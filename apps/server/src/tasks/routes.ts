@@ -76,7 +76,7 @@ export function taskRoutes(db: Db): RouterType {
         parentId: parentId ?? null,
         title: title.trim(),
         objective: objective ?? null,
-        status: status ?? "idle",
+        status: status ?? "backlog",
         priority: priority ?? "medium",
         groupName: groupName ?? null,
         assigneeAgentId: assigneeAgentId ?? null,
@@ -140,6 +140,20 @@ export function taskRoutes(db: Db): RouterType {
     } catch (error) {
       console.error("Failed to run task:", error);
       res.status(400).json({ error: error instanceof Error ? error.message : "Failed to run task" });
+    }
+  });
+
+  router.post("/:id/stop", async (req, res) => {
+    try {
+      const task = await service.stopTask(req.params.id);
+      if (!task) {
+        res.status(404).json({ error: "Task not found" });
+        return;
+      }
+      res.json(task);
+    } catch (error) {
+      console.error("Failed to stop task:", error);
+      res.status(400).json({ error: error instanceof Error ? error.message : "Failed to stop task" });
     }
   });
 

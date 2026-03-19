@@ -12,6 +12,7 @@ import type {
   AdapterRuntime,
   AdapterExecutionResult,
 } from "@ownlab/adapter-utils";
+import { clearInterruptedProcess, wasProcessInterrupted } from "@ownlab/adapter-utils/server-utils";
 import { getServerAdapter } from "../adapters/registry.js";
 import { createChannelService } from "../channels/service.js";
 import {
@@ -19,6 +20,7 @@ import {
   ensureAgencyProfileMaterialized,
   type AgencyProfileMaterialization,
 } from "../agency/profile.js";
+import { registerTaskRun, unregisterTaskRun } from "../tasks/run-control-service.js";
 
 function buildTaskPrompt(
   task: { title: string; objective: string | null },
@@ -127,6 +129,7 @@ export function createHeartbeatService(db: Db) {
     };
 
     let execution: AdapterExecutionResult;
+    registerTaskRun(task.id, runId);
 
     try {
       await db
@@ -165,6 +168,42 @@ export function createHeartbeatService(db: Db) {
         },
       });
     } catch (err) {
+      const interrupted = wasProcessInterrupted(runId);
+      clearInterruptedProcess(runId);
+
+      if (interrupted) {
+        await db
+          .update(heartbeatRuns)
+          .set({
+            status: "cancelled",
+            finishedAt: new Date(),
+            error: null,
+            updatedAt: new Date(),
+          })
+          .where(eq(heartbeatRuns.id, runId));
+
+        await db
+          .update(tasks)
+          .set({
+            status: "ready",
+            updatedAt: new Date(),
+          })
+          .where(eq(tasks.id, taskId));
+
+        await db
+          .update(agents)
+          .set({ status: "idle", updatedAt: new Date() })
+          .where(eq(agents.id, agent.id));
+
+        const updatedRun = await db
+          .select()
+          .from(heartbeatRuns)
+          .where(eq(heartbeatRuns.id, runId))
+          .then((rows) => rows[0]);
+
+        return updatedRun;
+      }
+
       const message = err instanceof Error ? err.message : String(err);
       await db
         .update(heartbeatRuns)
@@ -191,12 +230,16 @@ export function createHeartbeatService(db: Db) {
         .where(eq(agents.id, agent.id));
 
       throw err;
+    } finally {
+      unregisterTaskRun(task.id, runId);
     }
 
     const status =
       (execution.exitCode ?? 0) === 0 && !execution.timedOut
         ? "succeeded"
         : "failed";
+    const interrupted = wasProcessInterrupted(runId);
+    clearInterruptedProcess(runId);
 
     const nextRunAt =
       task.scheduleEnabled &&
@@ -210,9 +253,9 @@ export function createHeartbeatService(db: Db) {
     await db
       .update(heartbeatRuns)
       .set({
-        status,
+        status: interrupted ? "cancelled" : status,
         finishedAt: new Date(),
-        error: execution.errorMessage ?? null,
+        error: interrupted ? null : (execution.errorMessage ?? null),
         exitCode: execution.exitCode ?? null,
         resultJson: execution.resultJson ?? null,
         updatedAt: new Date(),
@@ -222,10 +265,10 @@ export function createHeartbeatService(db: Db) {
     await db
       .update(tasks)
       .set({
-        status: status === "succeeded" ? "idle" : "failed",
+        status: interrupted ? "ready" : status === "succeeded" ? "ready" : "failed",
         lastRunAt: new Date(),
-        nextRunAt,
-        lastResultSummary: resultSummary,
+        nextRunAt: interrupted ? task.nextRunAt : nextRunAt,
+        lastResultSummary: interrupted ? task.lastResultSummary : resultSummary,
         updatedAt: new Date(),
       })
       .where(eq(tasks.id, taskId));
@@ -237,6 +280,7 @@ export function createHeartbeatService(db: Db) {
 
     if (
       task.workspaceId &&
+      !interrupted &&
       status === "succeeded" &&
       execution.summary?.trim()
     ) {

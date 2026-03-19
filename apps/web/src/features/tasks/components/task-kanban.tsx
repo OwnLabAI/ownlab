@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { TaskCard } from './task-card';
 import type { Task } from '@/lib/api';
+import { getTaskStatusLabel, TASK_COLUMNS } from './task-status';
 
 interface TaskKanbanProps {
   tasks: Task[];
@@ -14,14 +15,8 @@ interface TaskKanbanProps {
   onAddTask: (groupName?: string) => void;
 }
 
-const UNGROUPED = 'ungrouped';
-const STATUS_GROUPS = ['Ready', 'Running', 'Failed'] as const;
-
 function getTaskColumn(task: Task): string {
-  if (task.status === 'running') return 'Running';
-  if (task.status === 'failed') return 'Failed';
-  const hasGroup = Boolean(task.groupName?.trim());
-  return hasGroup ? 'Ready' : UNGROUPED;
+  return getTaskStatusLabel(task);
 }
 
 export function TaskKanban({
@@ -31,12 +26,7 @@ export function TaskKanban({
   onAddTask,
 }: TaskKanbanProps) {
   const groups = useMemo(() => {
-    const map = new Map<string, Task[]>([
-      [UNGROUPED, []],
-      ['Ready', []],
-      ['Running', []],
-      ['Failed', []],
-    ]);
+    const map = new Map<string, Task[]>(TASK_COLUMNS.map((column) => [column, []]));
 
     for (const task of tasks) {
       const group = getTaskColumn(task);
@@ -48,7 +38,7 @@ export function TaskKanban({
     return map;
   }, [tasks]);
 
-  const columnOrder = [UNGROUPED, ...STATUS_GROUPS];
+  const columnOrder = TASK_COLUMNS;
 
   return (
     <ScrollArea className="h-full">
@@ -77,7 +67,7 @@ export function TaskKanban({
                 ))}
               </div>
 
-              {groupName === UNGROUPED && (
+              {groupName === 'Undo' && (
                 <Button
                   variant="ghost"
                   size="sm"

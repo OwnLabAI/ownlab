@@ -72,7 +72,7 @@ export async function createAgent(data: {
   reportsTo?: string | null;
   adapterType: string;
   model: string;
-  icon?: string;
+  icon?: string | null;
   style?: string;
   agentType?: string;
   adapterConfig?: Record<string, unknown>;
@@ -1206,6 +1206,17 @@ export async function runTask(id: string): Promise<TaskRun> {
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: 'Failed to run task' }));
     throw new Error((err as { error?: string }).error || 'Failed to run task');
+  }
+  return res.json();
+}
+
+export async function stopTask(id: string): Promise<Task> {
+  const res = await fetch(`${API_BASE}/tasks/${id}/stop`, {
+    method: 'POST',
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: 'Failed to stop task' }));
+    throw new Error((err as { error?: string }).error || 'Failed to stop task');
   }
   return res.json();
 }

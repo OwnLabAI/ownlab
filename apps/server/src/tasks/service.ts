@@ -9,6 +9,7 @@ import {
   tasks,
   teams,
 } from "@ownlab/db";
+import { stopTaskRuns } from "./run-control-service.js";
 
 type TaskMode = "scheduled" | "auto";
 
@@ -211,7 +212,7 @@ export function createTaskService(db: Db) {
         title: input.title.trim(),
         objective: input.objective ?? null,
         description: null,
-        status: input.status ?? "idle",
+        status: input.status ?? "backlog",
         priority: input.priority ?? "medium",
         groupName: input.groupName ?? null,
         assigneeAgentId: delegation.assigneeAgentId,
@@ -346,6 +347,33 @@ export function createTaskService(db: Db) {
     throw new Error("Scheduled tasks should run through the heartbeat service");
   }
 
+  async function stopTask(taskId: string) {
+    const task = await getTaskById(taskId);
+    if (!task) {
+      return null;
+    }
+
+    if (task.status !== "running") {
+      throw new Error("Task is not running");
+    }
+
+    const result = stopTaskRuns(taskId);
+    if (!result.stopped) {
+      throw new Error("No running task process found");
+    }
+
+    const [updated] = await db
+      .update(tasks)
+      .set({
+        status: "ready",
+        updatedAt: new Date(),
+      })
+      .where(eq(tasks.id, taskId))
+      .returning();
+
+    return updated ?? task;
+  }
+
   return {
     listTasksByBoard,
     getTaskById,
@@ -354,5 +382,6 @@ export function createTaskService(db: Db) {
     updateTask,
     deleteTask,
     enqueueTaskRun,
+    stopTask,
   };
 }

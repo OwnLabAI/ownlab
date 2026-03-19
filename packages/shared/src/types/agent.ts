@@ -22,7 +22,7 @@ export interface CreateAgentInput {
   reportsTo?: string | null;
   adapterType: AdapterType;
   model: string;
-  icon?: string;
+  icon?: string | null;
   style?: string;
   agentType?: "local" | "cloud";
   adapterConfig?: Record<string, unknown>;

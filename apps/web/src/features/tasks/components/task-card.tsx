@@ -5,18 +5,12 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import type { Task } from '@/lib/api';
+import { getTaskStatusLabel } from './task-status';
 
 interface TaskCardProps {
   task: Task;
   isActive: boolean;
   onClick: () => void;
-}
-
-function getTaskStatusLabel(task: Task) {
-  if (task.status === 'running') return 'Running';
-  if (task.status === 'failed') return 'Failed';
-  if (task.lastRunAt) return 'Ready';
-  return 'Ready';
 }
 
 function getTaskSummary(task: Task) {
@@ -28,6 +22,7 @@ function getModeLabel(task: Task) {
 }
 
 const STATUS_ICON: Record<string, React.ReactNode> = {
+  Undo: <Circle className="size-4 text-muted-foreground" />,
   Running: <LoaderCircle className="size-4 animate-spin text-blue-500" />,
   Failed: <Circle className="size-4 fill-orange-500/20 text-orange-500" />,
   Ready: <CheckCircle2 className="size-4 text-muted-foreground" />,

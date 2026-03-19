@@ -1,9 +1,8 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { Loader2, Play, RefreshCw, Trash2, X } from 'lucide-react';
+import { Loader2, Pause, Play, Trash2, X } from 'lucide-react';
 import { EntityIcon } from '@/components/entity-icon';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -22,6 +21,7 @@ import {
   fetchTeams,
   fetchWorkspaces,
   runTask,
+  stopTask,
   updateTask,
   type Task,
   type TaskDetail,
@@ -53,12 +53,6 @@ type TaskPatch = Partial<{
 function formatDateTime(value: string | null) {
   if (!value) return 'Never';
   return new Date(value).toLocaleString();
-}
-
-function getTaskStatusLabel(task: Task) {
-  if (task.status === 'running') return 'Running';
-  if (task.status === 'failed') return 'Failed';
-  return 'Ready';
 }
 
 function getTaskMode(task: Task) {
@@ -101,6 +95,7 @@ export function TaskDetailPanel({
   const [detail, setDetail] = useState<TaskDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [running, setRunning] = useState(false);
+  const [stopping, setStopping] = useState(false);
   const [agents, setAgents] = useState<{ id: string; name: string; icon: string | null }[]>([]);
   const [teams, setTeams] = useState<TeamRecord[]>([]);
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
@@ -184,6 +179,20 @@ export function TaskDetailPanel({
     onDeleted(task.id);
   }, [task, onDeleted]);
 
+  const handleStop = useCallback(async () => {
+    if (!task || task.status !== 'running') return;
+    setStopping(true);
+    try {
+      const updated = await stopTask(task.id);
+      setDetail((prev) => (prev ? { ...prev, task: updated } : prev));
+      onUpdated(updated);
+      onTasksChanged?.();
+      await loadDetail();
+    } finally {
+      setStopping(false);
+    }
+  }, [task, loadDetail, onTasksChanged, onUpdated]);
+
   if (loading) {
     return (
       <div className="flex h-full items-center justify-center">
@@ -200,19 +209,16 @@ export function TaskDetailPanel({
     );
   }
 
-  const status = getTaskStatusLabel(task);
   const mode = getTaskMode(task);
   const targetType = getTargetType(task);
   const targetId = getTargetId(task);
+  const targetLabel = targetType === 'team' ? 'Team' : 'Agent';
 
   return (
     <div className="flex h-full flex-col">
       <div className="border-b px-4 py-4">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
-            <div className="mb-3 flex items-center gap-2">
-              <Badge variant="outline">{status}</Badge>
-            </div>
             <Input
               value={task.title}
               onChange={(event) =>
@@ -231,14 +237,23 @@ export function TaskDetailPanel({
           </div>
 
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={() => void loadDetail()}>
-              <RefreshCw className="mr-1 size-4" />
-              Refresh
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => void handleStop()}
+              disabled={task.status !== 'running' || stopping}
+            >
+              {stopping ? (
+                <Loader2 className="mr-1 size-4 animate-spin" />
+              ) : (
+                <Pause className="mr-1 size-4" />
+              )}
+              Pause
             </Button>
             <Button
               size="sm"
               onClick={() => void handleRun()}
-              disabled={running || task.status === 'running' || mode === 'auto'}
+              disabled={running || stopping || task.status === 'running' || mode === 'auto'}
             >
               {running || task.status === 'running' ? (
                 <Loader2 className="mr-1 size-4 animate-spin" />
@@ -259,113 +274,115 @@ export function TaskDetailPanel({
 
       <ScrollArea className="h-full">
         <div className="space-y-4 p-4">
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Type</label>
-            <Select
-              value={targetType}
-              onValueChange={(value) => {
-                if (value === 'team') {
-                  void handleUpdate({
-                    assigneeAgentId: null,
-                    assigneeTeamId: teams[0]?.id ?? null,
-                  });
-                } else {
-                  void handleUpdate({
-                    assigneeTeamId: null,
-                    assigneeAgentId: task.assigneeAgentId ?? agents[0]?.id ?? null,
-                  });
-                }
-              }}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="agent">Agent</SelectItem>
-                <SelectItem value="team">Team</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-sm font-medium">{targetType === 'team' ? 'Team' : 'Agent'}</label>
-            {targetType === 'team' ? (
+          <div className="grid gap-3 md:grid-cols-3">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Type</label>
               <Select
-                value={targetId ?? 'none'}
+                value={targetType}
+                onValueChange={(value) => {
+                  if (value === 'team') {
+                    void handleUpdate({
+                      assigneeAgentId: null,
+                      assigneeTeamId: teams[0]?.id ?? null,
+                    });
+                  } else {
+                    void handleUpdate({
+                      assigneeTeamId: null,
+                      assigneeAgentId: task.assigneeAgentId ?? agents[0]?.id ?? null,
+                    });
+                  }
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="agent">Agent</SelectItem>
+                  <SelectItem value="team">Team</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium">{targetLabel}</label>
+              {targetType === 'team' ? (
+                <Select
+                  value={targetId ?? 'none'}
+                  onValueChange={(value) =>
+                    void handleUpdate({
+                      assigneeTeamId: value === 'none' ? null : value,
+                      assigneeAgentId: null,
+                    })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select team" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">None</SelectItem>
+                    {teams.map((team) => (
+                      <SelectItem key={team.id} value={team.id}>
+                        {team.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <Select
+                  value={task.assigneeAgentId ?? 'none'}
+                  onValueChange={(value) =>
+                    void handleUpdate({
+                      assigneeAgentId: value === 'none' ? null : value,
+                      assigneeTeamId: null,
+                    })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select agent" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">None</SelectItem>
+                    {agents.map((agent) => (
+                      <SelectItem key={agent.id} value={agent.id}>
+                        <span className="flex items-center gap-2">
+                          <EntityIcon
+                            icon={agent.icon}
+                            name={agent.name}
+                            fallback="AI"
+                            className="size-5 rounded-md"
+                            fallbackClassName="rounded-md text-[9px]"
+                          />
+                          <span>{agent.name}</span>
+                        </span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Mode</label>
+              <Select
+                value={mode}
                 onValueChange={(value) =>
                   void handleUpdate({
-                    assigneeTeamId: value === 'none' ? null : value,
-                    assigneeAgentId: null,
+                    mode: value as 'scheduled' | 'auto',
+                    scheduleEnabled: value === 'scheduled',
+                    scheduleType: value === 'scheduled' ? 'interval' : 'manual',
+                    intervalSec: value === 'scheduled' ? (task.intervalSec ?? 1800) : null,
                   })
                 }
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select team" />
+                  <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">None</SelectItem>
-                  {teams.map((team) => (
-                    <SelectItem key={team.id} value={team.id}>
-                      {team.name}
-                    </SelectItem>
-                  ))}
+                  <SelectItem value="scheduled">Scheduled</SelectItem>
+                  <SelectItem value="auto">Auto</SelectItem>
                 </SelectContent>
               </Select>
-            ) : (
-              <Select
-                value={task.assigneeAgentId ?? 'none'}
-                onValueChange={(value) =>
-                  void handleUpdate({
-                    assigneeAgentId: value === 'none' ? null : value,
-                    assigneeTeamId: null,
-                  })
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select agent" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">None</SelectItem>
-                  {agents.map((agent) => (
-                    <SelectItem key={agent.id} value={agent.id}>
-                      <span className="flex items-center gap-2">
-                        <EntityIcon
-                          icon={agent.icon}
-                          name={agent.name}
-                          fallback="AI"
-                          className="size-5 rounded-md"
-                          fallbackClassName="rounded-md text-[9px]"
-                        />
-                        <span>{agent.name}</span>
-                      </span>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Mode</label>
-            <Select
-              value={mode}
-              onValueChange={(value) =>
-                void handleUpdate({
-                  mode: value as 'scheduled' | 'auto',
-                  scheduleEnabled: value === 'scheduled',
-                  scheduleType: value === 'scheduled' ? 'interval' : 'manual',
-                  intervalSec: value === 'scheduled' ? (task.intervalSec ?? 1800) : null,
-                })
-              }
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="scheduled">Scheduled</SelectItem>
-                <SelectItem value="auto">Auto</SelectItem>
-              </SelectContent>
-            </Select>
+            </div>
           </div>
 
           {mode === 'scheduled' ? (
@@ -464,10 +481,10 @@ export function TaskDetailPanel({
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium">Runs</label>
+            <label className="text-sm font-medium">History</label>
             {detail.runs.length === 0 ? (
               <div className="rounded-md border border-dashed p-3 text-sm text-muted-foreground">
-                No runs yet.
+                No history yet.
               </div>
             ) : (
               detail.runs.map((run) => <RunCard key={run.id} run={run} />)
