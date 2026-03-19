@@ -1,0 +1,29 @@
+{
+  "name": "ownlab",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "pnpm run dev:server & pnpm run dev:web",
+    "dev:server": "pnpm --filter @ownlab/server dev",
+    "dev:web": "pnpm --filter @ownlab/web dev",
+    "build": "pnpm -r build",
+    "typecheck": "pnpm -r typecheck",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "db:generate": "pnpm --filter @ownlab/db generate",
+    "db:migrate": "pnpm --filter @ownlab/db exec tsx src/migrate.ts"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.3",
+    "vitest": "^3.2.4"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "packageManager": "pnpm@9.15.4",
+  "pnpm": {
+    "overrides": {
+      "@esbuild-kit/core-utils>esbuild": "^0.25.12"
+    }
+  }
+}

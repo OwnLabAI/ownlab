@@ -1,0 +1,1 @@
+-- chat_threads/chat_messages tables have been removed in favor of channel-based chat.

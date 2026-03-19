@@ -1,0 +1,47 @@
+{
+  "name": "@ownlab/server",
+  "version": "0.0.1",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "clean": "rm -rf dist",
+    "start": "node dist/index.js",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest",
+    "test:run": "vitest run --config ./vitest.config.ts"
+  },
+  "dependencies": {
+    "@ai-sdk/anthropic": "^3.0.58",
+    "@ownlab/adapter-claude-local": "workspace:*",
+    "@ownlab/adapter-codex-local": "workspace:*",
+    "@ownlab/adapter-cursor-local": "workspace:*",
+    "@ownlab/adapter-gemini-local": "workspace:*",
+    "@ownlab/adapter-opencode-local": "workspace:*",
+    "@ownlab/adapter-pi-local": "workspace:*",
+    "@ownlab/adapter-utils": "workspace:*",
+    "@ownlab/db": "workspace:*",
+    "@ownlab/shared": "workspace:*",
+    "ai": "^6.0.116",
+    "cors": "^2.8.6",
+    "detect-port": "^2.1.0",
+    "embedded-postgres": "18.3.0-beta.16",
+    "express": "^5.0.1",
+    "ocrad.js": "^0.0.1",
+    "pdfjs-dist": "^5.5.207",
+    "sharp": "0.34.5",
+    "zod": "^4.0.17"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/detect-port": "^2.0.0",
+    "@types/express": "^5.0.0",
+    "@types/node": "^24.6.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3",
+    "vitest": "^3.2.4"
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "name": "@ownlab/db",
+  "version": "0.0.1",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "tsc && cp -r src/migrations dist/migrations 2>/dev/null || true",
+    "clean": "rm -rf dist",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest",
+    "test:run": "vitest run --config ./vitest.config.ts",
+    "generate": "tsc -p tsconfig.json && drizzle-kit generate",
+    "migrate": "tsx src/migrate.ts",
+    "backup": "tsx src/backup.ts"
+  },
+  "dependencies": {
+    "@ownlab/shared": "workspace:*",
+    "drizzle-orm": "^0.38.4",
+    "postgres": "^3.4.5"
+  },
+  "devDependencies": {
+    "@types/node": "^24.6.0",
+    "drizzle-kit": "^0.31.10",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3",
+    "vitest": "^3.2.4"
+  }
+}
