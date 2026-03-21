@@ -105,17 +105,6 @@ export function resolveAgentRuntimeHomeDir(
   return path.resolve(resolveAgentRuntimeRootDir(agentId, runtimeConfig), "home");
 }
 
-/**
- * Resolves the default agent workspace directory for memory and fallback workspace.
- * Path: ~/.ownlab/instances/{instance}/agents/{agentId}/workspace
- */
-export function resolveDefaultAgentWorkspaceDir(
-  agentId: string,
-  runtimeConfig?: RuntimeConfigRecord | null,
-): string {
-  return path.resolve(resolveAgentRuntimeRootDir(agentId, runtimeConfig), "workspace");
-}
-
 export function resolveAgentCodexHomeDir(
   agentId: string,
   runtimeConfig?: RuntimeConfigRecord | null,

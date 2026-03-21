@@ -124,10 +124,7 @@ export function AgentPageContent({ name }: Props) {
       try {
         const workspaces = await fetchWorkspaces();
         const runtimeConfig = (agentRef.runtimeConfig ?? {}) as Record<string, unknown>;
-        const configuredWorkspaceId =
-          parseString(runtimeConfig.workspaceSource) === 'workspace'
-            ? parseString(runtimeConfig.workspaceId)
-            : '';
+        const configuredWorkspaceId = parseString(runtimeConfig.workspaceId);
         const configuredWorkspace =
           configuredWorkspaceId.length > 0
             ? workspaces.find((workspace) => workspace.id === configuredWorkspaceId)

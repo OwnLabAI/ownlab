@@ -30,7 +30,6 @@ import {
   fetchAgents,
   updateAgent,
   fetchAgencyTemplates,
-  fetchAgencyTemplate,
   fetchWorkspaces,
   type AgencyTemplateSummary,
   type Workspace,
@@ -204,9 +203,7 @@ export function CreateAgentDialog({
     setAgencyInstructions(parseString(runtimeConfig.agencyInstructions));
     setCustomAgencyInstructions(parseString(runtimeConfig.customAgencyInstructions));
     setSelectedDepartment(agencyTemplate?.department || 'Engineering');
-    setWorkspaceSource(
-      parseString(runtimeConfig.workspaceSource) === 'workspace' ? 'workspace' : 'agent_home',
-    );
+    setWorkspaceSource(parseString(runtimeConfig.workspaceId) ? 'workspace' : 'agent_home');
     setSelectedWorkspaceId(parseString(runtimeConfig.workspaceId));
     setSelectedManagerId(parseString(agent?.reportsTo));
   }, [agent, open]);
@@ -300,7 +297,7 @@ export function CreateAgentDialog({
     setEnvStatus('idle');
   }, []);
 
-  const handleSelectAgency = useCallback(async (template: AgencyTemplateSummary) => {
+  const handleSelectAgency = useCallback((template: AgencyTemplateSummary) => {
     setSelectedDepartment(template.department);
     setSelectedAgencySlug(template.slug);
     setSelectedAgencyTemplate({
@@ -309,15 +306,7 @@ export function CreateAgentDialog({
       department: template.department,
       path: template.path,
     });
-    setAgencyInstructions('Loading template...');
-
-    try {
-      const detail = await fetchAgencyTemplate(template.slug);
-      setAgencyInstructions(detail.content);
-    } catch {
-      setAgencyInstructions('');
-      setError('Failed to load agency template');
-    }
+    setAgencyInstructions('');
   }, []);
 
   const handleTestEnvironment = useCallback(async () => {
@@ -379,7 +368,7 @@ export function CreateAgentDialog({
       return;
     }
     if (workspaceSource === 'workspace' && !selectedWorkspaceId) {
-      setError('Select a workspace or switch back to the default agent workspace');
+      setError('Select a workspace or switch back to the agent home directory');
       return;
     }
 
@@ -409,7 +398,6 @@ export function CreateAgentDialog({
           agencyTemplate: selectedAgencyTemplate,
           agencyInstructions: agencyInstructions.trim() || null,
           customAgencyInstructions: customAgencyInstructions.trim() || null,
-          workspaceSource,
           workspaceId: workspaceSource === 'workspace' ? selectedWorkspaceId : null,
         },
       };
@@ -544,88 +532,35 @@ export function CreateAgentDialog({
                 </Button>
                 {requiresEnvironmentTest && !hasEnvironmentClearance && (
                   <p className="text-xs text-muted-foreground">
-                    A passing check or warning result will unlock avatar, agency, and name settings.
+                    A passing check or warning result will unlock the remaining agent settings.
                   </p>
                 )}
               </div>
 
-                {showExtendedConfig ? (
+              {showExtendedConfig ? (
                 <>
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label className="text-sm font-medium">Workspace</Label>
-                      <p className="text-xs text-muted-foreground">
-                        Choose where this agent should work by default. You can keep the agent in its own home
-                        directory or attach it to an existing shared workspace.
-                      </p>
-                    </div>
-
-                    <div className="flex flex-wrap gap-3">
-                      <button
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">Name</Label>
+                    <div className="flex gap-2">
+                      <Input
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        placeholder="agent-name"
+                        className="flex-1"
+                      />
+                      <Button
                         type="button"
-                        onClick={() => setWorkspaceSource('agent_home')}
-                        className={cn(
-                          'min-h-[112px] max-w-[360px] flex-1 basis-[280px] rounded-2xl border px-4 py-3 text-left transition-colors',
-                          workspaceSource === 'agent_home'
-                            ? 'border-primary/40 bg-primary/5'
-                            : 'border-border hover:border-muted-foreground/30 hover:bg-muted/30',
-                        )}
+                        variant="outline"
+                        size="icon"
+                        onClick={() => setName(randomName())}
+                        title="Random name"
                       >
-                        <div className="font-semibold">Use default agent workspace</div>
-                        <p className="mt-1 text-sm text-muted-foreground">
-                          Recommended for quick setup. The agent works in its own default directory.
-                        </p>
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => setWorkspaceSource('workspace')}
-                        className={cn(
-                          'min-h-[112px] max-w-[360px] flex-1 basis-[280px] rounded-2xl border px-4 py-3 text-left transition-colors',
-                          workspaceSource === 'workspace'
-                            ? 'border-primary/40 bg-primary/5'
-                            : 'border-border hover:border-muted-foreground/30 hover:bg-muted/30',
-                        )}
-                      >
-                        <div className="font-semibold">Attach existing workspace</div>
-                        <p className="mt-1 text-sm text-muted-foreground">
-                          Use a shared lab workspace so the agent starts with the right project context.
-                        </p>
-                      </button>
+                        <Shuffle className="size-4" />
+                      </Button>
                     </div>
-
-                    {workspaceSource === 'workspace' && (
-                      <div className="space-y-3 rounded-2xl border px-4 py-4">
-                        <div className="flex items-center justify-between gap-3">
-                          <div>
-                            <p className="font-medium">Shared workspace</p>
-                            <p className="text-xs text-muted-foreground">
-                              Select an existing workspace or create one before saving.
-                            </p>
-                          </div>
-                          <Button type="button" variant="outline" size="sm" onClick={() => setWorkspaceDialogOpen(true)}>
-                            New workspace
-                          </Button>
-                        </div>
-
-                        <Select
-                          value={selectedWorkspaceId || 'none'}
-                          onValueChange={(value) => setSelectedWorkspaceId(value === 'none' ? '' : value)}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder={loadingWorkspaces ? 'Loading workspaces...' : 'Select a workspace'} />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="none">Select a workspace</SelectItem>
-                            {workspaces.map((workspace) => (
-                              <SelectItem key={workspace.id} value={workspace.id}>
-                                {workspace.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    )}
+                    <p className="text-xs text-muted-foreground">
+                      3-30 letters, numbers, and hyphens. Must start with a letter.
+                    </p>
                   </div>
 
                   <div className="space-y-2">
@@ -761,20 +696,6 @@ export function CreateAgentDialog({
                     </div>
 
                     <div className="space-y-2">
-                      <Label className="text-sm font-medium">Agency instructions</Label>
-                      <Textarea
-                        value={agencyInstructions}
-                        onChange={(e) => setAgencyInstructions(e.target.value)}
-                        placeholder="Select a template above, or paste your own agency instructions here..."
-                        className="min-h-44"
-                      />
-                      <p className="text-xs text-muted-foreground">
-                        You can edit the imported template before saving. The final text will be written into the
-                        agent&apos;s local `agency/AGENCY.md` bundle.
-                      </p>
-                    </div>
-
-                    <div className="space-y-2">
                       <Label className="text-sm font-medium">Additional custom instructions</Label>
                       <Textarea
                         value={customAgencyInstructions}
@@ -783,6 +704,83 @@ export function CreateAgentDialog({
                         className="min-h-28"
                       />
                     </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">Workspace</Label>
+                      <p className="text-xs text-muted-foreground">
+                        Choose where this agent should work by default. You can keep it in its own home
+                        directory or attach it to an existing shared workspace.
+                      </p>
+                    </div>
+
+                    <div className="flex flex-wrap gap-3">
+                      <button
+                        type="button"
+                        onClick={() => setWorkspaceSource('agent_home')}
+                        className={cn(
+                          'min-h-[112px] max-w-[360px] flex-1 basis-[280px] rounded-2xl border px-4 py-3 text-left transition-colors',
+                          workspaceSource === 'agent_home'
+                            ? 'border-primary/40 bg-primary/5'
+                            : 'border-border hover:border-muted-foreground/30 hover:bg-muted/30',
+                        )}
+                      >
+                        <div className="font-semibold">Use agent home directory</div>
+                        <p className="mt-1 text-sm text-muted-foreground">
+                          Recommended for quick setup. The agent works directly from its private home directory.
+                        </p>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setWorkspaceSource('workspace')}
+                        className={cn(
+                          'min-h-[112px] max-w-[360px] flex-1 basis-[280px] rounded-2xl border px-4 py-3 text-left transition-colors',
+                          workspaceSource === 'workspace'
+                            ? 'border-primary/40 bg-primary/5'
+                            : 'border-border hover:border-muted-foreground/30 hover:bg-muted/30',
+                        )}
+                      >
+                        <div className="font-semibold">Attach existing workspace</div>
+                        <p className="mt-1 text-sm text-muted-foreground">
+                          Use a shared lab workspace so the agent starts with the right project context.
+                        </p>
+                      </button>
+                    </div>
+
+                    {workspaceSource === 'workspace' && (
+                      <div className="space-y-3 rounded-2xl border px-4 py-4">
+                        <div className="flex items-center justify-between gap-3">
+                          <div>
+                            <p className="font-medium">Shared workspace</p>
+                            <p className="text-xs text-muted-foreground">
+                              Select an existing workspace or create one before saving.
+                            </p>
+                          </div>
+                          <Button type="button" variant="outline" size="sm" onClick={() => setWorkspaceDialogOpen(true)}>
+                            New workspace
+                          </Button>
+                        </div>
+
+                        <Select
+                          value={selectedWorkspaceId || 'none'}
+                          onValueChange={(value) => setSelectedWorkspaceId(value === 'none' ? '' : value)}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder={loadingWorkspaces ? 'Loading workspaces...' : 'Select a workspace'} />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">Select a workspace</SelectItem>
+                            {workspaces.map((workspace) => (
+                              <SelectItem key={workspace.id} value={workspace.id}>
+                                {workspace.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
                   </div>
 
                   <div className="space-y-2">
@@ -817,30 +815,6 @@ export function CreateAgentDialog({
                     </Select>
                     <p className="text-xs text-muted-foreground">
                       Use this to build an agent hierarchy. Child agents can report to another agent in the same lab.
-                    </p>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label className="text-sm font-medium">Name</Label>
-                    <div className="flex gap-2">
-                      <Input
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        placeholder="agent-name"
-                        className="flex-1"
-                      />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="icon"
-                        onClick={() => setName(randomName())}
-                        title="Random name"
-                      >
-                        <Shuffle className="size-4" />
-                      </Button>
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      3-30 letters, numbers, and hyphens. Must start with a letter.
                     </p>
                   </div>
                 </>

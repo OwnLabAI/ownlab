@@ -1,7 +1,7 @@
 import type { Db } from "@ownlab/db";
 import { eq, workspaces } from "@ownlab/db";
 import type { agents } from "@ownlab/db";
-import { resolveAgentRuntimeHomeDir, resolveDefaultAgentWorkspaceDir } from "../home-paths.js";
+import { resolveAgentRuntimeHomeDir } from "../home-paths.js";
 import { initializeAgentRuntimeFilesystem } from "./runtime-filesystem.js";
 
 type AgentRecord = typeof agents.$inferSelect;
@@ -19,15 +19,11 @@ export interface AgentExecutionRuntimeContext {
 export async function resolveAgentExecutionRuntimeContext(
   db: Db,
   agent: AgentRecord,
-  channelWorkspaceId?: string | null,
-  channelId?: string | null,
+  _channelWorkspaceId?: string | null,
+  _channelId?: string | null,
 ): Promise<AgentExecutionRuntimeContext> {
   const runtimeConfig = asRecord(agent.runtimeConfig);
-  const requestedWorkspaceSource =
-    asString(runtimeConfig?.workspaceSource) === "workspace" ? "workspace" : "agent_home";
-  const requestedWorkspaceId =
-    asString(runtimeConfig?.workspaceId) ??
-    (requestedWorkspaceSource === "workspace" ? asString(channelWorkspaceId) : null);
+  const requestedWorkspaceId = asString(runtimeConfig?.workspaceId);
   const configuredProjectPath =
     asString(runtimeConfig?.projectPath) ||
     asString(runtimeConfig?.workingDirectory) ||
@@ -35,7 +31,7 @@ export async function resolveAgentExecutionRuntimeContext(
 
   const agentHome = resolveAgentRuntimeHomeDir(agent.id, agent.runtimeConfig);
   const channelHome = null;
-  const fallbackCwd = resolveDefaultAgentWorkspaceDir(agent.id, agent.runtimeConfig);
+  const fallbackCwd = agentHome;
 
   await initializeAgentRuntimeFilesystem({
     agentId: agent.id,
@@ -54,7 +50,7 @@ export async function resolveAgentExecutionRuntimeContext(
     };
   }
 
-  if (requestedWorkspaceSource === "workspace" && requestedWorkspaceId) {
+  if (requestedWorkspaceId) {
     const [workspace] = await db
       .select()
       .from(workspaces)

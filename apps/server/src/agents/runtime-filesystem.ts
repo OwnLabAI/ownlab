@@ -6,7 +6,6 @@ import {
   resolveAgentCodexHomeDir,
   resolveAgentRuntimeHomeDir,
   resolveAgentRuntimeRootDir,
-  resolveDefaultAgentWorkspaceDir,
   resolveLegacyAgentRuntimeRootDir,
 } from "../home-paths.js";
 
@@ -109,6 +108,33 @@ async function migrateLegacyRuntimeRoot(
   await fs.rename(legacyRoot, targetRoot);
 }
 
+async function migrateLegacyWorkspaceArtifacts(
+  runtimeRoot: string,
+  agentHome: string,
+): Promise<void> {
+  const legacyWorkspaceDir = path.join(runtimeRoot, "workspace");
+  const legacyAgencyDir = path.join(legacyWorkspaceDir, "agency");
+  const nextAgencyDir = path.join(agentHome, "agency");
+
+  const legacyAgencyExists = await pathExists(legacyAgencyDir);
+  const nextAgencyExists = await pathExists(nextAgencyDir);
+
+  if (legacyAgencyExists && !nextAgencyExists) {
+    await fs.mkdir(agentHome, { recursive: true });
+    await fs.rename(legacyAgencyDir, nextAgencyDir);
+  }
+
+  const workspaceExists = await pathExists(legacyWorkspaceDir);
+  if (!workspaceExists) {
+    return;
+  }
+
+  const remainingEntries = await fs.readdir(legacyWorkspaceDir).catch(() => []);
+  if (remainingEntries.length === 0) {
+    await fs.rmdir(legacyWorkspaceDir).catch(() => undefined);
+  }
+}
+
 export async function initializeAgentRuntimeFilesystem(input: {
   agentId: string;
   runtimeConfig?: RuntimeConfigRecord | null;
@@ -117,7 +143,6 @@ export async function initializeAgentRuntimeFilesystem(input: {
   const legacyRoot = resolveLegacyAgentRuntimeRootDir(input.agentId);
   const runtimeRoot = resolveAgentRuntimeRootDir(input.agentId, runtimeConfig);
   const agentHome = resolveAgentRuntimeHomeDir(input.agentId, runtimeConfig);
-  const workspaceDir = resolveDefaultAgentWorkspaceDir(input.agentId, runtimeConfig);
   const codexHome = resolveAgentCodexHomeDir(input.agentId, runtimeConfig);
   const claudeHome = resolveAgentClaudeContainerDir(input.agentId, runtimeConfig);
 
@@ -125,9 +150,9 @@ export async function initializeAgentRuntimeFilesystem(input: {
 
   await fs.mkdir(runtimeRoot, { recursive: true });
   await fs.mkdir(agentHome, { recursive: true });
-  await fs.mkdir(workspaceDir, { recursive: true });
   await fs.mkdir(path.join(codexHome, "skills"), { recursive: true });
   await fs.mkdir(path.join(claudeHome, "skills"), { recursive: true });
+  await migrateLegacyWorkspaceArtifacts(runtimeRoot, agentHome);
 
   const globalCodexHome = resolveCodexHomeDir(process.env);
   await seedRuntimeHome(codexHome, globalCodexHome, CODEX_SYMLINKED_SHARED_FILES, "symlink");
@@ -136,4 +161,3 @@ export async function initializeAgentRuntimeFilesystem(input: {
   const globalClaudeHome = resolveClaudeConfigDir(process.env);
   await seedRuntimeHome(claudeHome, globalClaudeHome, CLAUDE_COPIED_SHARED_FILES, "copy");
 }
-

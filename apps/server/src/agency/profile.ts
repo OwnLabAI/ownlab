@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { agents } from "@ownlab/db";
-import { resolveDefaultAgentWorkspaceDir } from "../home-paths.js";
+import { resolveAgentRuntimeHomeDir } from "../home-paths.js";
 
 type RuntimeRecord = Record<string, unknown>;
 
@@ -104,7 +104,7 @@ export async function ensureAgencyProfileMaterialized(
     return null;
   }
 
-  const agentHome = resolveDefaultAgentWorkspaceDir(agent.id, agent.runtimeConfig);
+  const agentHome = resolveAgentRuntimeHomeDir(agent.id, agent.runtimeConfig);
   const rootDir = path.join(agentHome, "agency");
   const manifestPath = path.join(rootDir, "manifest.json");
   const sourcePath = path.join(rootDir, "source.md");
