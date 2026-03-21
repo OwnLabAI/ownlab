@@ -361,7 +361,7 @@ export function AgentChatView({
             <Loader className="text-muted-foreground" />
           </div>
         ) : isEmpty ? null : (
-          <Conversation className="h-full min-h-0 overflow-y-auto">
+          <Conversation className="h-full min-h-0">
             <ConversationContent className="min-h-full px-5 py-5">
               {messages.map((message) => (
                 <AgentMessageItem key={message.id} message={message} />
