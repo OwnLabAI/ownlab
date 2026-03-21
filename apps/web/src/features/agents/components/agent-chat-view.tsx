@@ -43,6 +43,7 @@ import {
 } from '@/lib/api';
 import { PaperclipIcon } from 'lucide-react';
 import { useChannelRun } from '@/features/channels/stores/use-channel-run-store';
+import { PromptInputDraftProvider } from '@/features/channels/components/prompt-input-draft-provider';
 import { MessageCopyButton } from '@/features/channels/components/message-copy-button';
 
 interface AgentChatViewProps {
@@ -72,6 +73,7 @@ export function AgentChatView({
   onChannelActivity,
 }: AgentChatViewProps) {
   const runKey = sessionId ? `${channel.id}:${sessionId}` : channel.id;
+  const draftKey = sessionId ? `agent:${channel.id}:${sessionId}` : `agent:${channel.id}`;
   const [messages, setMessages] = useState<ChannelMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const [sendError, setSendError] = useState<string | null>(null);
@@ -386,21 +388,23 @@ export function AgentChatView({
             {sendError}
           </div>
         ) : null}
-        <PromptInput
-          onSubmit={handleSubmit}
-          globalDrop
-          clearOnSubmitStart
-          className="mx-auto max-w-3xl [&_[data-slot=input-group]]:border-border/40 [&_[data-slot=input-group]]:bg-background/60 [&_[data-slot=input-group]]:shadow-sm [&_[data-slot=input-group]]:backdrop-blur-md"
-          multiple
-          maxFiles={8}
-        >
-          <AgentComposerAttachments />
-          <PromptInputTextarea placeholder={placeholder ?? 'Message...'} />
-          <PromptInputFooter>
-            <AgentComposerAttachmentButton />
-            <PromptInputSubmit status={runActive ? 'streaming' : 'ready'} onStop={handleStop} />
-          </PromptInputFooter>
-        </PromptInput>
+        <PromptInputDraftProvider draftKey={draftKey}>
+          <PromptInput
+            onSubmit={handleSubmit}
+            globalDrop
+            clearOnSubmitStart
+            className="mx-auto max-w-3xl [&_[data-slot=input-group]]:border-border/40 [&_[data-slot=input-group]]:bg-background/60 [&_[data-slot=input-group]]:shadow-sm [&_[data-slot=input-group]]:backdrop-blur-md"
+            multiple
+            maxFiles={8}
+          >
+            <AgentComposerAttachments />
+            <PromptInputTextarea placeholder={placeholder ?? 'Message...'} />
+            <PromptInputFooter>
+              <AgentComposerAttachmentButton />
+              <PromptInputSubmit status={runActive ? 'streaming' : 'ready'} onStop={handleStop} />
+            </PromptInputFooter>
+          </PromptInput>
+        </PromptInputDraftProvider>
       </div>
     </div>
   );
@@ -473,14 +477,14 @@ function AgentMessageItem({ message }: { message: ChannelMessage }) {
           <div className={cn('flex w-full items-center gap-2 text-xs text-muted-foreground', !isAssistant && 'justify-end')}>
             <span className="font-medium text-foreground">{message.actorName ?? 'Unknown'}</span>
             <span className={cn('tabular-nums', !isAssistant && 'text-right')}>{formatTimestamp(message.createdAt)}</span>
-          </div>
-
-          <MessageContent className="w-full rounded-none bg-transparent px-0 py-0 shadow-none">
             {hasContent ? (
               <MessageActions className={cn(!isAssistant && 'justify-end')}>
                 <MessageCopyButton content={message.content} align={isAssistant ? 'left' : 'right'} />
               </MessageActions>
             ) : null}
+          </div>
+
+          <MessageContent className="w-full rounded-none bg-transparent px-0 py-0 shadow-none">
             {message.content ? (
               isAssistant ? (
                 <MessageResponse>{message.content}</MessageResponse>

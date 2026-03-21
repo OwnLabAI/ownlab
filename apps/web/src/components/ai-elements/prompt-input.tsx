@@ -162,6 +162,8 @@ const useOptionalProviderAttachments = () =>
 
 export type PromptInputProviderProps = PropsWithChildren<{
   initialInput?: string;
+  initialAttachments?: (FileUIPart & { id: string })[];
+  manageAttachmentUrlsExternally?: boolean;
 }>;
 
 /**
@@ -170,6 +172,8 @@ export type PromptInputProviderProps = PropsWithChildren<{
  */
 export const PromptInputProvider = ({
   initialInput: initialTextInput = "",
+  initialAttachments = [],
+  manageAttachmentUrlsExternally = false,
   children,
 }: PromptInputProviderProps) => {
   // ----- textInput state
@@ -179,7 +183,7 @@ export const PromptInputProvider = ({
   // ----- attachments state (global when wrapped)
   const [attachmentFiles, setAttachmentFiles] = useState<
     (FileUIPart & { id: string })[]
-  >([]);
+  >(initialAttachments);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   // oxlint-disable-next-line eslint(no-empty-function)
   const openRef = useRef<() => void>(() => {});
@@ -205,23 +209,23 @@ export const PromptInputProvider = ({
   const remove = useCallback((id: string) => {
     setAttachmentFiles((prev) => {
       const found = prev.find((f) => f.id === id);
-      if (found?.url) {
+      if (found?.url && !manageAttachmentUrlsExternally) {
         URL.revokeObjectURL(found.url);
       }
       return prev.filter((f) => f.id !== id);
     });
-  }, []);
+  }, [manageAttachmentUrlsExternally]);
 
   const clear = useCallback(() => {
     setAttachmentFiles((prev) => {
       for (const f of prev) {
-        if (f.url) {
+        if (f.url && !manageAttachmentUrlsExternally) {
           URL.revokeObjectURL(f.url);
         }
       }
       return [];
     });
-  }, []);
+  }, [manageAttachmentUrlsExternally]);
 
   // Keep a ref to attachments for cleanup on unmount (avoids stale closure)
   const attachmentsRef = useRef(attachmentFiles);
@@ -233,13 +237,16 @@ export const PromptInputProvider = ({
   // Cleanup blob URLs on unmount to prevent memory leaks
   useEffect(
     () => () => {
+      if (manageAttachmentUrlsExternally) {
+        return;
+      }
       for (const f of attachmentsRef.current) {
         if (f.url) {
           URL.revokeObjectURL(f.url);
         }
       }
     },
-    []
+    [manageAttachmentUrlsExternally]
   );
 
   const openFileDialog = useCallback(() => {

@@ -110,12 +110,13 @@ export function createConversationSessionService(db: Db) {
 
   async function listSessionMessages(channelId: string, sessionId: string, limit: number) {
     const safeLimit = Math.min(Math.max(limit, 1), 200);
-    return db
+    const rows = await db
       .select()
       .from(channelMessages)
       .where(and(eq(channelMessages.channelId, channelId), eq(channelMessages.sessionId, sessionId)))
-      .orderBy(asc(channelMessages.createdAt))
+      .orderBy(desc(channelMessages.createdAt))
       .limit(safeLimit);
+    return [...rows].reverse();
   }
 
   return {

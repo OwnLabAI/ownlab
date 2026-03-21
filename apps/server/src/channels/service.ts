@@ -330,10 +330,10 @@ export function createChannelService(db: Db) {
       .select()
       .from(channelMessages)
       .where(whereClause)
-      .orderBy(asc(channelMessages.createdAt))
+      .orderBy(desc(channelMessages.createdAt))
       .limit(safeLimit);
 
-    return hydrateMessages(rows);
+    return hydrateMessages([...rows].reverse());
   }
 
   function getActorSnapshot(message: StoredChannelMessage) {

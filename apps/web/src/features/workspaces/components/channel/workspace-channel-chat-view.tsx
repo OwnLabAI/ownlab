@@ -48,6 +48,7 @@ import {
 } from '@/lib/api';
 import { PaperclipIcon } from 'lucide-react';
 import { useChannelRun } from '@/features/channels/stores/use-channel-run-store';
+import { PromptInputDraftProvider } from '@/features/channels/components/prompt-input-draft-provider';
 import { MessageCopyButton } from '@/features/channels/components/message-copy-button';
 
 interface WorkspaceChannelChatViewProps {
@@ -83,6 +84,7 @@ export function WorkspaceChannelChatView({
   appearance = 'default',
 }: WorkspaceChannelChatViewProps) {
   const runKey = sessionId ? `${channel.id}:${sessionId}` : channel.id;
+  const draftKey = sessionId ? `workspace:${channel.id}:${sessionId}` : `workspace:${channel.id}`;
   const [messages, setMessages] = useState<ChannelMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const [sendError, setSendError] = useState<string | null>(null);
@@ -587,37 +589,39 @@ export function WorkspaceChannelChatView({
             </div>
           ) : null}
 
-          <PromptInput
-            onSubmit={handleSubmit}
-            globalDrop
-            clearOnSubmitStart
-            className={cn(
-              'max-w-3xl',
-              appearance === 'floating' && [
-                '[&_[data-slot=input-group]]:border-border/40',
-                '[&_[data-slot=input-group]]:bg-background/60',
-                '[&_[data-slot=input-group]]:shadow-sm',
-                '[&_[data-slot=input-group]]:backdrop-blur-md',
-              ],
-            )}
-            multiple
-            maxFiles={8}
-          >
-            <ComposerAttachments />
-            <PromptInputTextarea
-              placeholder={placeholder ?? ''}
-              onChange={(event) => updateMentionDraft(event.currentTarget)}
-              onClick={(event) => updateMentionDraft(event.currentTarget)}
-              onKeyUp={(event) => updateMentionDraft(event.currentTarget)}
-              onSelect={(event) => updateMentionDraft(event.currentTarget)}
-              onFocus={(event) => updateMentionDraft(event.currentTarget)}
-              onKeyDown={handleTextareaKeyDown}
-            />
-            <PromptInputFooter>
-              <ComposerAttachmentButton />
-              <PromptInputSubmit status={runActive ? 'streaming' : 'ready'} onStop={handleStop} />
-            </PromptInputFooter>
-          </PromptInput>
+          <PromptInputDraftProvider draftKey={draftKey}>
+            <PromptInput
+              onSubmit={handleSubmit}
+              globalDrop
+              clearOnSubmitStart
+              className={cn(
+                'max-w-3xl',
+                appearance === 'floating' && [
+                  '[&_[data-slot=input-group]]:border-border/40',
+                  '[&_[data-slot=input-group]]:bg-background/60',
+                  '[&_[data-slot=input-group]]:shadow-sm',
+                  '[&_[data-slot=input-group]]:backdrop-blur-md',
+                ],
+              )}
+              multiple
+              maxFiles={8}
+            >
+              <ComposerAttachments />
+              <PromptInputTextarea
+                placeholder={placeholder ?? ''}
+                onChange={(event) => updateMentionDraft(event.currentTarget)}
+                onClick={(event) => updateMentionDraft(event.currentTarget)}
+                onKeyUp={(event) => updateMentionDraft(event.currentTarget)}
+                onSelect={(event) => updateMentionDraft(event.currentTarget)}
+                onFocus={(event) => updateMentionDraft(event.currentTarget)}
+                onKeyDown={handleTextareaKeyDown}
+              />
+              <PromptInputFooter>
+                <ComposerAttachmentButton />
+                <PromptInputSubmit status={runActive ? 'streaming' : 'ready'} onStop={handleStop} />
+              </PromptInputFooter>
+            </PromptInput>
+          </PromptInputDraftProvider>
         </div>
       </div>
     </div>
@@ -677,8 +681,8 @@ function ChannelMessageItem({
   appearance?: 'default' | 'floating';
 }) {
   const isAssistant = message.actorType === 'agent';
-
   const hasContent = message.content.trim().length > 0;
+
   return (
     <Message from={isAssistant ? 'assistant' : 'user'}>
       <div
@@ -704,13 +708,13 @@ function ChannelMessageItem({
             <span className={cn('tabular-nums', !isAssistant && 'text-right')}>
               {formatTimestamp(message.createdAt)}
             </span>
-          </div>
-
             {hasContent ? (
               <MessageActions className={cn(!isAssistant && 'justify-end')}>
                 <MessageCopyButton content={message.content} align={isAssistant ? 'left' : 'right'} />
               </MessageActions>
             ) : null}
+          </div>
+
           <MessageContent
             className={cn(
               appearance === 'floating' &&
