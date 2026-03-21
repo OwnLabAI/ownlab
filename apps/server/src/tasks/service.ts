@@ -47,7 +47,37 @@ function inferTaskMode(input: {
   return "auto";
 }
 
+function computeNextRunAt(input: {
+  scheduleEnabled: boolean;
+  scheduleType: string;
+  intervalSec: number | null;
+  shouldActivate: boolean;
+}) {
+  if (!input.shouldActivate) {
+    return null;
+  }
+
+  if (
+    input.scheduleEnabled &&
+    input.scheduleType === "interval" &&
+    typeof input.intervalSec === "number" &&
+    input.intervalSec > 0
+  ) {
+    return new Date(Date.now() + input.intervalSec * 1000);
+  }
+
+  return null;
+}
+
 export function createTaskService(db: Db) {
+  async function listTasks() {
+    return db
+      .select()
+      .from(tasks)
+      .where(isNull(tasks.parentId))
+      .orderBy(desc(tasks.createdAt));
+  }
+
   async function resolveDelegation(input: {
     assigneeAgentId?: string | null;
     assigneeTeamId?: string | null;
@@ -196,10 +226,13 @@ export function createTaskService(db: Db) {
     const scheduleType = scheduleEnabled ? (input.scheduleType ?? "interval") : "manual";
     const intervalSec = scheduleEnabled ? (input.intervalSec ?? 1800) : null;
     const delegation = await resolveDelegation(input);
-    const nextRunAt =
-      scheduleEnabled && scheduleType === "interval" && intervalSec
-        ? new Date(Date.now() + intervalSec * 1000)
-        : null;
+    const nextRunAt = computeNextRunAt({
+      scheduleEnabled,
+      scheduleType,
+      intervalSec,
+      // A brand-new task should not enter the scheduler until the user explicitly runs it once.
+      shouldActivate: false,
+    });
 
     const [task] = await db
       .insert(tasks)
@@ -275,15 +308,19 @@ export function createTaskService(db: Db) {
         ? (patch.scheduleType ?? existing.scheduleType ?? "interval")
         : "manual";
       const intervalSec = scheduleEnabled ? (patch.intervalSec ?? existing.intervalSec ?? 1800) : null;
+      const nextRunAt = computeNextRunAt({
+        scheduleEnabled,
+        scheduleType,
+        intervalSec,
+        // Editing schedule settings should not start a task that has never been run.
+        shouldActivate: existing.lastRunAt !== null,
+      });
 
       updates.type = mode;
       updates.scheduleEnabled = scheduleEnabled;
       updates.scheduleType = scheduleType;
       updates.intervalSec = intervalSec;
-      updates.nextRunAt =
-        scheduleEnabled && scheduleType === "interval" && intervalSec
-          ? new Date(Date.now() + intervalSec * 1000)
-          : null;
+      updates.nextRunAt = nextRunAt;
       updates.metadata = {
         ...(existing.metadata ?? {}),
         mode,
@@ -375,6 +412,7 @@ export function createTaskService(db: Db) {
   }
 
   return {
+    listTasks,
     listTasksByBoard,
     getTaskById,
     getTaskDetail,
