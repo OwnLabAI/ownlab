@@ -110,12 +110,82 @@ type TeamTreeNode = {
 function OrgChartNode({
   node,
   memberNameById,
+  depth = 0,
 }: {
   node: TeamTreeNode;
   memberNameById: Map<string, string>;
+  depth?: number;
 }) {
   const reportsToName = node.member.reportsTo ? memberNameById.get(node.member.reportsTo) ?? null : null;
   const hasChildren = node.children.length > 0;
+  const useCompactSplitLayout = depth === 0;
+
+  if (useCompactSplitLayout) {
+    return (
+      <>
+        <div className="flex items-center justify-center md:hidden">
+          <div className="flex items-center gap-6">
+            <TeamNodeCard
+              member={node.member}
+              emphasis={node.member.teamRole === 'leader' ? 'leader' : 'worker'}
+              reportsToName={reportsToName}
+            />
+
+            {hasChildren ? (
+              <div className="relative flex flex-col gap-4">
+                <div className="absolute -left-6 top-1/2 h-px w-6 -translate-y-1/2 bg-border" aria-hidden="true" />
+                <div className="absolute -left-6 top-0 bottom-0 w-px bg-border" aria-hidden="true" />
+                {node.children.map((child) => (
+                  <div key={child.member.agentId} className="relative">
+                    <div
+                      className="absolute -left-6 top-1/2 h-px w-6 -translate-y-1/2 bg-border"
+                      aria-hidden="true"
+                    />
+                    <OrgChartNode node={child} memberNameById={memberNameById} depth={depth + 1} />
+                  </div>
+                ))}
+              </div>
+            ) : null}
+          </div>
+        </div>
+
+        <div className="hidden md:flex md:flex-col md:items-center">
+          <TeamNodeCard
+            member={node.member}
+            emphasis={node.member.teamRole === 'leader' ? 'leader' : 'worker'}
+            reportsToName={reportsToName}
+          />
+
+          {hasChildren ? (
+            <ul className="relative mt-6 flex justify-center pt-8">
+              <li className="absolute left-1/2 top-0 h-8 w-px -translate-x-1/2 bg-border" aria-hidden="true" />
+              {node.children.map((child, index) => {
+                const isOnlyChild = node.children.length === 1;
+                const isFirst = index === 0;
+                const isLast = index === node.children.length - 1;
+
+                return (
+                  <li
+                    key={child.member.agentId}
+                    className={cn(
+                      'relative flex flex-col items-center px-3 pt-8',
+                      'after:absolute after:left-1/2 after:top-0 after:h-8 after:w-px after:-translate-x-1/2 after:bg-border',
+                      !isOnlyChild &&
+                        'before:absolute before:top-0 before:h-px before:bg-border before:left-0 before:w-full',
+                      !isOnlyChild && isFirst && 'before:left-1/2 before:w-1/2',
+                      !isOnlyChild && isLast && 'before:w-1/2',
+                    )}
+                  >
+                    <OrgChartNode node={child} memberNameById={memberNameById} depth={depth + 1} />
+                  </li>
+                );
+              })}
+            </ul>
+          ) : null}
+        </div>
+      </>
+    );
+  }
 
   return (
     <div className="flex flex-col items-center">
@@ -127,28 +197,28 @@ function OrgChartNode({
 
       {hasChildren ? (
         <ul className="relative mt-6 flex justify-center pt-8">
-          <li className="absolute left-1/2 top-0 h-8 w-px -translate-x-1/2 bg-border" aria-hidden="true" />
-          {node.children.map((child, index) => {
-            const isOnlyChild = node.children.length === 1;
-            const isFirst = index === 0;
-            const isLast = index === node.children.length - 1;
+            <li className="absolute left-1/2 top-0 h-8 w-px -translate-x-1/2 bg-border" aria-hidden="true" />
+            {node.children.map((child, index) => {
+              const isOnlyChild = node.children.length === 1;
+              const isFirst = index === 0;
+              const isLast = index === node.children.length - 1;
 
-            return (
-              <li
-                key={child.member.agentId}
-                className={cn(
-                  'relative flex flex-col items-center px-3 pt-8',
-                  'after:absolute after:left-1/2 after:top-0 after:h-8 after:w-px after:-translate-x-1/2 after:bg-border',
-                  !isOnlyChild &&
-                    'before:absolute before:top-0 before:h-px before:bg-border before:left-0 before:w-full',
-                  !isOnlyChild && isFirst && 'before:left-1/2 before:w-1/2',
-                  !isOnlyChild && isLast && 'before:w-1/2',
-                )}
-              >
-                <OrgChartNode node={child} memberNameById={memberNameById} />
-              </li>
-            );
-          })}
+              return (
+                <li
+                  key={child.member.agentId}
+                  className={cn(
+                    'relative flex flex-col items-center px-3 pt-8',
+                    'after:absolute after:left-1/2 after:top-0 after:h-8 after:w-px after:-translate-x-1/2 after:bg-border',
+                    !isOnlyChild &&
+                      'before:absolute before:top-0 before:h-px before:bg-border before:left-0 before:w-full',
+                    !isOnlyChild && isFirst && 'before:left-1/2 before:w-1/2',
+                    !isOnlyChild && isLast && 'before:w-1/2',
+                  )}
+                >
+                  <OrgChartNode node={child} memberNameById={memberNameById} depth={depth + 1} />
+                </li>
+              );
+            })}
         </ul>
       ) : null}
     </div>
@@ -165,7 +235,7 @@ function TeamNodeCard({
   reportsToName: string | null;
 }) {
   return (
-    <Card className="w-[320px] max-w-full border bg-card/95 shadow-sm">
+    <Card className="w-[240px] max-w-full border bg-card/95 shadow-sm sm:w-[320px]">
       <CardHeader>
         <div className="flex items-start gap-3">
           <Avatar size="lg">
