@@ -23,3 +23,18 @@ export interface AgentSkillAssignment {
   updatedAt: string;
   skill: Skill;
 }
+
+export interface AgentRuntimeSkillEntry {
+  name: string;
+  path: string;
+  targetPath: string | null;
+  isSymlink: boolean;
+}
+
+export interface AgentRuntimeSkills {
+  agentId: string;
+  adapterType: string;
+  rootPath: string | null;
+  supported: boolean;
+  entries: AgentRuntimeSkillEntry[];
+}

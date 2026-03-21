@@ -1,9 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { EntityIcon } from '@/components/entity-icon';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { SidebarTrigger } from '@/components/ui/sidebar';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Dialog,
   DialogContent,
@@ -12,7 +15,8 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
-import { PenSquare, Settings2, Trash2 } from 'lucide-react';
+import { fetchAgentRuntimeSkills, type AgentRuntimeSkillsRecord } from '@/lib/api';
+import { BrainCircuit, Download, Loader2, PenSquare, Settings2, Trash2 } from 'lucide-react';
 import { ThreadList } from './thread-list';
 import type { ThreadItem } from './thread-list';
 
@@ -59,6 +63,46 @@ export function AgentHeader({
   deleteError = null,
 }: Props) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [skillsDialogOpen, setSkillsDialogOpen] = useState(false);
+  const [runtimeSkills, setRuntimeSkills] = useState<AgentRuntimeSkillsRecord | null>(null);
+  const [skillsLoading, setSkillsLoading] = useState(false);
+  const [skillsError, setSkillsError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!skillsDialogOpen) {
+      return;
+    }
+
+    let cancelled = false;
+
+    async function loadRuntimeSkills() {
+      setSkillsLoading(true);
+      setSkillsError(null);
+      try {
+        const result = await fetchAgentRuntimeSkills(agent.id);
+        if (!cancelled) {
+          setRuntimeSkills(result);
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setRuntimeSkills(null);
+          setSkillsError(
+            error instanceof Error ? error.message : 'Failed to load agent runtime skills',
+          );
+        }
+      } finally {
+        if (!cancelled) {
+          setSkillsLoading(false);
+        }
+      }
+    }
+
+    void loadRuntimeSkills();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [agent.id, skillsDialogOpen]);
 
   return (
     <>
@@ -83,6 +127,15 @@ export function AgentHeader({
           </div>
         </div>
         <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="gap-1.5 text-xs"
+            onClick={() => setSkillsDialogOpen(true)}
+          >
+            <BrainCircuit className="size-3.5" />
+            Skills
+          </Button>
           <Button variant="ghost" size="sm" className="gap-1.5 text-xs" onClick={onOpenConfig}>
             <Settings2 className="size-3.5" />
             Config
@@ -138,6 +191,65 @@ export function AgentHeader({
               {deletingAgent ? 'Removing...' : 'Remove'}
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={skillsDialogOpen} onOpenChange={setSkillsDialogOpen}>
+        <DialogContent className="flex max-h-[80vh] flex-col overflow-hidden p-0 sm:max-w-2xl">
+          <DialogHeader className="shrink-0 px-6 pt-6 pb-3">
+            <DialogTitle className="text-xl">Agent Skills</DialogTitle>
+            <DialogDescription>
+              Skills currently installed for this agent.
+            </DialogDescription>
+          </DialogHeader>
+
+          <ScrollArea className="min-h-0 flex-1 px-6 py-4">
+            {skillsLoading ? (
+              <div className="flex min-h-40 items-center justify-center">
+                <Loader2 className="size-5 animate-spin text-muted-foreground" />
+              </div>
+            ) : skillsError ? (
+              <div className="rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+                {skillsError}
+              </div>
+            ) : !runtimeSkills?.supported ? (
+              <div className="rounded-xl border border-border/70 bg-muted/20 px-4 py-3 text-sm text-muted-foreground">
+                The `{agent.adapterType}` adapter does not support runtime skills.
+              </div>
+            ) : (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Installed Skills</CardTitle>
+                  <CardDescription>
+                    {runtimeSkills.entries.length > 0
+                      ? `${runtimeSkills.entries.length} skill${runtimeSkills.entries.length === 1 ? '' : 's'} available.`
+                      : 'No skills installed for this agent yet.'}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {runtimeSkills.entries.length === 0 ? (
+                    <Button asChild variant="outline" size="sm" className="gap-2">
+                      <Link href="/lab/skills" onClick={() => setSkillsDialogOpen(false)}>
+                        <Download className="size-4" />
+                        Browse Skills
+                      </Link>
+                    </Button>
+                  ) : (
+                    <div className="flex flex-wrap gap-2">
+                      {runtimeSkills.entries.map((entry) => (
+                        <div
+                          key={entry.name}
+                          className="rounded-lg border bg-muted/30 px-3 py-2 text-sm font-medium text-foreground"
+                        >
+                          {entry.name}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+          </ScrollArea>
         </DialogContent>
       </Dialog>
     </>

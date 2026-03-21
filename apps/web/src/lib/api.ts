@@ -250,6 +250,21 @@ export interface AgentSkillAssignmentRecord {
   skill: SkillRecord;
 }
 
+export interface AgentRuntimeSkillEntryRecord {
+  name: string;
+  path: string;
+  targetPath: string | null;
+  isSymlink: boolean;
+}
+
+export interface AgentRuntimeSkillsRecord {
+  agentId: string;
+  adapterType: string;
+  rootPath: string | null;
+  supported: boolean;
+  entries: AgentRuntimeSkillEntryRecord[];
+}
+
 export async function fetchAgencyTemplates(): Promise<AgencyTemplateSummary[]> {
   const res = await fetch(`${API_BASE}/agents/agencies`);
   if (!res.ok) throw new Error('Failed to fetch agency templates');
@@ -302,6 +317,15 @@ export async function importSkill(data: {
 export async function fetchAgentSkills(agentId: string): Promise<AgentSkillAssignmentRecord[]> {
   const res = await fetch(`${API_BASE}/skills/agents/${encodeURIComponent(agentId)}`);
   if (!res.ok) throw new Error('Failed to fetch agent skills');
+  return res.json();
+}
+
+export async function fetchAgentRuntimeSkills(agentId: string): Promise<AgentRuntimeSkillsRecord> {
+  const res = await fetch(`${API_BASE}/skills/agents/${encodeURIComponent(agentId)}/runtime`);
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: 'Failed to fetch agent runtime skills' }));
+    throw new Error(err.error || 'Failed to fetch agent runtime skills');
+  }
   return res.json();
 }
 

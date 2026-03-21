@@ -2,6 +2,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import type { Db } from "@ownlab/db";
+import type { AgentRuntimeSkills } from "@ownlab/shared";
 import {
   agentSkills,
   agents,
@@ -350,6 +351,60 @@ export function createSkillService(db: Db) {
     };
   }
 
+  async function listAgentRuntimeSkills(agentId: string): Promise<AgentRuntimeSkills> {
+    const [agent] = await db.select().from(agents).where(eq(agents.id, agentId)).limit(1);
+    if (!agent) {
+      throw new Error("Agent not found");
+    }
+
+    const adapterType = agent.adapterType?.trim() ?? "";
+    const rootPath =
+      adapterType === "codex_local"
+        ? path.join(resolveAgentCodexHomeDir(agentId, agent.runtimeConfig), "skills")
+        : adapterType === "claude_local"
+          ? path.join(resolveAgentClaudeContainerDir(agentId, agent.runtimeConfig), "skills")
+          : null;
+
+    if (!rootPath) {
+      return {
+        agentId,
+        adapterType,
+        rootPath: null,
+        supported: false,
+        entries: [],
+      };
+    }
+
+    const dirEntries = await fs.readdir(rootPath, { withFileTypes: true }).catch(() => []);
+    const entries = await Promise.all(
+      dirEntries
+        .filter((entry) => entry.isDirectory() || entry.isSymbolicLink())
+        .sort((a, b) => a.name.localeCompare(b.name))
+        .map(async (entry) => {
+          const fullPath = path.join(rootPath, entry.name);
+          const linkTarget = entry.isSymbolicLink()
+            ? await fs.readlink(fullPath).catch(() => null)
+            : null;
+
+          return {
+            name: entry.name,
+            path: fullPath,
+            targetPath: linkTarget ? path.resolve(path.dirname(fullPath), linkTarget) : null,
+            isSymlink: entry.isSymbolicLink(),
+          };
+        }),
+    );
+    const visibleEntries = entries.filter((entry) => !entry.name.startsWith("."));
+
+    return {
+      agentId,
+      adapterType,
+      rootPath,
+      supported: true,
+      entries: visibleEntries,
+    };
+  }
+
   return {
     listSkills,
     getSkillDetail,
@@ -358,6 +413,7 @@ export function createSkillService(db: Db) {
     setAgentSkills,
     syncAgentRuntimeSkills,
     listEffectiveSkillsForChannelAgent,
+    listAgentRuntimeSkills,
   };
 }
 

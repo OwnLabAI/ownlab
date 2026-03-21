@@ -49,6 +49,21 @@ export function skillRoutes(db: Db): RouterType {
     }
   });
 
+  router.get("/agents/:agentId/runtime", async (req, res) => {
+    try {
+      const rows = await service.listAgentRuntimeSkills(req.params.agentId);
+      res.json(rows);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to list agent runtime skills";
+      console.error("Failed to list agent runtime skills:", error);
+      if (message === "Agent not found") {
+        res.status(404).json({ error: message });
+        return;
+      }
+      res.status(500).json({ error: message });
+    }
+  });
+
   router.put("/agents/:agentId", async (req, res) => {
     try {
       const { assignments } = req.body as {

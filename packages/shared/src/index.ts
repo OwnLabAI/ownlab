@@ -29,6 +29,8 @@ export type {
   SendChatInput,
   Skill,
   AgentSkillAssignment,
+  AgentRuntimeSkillEntry,
+  AgentRuntimeSkills,
   ChannelAttachment,
   ChannelAttachmentTextExtractionKind,
   ChannelMention,
