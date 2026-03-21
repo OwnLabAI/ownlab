@@ -167,6 +167,7 @@ export function createAgentService(db: Db) {
 
     await initializeAgentRuntimeFilesystem({
       agentId: created.id,
+      adapterType: created.adapterType,
       runtimeConfig: created.runtimeConfig,
     });
 

@@ -35,6 +35,7 @@ export async function resolveAgentExecutionRuntimeContext(
 
   await initializeAgentRuntimeFilesystem({
     agentId: agent.id,
+    adapterType: agent.adapterType,
     runtimeConfig: agent.runtimeConfig,
   });
 

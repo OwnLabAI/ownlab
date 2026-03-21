@@ -381,12 +381,14 @@ export function createTeamService(db: Db) {
 
     await initializeAgentRuntimeFilesystem({
       agentId: created.leader.id,
+      adapterType: created.leader.adapterType,
       runtimeConfig: created.leader.runtimeConfig,
     });
     await Promise.all(
       created.workers.map((worker) =>
         initializeAgentRuntimeFilesystem({
           agentId: worker.id,
+          adapterType: worker.adapterType,
           runtimeConfig: worker.runtimeConfig,
         })
       ),

@@ -1,6 +1,7 @@
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
+import type { AdapterType } from "@ownlab/shared";
 import {
   resolveAgentClaudeContainerDir,
   resolveAgentCodexHomeDir,
@@ -14,6 +15,14 @@ const CODEX_SYMLINKED_SHARED_FILES = ["auth.json"] as const;
 const CLAUDE_COPIED_SHARED_FILES = ["settings.json"] as const;
 
 type RuntimeConfigRecord = Record<string, unknown>;
+
+function shouldInitializeCodexHome(adapterType: string | null | undefined): boolean {
+  return adapterType === "codex_local";
+}
+
+function shouldInitializeClaudeHome(adapterType: string | null | undefined): boolean {
+  return adapterType === "claude_local";
+}
 
 function resolveCodexHomeDir(env: NodeJS.ProcessEnv = process.env): string {
   const fromEnv = typeof env.CODEX_HOME === "string" && env.CODEX_HOME.trim().length > 0
@@ -137,6 +146,7 @@ async function migrateLegacyWorkspaceArtifacts(
 
 export async function initializeAgentRuntimeFilesystem(input: {
   agentId: string;
+  adapterType?: AdapterType | string | null;
   runtimeConfig?: RuntimeConfigRecord | null;
 }): Promise<void> {
   const runtimeConfig = input.runtimeConfig ?? null;
@@ -150,14 +160,20 @@ export async function initializeAgentRuntimeFilesystem(input: {
 
   await fs.mkdir(runtimeRoot, { recursive: true });
   await fs.mkdir(agentHome, { recursive: true });
-  await fs.mkdir(path.join(codexHome, "skills"), { recursive: true });
-  await fs.mkdir(path.join(claudeHome, "skills"), { recursive: true });
   await migrateLegacyWorkspaceArtifacts(runtimeRoot, agentHome);
 
-  const globalCodexHome = resolveCodexHomeDir(process.env);
-  await seedRuntimeHome(codexHome, globalCodexHome, CODEX_SYMLINKED_SHARED_FILES, "symlink");
-  await seedRuntimeHome(codexHome, globalCodexHome, CODEX_COPIED_SHARED_FILES, "copy");
+  if (shouldInitializeCodexHome(input.adapterType)) {
+    await fs.mkdir(path.join(codexHome, "skills"), { recursive: true });
 
-  const globalClaudeHome = resolveClaudeConfigDir(process.env);
-  await seedRuntimeHome(claudeHome, globalClaudeHome, CLAUDE_COPIED_SHARED_FILES, "copy");
+    const globalCodexHome = resolveCodexHomeDir(process.env);
+    await seedRuntimeHome(codexHome, globalCodexHome, CODEX_SYMLINKED_SHARED_FILES, "symlink");
+    await seedRuntimeHome(codexHome, globalCodexHome, CODEX_COPIED_SHARED_FILES, "copy");
+  }
+
+  if (shouldInitializeClaudeHome(input.adapterType)) {
+    await fs.mkdir(path.join(claudeHome, "skills"), { recursive: true });
+
+    const globalClaudeHome = resolveClaudeConfigDir(process.env);
+    await seedRuntimeHome(claudeHome, globalClaudeHome, CLAUDE_COPIED_SHARED_FILES, "copy");
+  }
 }
