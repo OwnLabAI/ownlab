@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { EntityIcon } from '@/components/entity-icon';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
@@ -217,16 +216,16 @@ export function AgentHeader({
                 The `{agent.adapterType}` adapter does not support runtime skills.
               </div>
             ) : (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Installed Skills</CardTitle>
-                  <CardDescription>
+              <section className="space-y-4">
+                <div className="space-y-1">
+                  <h3 className="text-sm font-semibold text-foreground">Installed Skills</h3>
+                  <p className="text-sm text-muted-foreground">
                     {runtimeSkills.entries.length > 0
                       ? `${runtimeSkills.entries.length} skill${runtimeSkills.entries.length === 1 ? '' : 's'} available.`
                       : 'No skills installed for this agent yet.'}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-3">
+                  </p>
+                </div>
+                <div className="space-y-3">
                   {runtimeSkills.entries.length === 0 ? (
                     <Button asChild variant="outline" size="sm" className="gap-2">
                       <Link href="/lab/skills" onClick={() => setSkillsDialogOpen(false)}>
@@ -246,8 +245,8 @@ export function AgentHeader({
                       ))}
                     </div>
                   )}
-                </CardContent>
-              </Card>
+                </div>
+              </section>
             )}
           </ScrollArea>
         </DialogContent>

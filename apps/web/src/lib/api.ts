@@ -673,9 +673,11 @@ export interface ConversationSession {
   agentId: string;
   channelId: string;
   title: string | null;
-  codexSessionId: string | null;
-  codexSessionParams: Record<string, unknown> | null;
-  codexSessionDisplayId: string | null;
+  runtimeSessionId: string | null;
+  runtimeSessionParams: Record<string, unknown> | null;
+  runtimeSessionDisplayId: string | null;
+  transcriptPath: string | null;
+  transcriptStatus: 'pending' | 'active' | 'archived' | 'missing';
   startedAt: string;
   lastMessageAt: string | null;
   archivedAt: string | null;

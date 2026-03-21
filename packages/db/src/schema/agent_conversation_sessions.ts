@@ -9,9 +9,13 @@ export const agentConversationSessions = pgTable(
     agentId: uuid("agent_id").notNull().references(() => agents.id, { onDelete: "cascade" }),
     channelId: uuid("channel_id").notNull().references(() => channels.id, { onDelete: "cascade" }),
     title: text("title"),
-    codexSessionId: text("codex_session_id"),
-    codexSessionParams: jsonb("codex_session_params").$type<Record<string, unknown> | null>(),
-    codexSessionDisplayId: text("codex_session_display_id"),
+    runtimeSessionId: text("runtime_session_id"),
+    runtimeSessionParams: jsonb("runtime_session_params").$type<Record<string, unknown> | null>(),
+    runtimeSessionDisplayId: text("runtime_session_display_id"),
+    transcriptPath: text("transcript_path"),
+    transcriptStatus: text("transcript_status").notNull().default("pending").$type<
+      "pending" | "active" | "archived" | "missing"
+    >(),
     startedAt: timestamp("started_at", { withTimezone: true }).notNull().defaultNow(),
     lastMessageAt: timestamp("last_message_at", { withTimezone: true }),
     archivedAt: timestamp("archived_at", { withTimezone: true }),

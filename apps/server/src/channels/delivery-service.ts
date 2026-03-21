@@ -78,9 +78,11 @@ export interface ExecuteAgentDeliveriesInput {
   }>;
   conversationSession?: {
     id: string;
-    codexSessionId: string | null;
-    codexSessionParams: Record<string, unknown> | null;
-    codexSessionDisplayId: string | null;
+    runtimeSessionId: string | null;
+    runtimeSessionParams: Record<string, unknown> | null;
+    runtimeSessionDisplayId: string | null;
+    transcriptPath: string | null;
+    transcriptStatus: "pending" | "active" | "archived" | "missing";
     title: string | null;
   } | null;
   history: StoredChannelMessage[];
@@ -320,11 +322,15 @@ export function createChannelDeliveryService(db: Db) {
         continue;
       }
 
-      const runtimeState = asRecord(participant.runtimeState);
       const conversationSession = input.conversationSession ?? null;
+      const runtimeState = asRecord(participant.runtimeState);
+      const useConversationRuntime = Boolean(conversationSession?.id);
+      const rawRuntimeParams = useConversationRuntime
+        ? conversationSession?.runtimeSessionParams ?? null
+        : conversationSession?.runtimeSessionParams ?? runtimeState?.sessionParams ?? null;
       const restoredSessionParams = adapter.sessionCodec?.deserialize(
-        conversationSession?.codexSessionParams ?? runtimeState?.sessionParams ?? null,
-      ) ?? asRecord(conversationSession?.codexSessionParams ?? runtimeState?.sessionParams);
+        rawRuntimeParams,
+      ) ?? asRecord(rawRuntimeParams);
 
       const agencyProfile = await ensureAgencyProfileMaterialized(agent);
       const runtimeWorkspace = await resolveAgentExecutionRuntimeContext(
@@ -356,11 +362,15 @@ export function createChannelDeliveryService(db: Db) {
       };
 
       const runtime: AdapterRuntime = {
-        sessionId: asString(conversationSession?.codexSessionId) ?? asString(runtimeState?.sessionId),
+        sessionId: useConversationRuntime
+          ? asString(conversationSession?.runtimeSessionId)
+          : asString(conversationSession?.runtimeSessionId) ?? asString(runtimeState?.sessionId),
         sessionParams: restoredSessionParams,
         sessionDisplayId:
-          asString(conversationSession?.codexSessionDisplayId) ??
-          asString(runtimeState?.sessionDisplayId) ??
+          (useConversationRuntime
+            ? asString(conversationSession?.runtimeSessionDisplayId)
+            : asString(conversationSession?.runtimeSessionDisplayId) ??
+              asString(runtimeState?.sessionDisplayId)) ??
           adapter.sessionCodec?.getDisplayId?.(restoredSessionParams) ??
           null,
       };
@@ -459,7 +469,19 @@ export function createChannelDeliveryService(db: Db) {
 
       if (!interrupted && ((execution.exitCode ?? 0) !== 0 || execution.timedOut)) {
         if (execution.clearSession) {
-          await channelService.updateChannelMemberRuntimeState(input.channel.id, agent.id, null);
+          if (!useConversationRuntime) {
+            await channelService.updateChannelMemberRuntimeState(input.channel.id, agent.id, null);
+          }
+          if (conversationSession?.id) {
+            await conversationSessionService.updateSessionAfterMessage({
+              sessionId: conversationSession.id,
+              runtimeSessionId: null,
+              runtimeSessionParams: null,
+              runtimeSessionDisplayId: null,
+              transcriptPath: null,
+              transcriptStatus: "missing",
+            });
+          }
         }
         const message =
           execution.errorMessage ||
@@ -482,13 +504,16 @@ export function createChannelDeliveryService(db: Db) {
                 runtime.sessionDisplayId ??
                 null,
             };
-        await channelService.updateChannelMemberRuntimeState(input.channel.id, agent.id, nextRuntimeState);
+        if (!useConversationRuntime) {
+          await channelService.updateChannelMemberRuntimeState(input.channel.id, agent.id, nextRuntimeState);
+        }
         if (conversationSession?.id) {
           await conversationSessionService.updateSessionAfterMessage({
             sessionId: conversationSession.id,
-            codexSessionId: nextRuntimeState?.sessionId ?? null,
-            codexSessionParams: asRecord(nextRuntimeState?.sessionParams),
-            codexSessionDisplayId: nextRuntimeState?.sessionDisplayId ?? null,
+            runtimeSessionId: nextRuntimeState?.sessionId ?? null,
+            runtimeSessionParams: asRecord(nextRuntimeState?.sessionParams),
+            runtimeSessionDisplayId: nextRuntimeState?.sessionDisplayId ?? null,
+            transcriptStatus: nextRuntimeState ? "active" : "missing",
           });
         }
       }

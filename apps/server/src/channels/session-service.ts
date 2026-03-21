@@ -70,9 +70,11 @@ export function createConversationSessionService(db: Db) {
 
   async function updateSessionAfterMessage(input: {
     sessionId: string;
-    codexSessionId?: string | null;
-    codexSessionParams?: Record<string, unknown> | null;
-    codexSessionDisplayId?: string | null;
+    runtimeSessionId?: string | null;
+    runtimeSessionParams?: Record<string, unknown> | null;
+    runtimeSessionDisplayId?: string | null;
+    transcriptPath?: string | null;
+    transcriptStatus?: "pending" | "active" | "archived" | "missing";
     titleHint?: string | null;
   }) {
     const current = await getSessionById(input.sessionId);
@@ -83,12 +85,15 @@ export function createConversationSessionService(db: Db) {
     const [updated] = await db
       .update(agentConversationSessions)
       .set({
-        codexSessionId: input.codexSessionId === undefined ? current.codexSessionId : input.codexSessionId,
-        codexSessionParams: input.codexSessionParams === undefined ? current.codexSessionParams : input.codexSessionParams,
-        codexSessionDisplayId:
-          input.codexSessionDisplayId === undefined
-            ? current.codexSessionDisplayId
-            : input.codexSessionDisplayId,
+        runtimeSessionId: input.runtimeSessionId === undefined ? current.runtimeSessionId : input.runtimeSessionId,
+        runtimeSessionParams:
+          input.runtimeSessionParams === undefined ? current.runtimeSessionParams : input.runtimeSessionParams,
+        runtimeSessionDisplayId:
+          input.runtimeSessionDisplayId === undefined
+            ? current.runtimeSessionDisplayId
+            : input.runtimeSessionDisplayId,
+        transcriptPath: input.transcriptPath === undefined ? current.transcriptPath : input.transcriptPath,
+        transcriptStatus: input.transcriptStatus === undefined ? current.transcriptStatus : input.transcriptStatus,
         title: current.title ?? input.titleHint ?? null,
         lastMessageAt: new Date(),
         updatedAt: new Date(),
