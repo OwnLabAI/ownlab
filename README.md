@@ -1,4 +1,6 @@
-# OwnLab
+<p>
+  <img src="./apps/web/public/logo-name.svg" alt="OwnLab" width="180" />
+</p>
 
 [简体中文](./README_CN.md)
 
@@ -144,4 +146,3 @@ pnpm db:migrate
 - ⚪ Support auto mode in tasks, such as auto-research
 - ⚪ Automatically create tasks
 - ⚪ Better docs
-
