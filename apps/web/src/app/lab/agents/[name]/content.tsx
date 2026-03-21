@@ -129,18 +129,15 @@ export function AgentPageContent({ name }: Props) {
           configuredWorkspaceId.length > 0
             ? workspaces.find((workspace) => workspace.id === configuredWorkspaceId)
             : null;
-        const workspaceForLab =
-          configuredWorkspace ??
+        const dmWorkspaceId =
+          configuredWorkspace?.id ??
           (Array.isArray(workspaces) && workspaces.length > 0
-            ? workspaces.find((ws) => ws.labId === agentRef.labId) ?? workspaces[0]
-            : null);
-        if (!workspaceForLab) {
-          throw new Error('No workspace available for this agent');
-        }
+            ? (workspaces.find((ws) => ws.labId === agentRef.labId) ?? workspaces[0])?.id ?? agentRef.id
+            : agentRef.id);
 
         if (cancelled) return;
 
-        const ensuredChannel = await ensureAgentDmChannel(workspaceForLab.id, agentRef.id);
+        const ensuredChannel = await ensureAgentDmChannel(dmWorkspaceId, agentRef.id);
         if (cancelled) return;
         setChannel(ensuredChannel);
         const nextSessions = await loadSessions(ensuredChannel.id);
