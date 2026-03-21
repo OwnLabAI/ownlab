@@ -45,6 +45,7 @@ import { PaperclipIcon } from 'lucide-react';
 import { useChannelRun } from '@/features/channels/stores/use-channel-run-store';
 import { PromptInputDraftProvider } from '@/features/channels/components/prompt-input-draft-provider';
 import { MessageCopyButton } from '@/features/channels/components/message-copy-button';
+import { usePersistentChannelConversation } from '@/features/channels/hooks/use-persistent-channel-conversation';
 
 interface AgentChatViewProps {
   channel: Channel;
@@ -73,9 +74,8 @@ export function AgentChatView({
   onChannelActivity,
 }: AgentChatViewProps) {
   const runKey = sessionId ? `${channel.id}:${sessionId}` : channel.id;
+  const conversationKey = `agent-chat:${runKey}`;
   const draftKey = sessionId ? `agent:${channel.id}:${sessionId}` : `agent:${channel.id}`;
-  const [messages, setMessages] = useState<ChannelMessage[]>([]);
-  const [loading, setLoading] = useState(true);
   const [sendError, setSendError] = useState<string | null>(null);
   const [dragActive, setDragActive] = useState(false);
   const dragDepthRef = useRef(0);
@@ -84,40 +84,25 @@ export function AgentChatView({
   const {
     active: runActive,
     status: runStatus,
-    startedAt: runStartedAt,
     startRun,
     updateStatus,
     failRun,
     completeRun,
   } = runState;
-
-  useEffect(() => {
-    let cancelled = false;
-
-    async function load() {
-      setLoading(true);
-      try {
-        const data = await fetchChannelMessages(channel.id, sessionId);
-        if (!cancelled) {
-          setMessages(data);
-        }
-      } catch {
-        if (!cancelled) {
-          setMessages([]);
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      }
-    }
-
-    void load();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [channel.id, sessionId]);
+  const {
+    messages,
+    loading,
+    updateMessages,
+    refreshFromServer,
+  } = usePersistentChannelConversation({
+    conversationKey,
+    fetchMessages: useCallback(
+      () => fetchChannelMessages(channel.id, sessionId),
+      [channel.id, sessionId],
+    ),
+    runActive,
+    hasCompletedReply: hasCompletedAssistantReply,
+  });
 
   useEffect(() => {
     if (!runActive || !hasCompletedAssistantReply(messages)) {
@@ -136,11 +121,10 @@ export function AgentChatView({
 
     const refreshMessages = async () => {
       try {
-        const data = await fetchChannelMessages(channel.id, sessionId);
+        const data = await refreshFromServer();
         if (cancelled) {
           return;
         }
-        setMessages(data);
         if (hasCompletedAssistantReply(data)) {
           completeRun();
         }
@@ -159,7 +143,7 @@ export function AgentChatView({
       cancelled = true;
       window.clearInterval(intervalId);
     };
-  }, [channel.id, completeRun, runActive, sessionId]);
+  }, [completeRun, refreshFromServer, runActive]);
 
   useEffect(() => {
     function hasFiles(event: DragEvent) {
@@ -238,7 +222,7 @@ export function AgentChatView({
 
       setSendError(null);
       startRun('Thinking...');
-      setMessages((prev) => [...prev, optimisticUser]);
+      updateMessages((prev) => [...prev, optimisticUser], true);
 
       try {
         const controller = new AbortController();
@@ -255,37 +239,37 @@ export function AgentChatView({
           signal: controller.signal,
           onEvent(event: ChannelChatStreamEvent) {
             if (event.type === 'user_message') {
-              setMessages((prev) => [
+              updateMessages((prev) => [
                 ...prev.filter((message) => message.id !== optimisticUser.id),
                 event.message,
-              ]);
+              ], true);
               onChannelActivity?.();
               return;
             }
 
             if (event.type === 'assistant_message_start') {
               updateStatus('Thinking...');
-              setMessages((prev) => (
+              updateMessages((prev) => (
                 prev.some((message) => message.id === event.message.id)
                   ? prev
                   : [...prev, event.message]
-              ));
+              ), true);
               return;
             }
 
             if (event.type === 'assistant_message_content') {
               updateStatus('Thinking...');
-              setMessages((prev) => prev.map((message) => (
+              updateMessages((prev) => prev.map((message) => (
                 message.id === event.messageId
                   ? { ...message, content: event.content }
                   : message
-              )));
+              )), true);
               return;
             }
 
             if (event.type === 'assistant_message_complete') {
               completeRun();
-              setMessages((prev) => {
+              updateMessages((prev) => {
                 const hasTemporary = prev.some((message) => message.id === event.temporaryMessageId);
                 if (hasTemporary) {
                   return prev.map((message) => (
@@ -296,7 +280,7 @@ export function AgentChatView({
                 return prev.some((message) => message.id === event.message.id)
                   ? prev
                   : [...prev, event.message];
-              });
+              }, true);
               onChannelActivity?.();
               return;
             }
@@ -316,9 +300,9 @@ export function AgentChatView({
           return;
         }
 
-        setMessages((prev) => prev.filter((message) => (
+        updateMessages((prev) => prev.filter((message) => (
           message.id !== optimisticUser.id && !message.id.startsWith('stream-')
-        )));
+        )), true);
         const message = error instanceof Error ? error.message : 'Failed to send message';
         setSendError(message);
         failRun(message);
@@ -327,7 +311,17 @@ export function AgentChatView({
         streamAbortRef.current = null;
       }
     },
-    [channel.id, channel.workspaceId, completeRun, failRun, onChannelActivity, sessionId, startRun, updateStatus],
+    [
+      channel.id,
+      channel.workspaceId,
+      completeRun,
+      failRun,
+      onChannelActivity,
+      sessionId,
+      startRun,
+      updateMessages,
+      updateStatus,
+    ],
   );
 
   const handleStop = useCallback(async () => {
@@ -338,10 +332,10 @@ export function AgentChatView({
       streamAbortRef.current?.abort();
       completeRun();
       window.setTimeout(() => {
-        void fetchChannelMessages(channel.id, sessionId).then(setMessages).catch(() => {});
+        void refreshFromServer().catch(() => {});
       }, 250);
     }
-  }, [channel.id, completeRun, sessionId, updateStatus]);
+  }, [channel.id, completeRun, refreshFromServer, updateStatus]);
 
   const isEmpty = messages.length === 0 && !loading;
 

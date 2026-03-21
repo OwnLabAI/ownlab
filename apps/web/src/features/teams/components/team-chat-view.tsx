@@ -32,78 +32,22 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import * as api from '@/lib/api';
+import {
+  fetchChannelMessages,
+  stopChannelRun,
+  streamChannelChatMessageViaServer,
+  type Channel,
+  type ChannelAttachment,
+  type ChannelChatStreamEvent,
+  type ChannelMessage,
+} from '@/lib/api';
 import { PaperclipIcon } from 'lucide-react';
 import { useChannelRun } from '@/features/channels/stores/use-channel-run-store';
 import { MessageCopyButton } from '@/features/channels/components/message-copy-button';
 import { PromptInputDraftProvider } from '@/features/channels/components/prompt-input-draft-provider';
+import { usePersistentChannelConversation } from '@/features/channels/hooks/use-persistent-channel-conversation';
 
-type ChannelRecord = {
-  id: string;
-  workspaceId: string;
-  scopeType: string;
-  scopeRefId: string | null;
-  name: string;
-  title: string | null;
-  description: string | null;
-};
-
-type ChannelAttachmentRecord = {
-  type: 'file';
-  filename?: string;
-  mediaType?: string;
-  url?: string;
-  textContent?: string | null;
-  textExtractionKind?: string | null;
-};
-
-type ChannelMessageRecord = {
-  id: string;
-  channelId: string;
-  actorId: string;
-  actorType: string;
-  actorName: string | null;
-  actorIcon: string | null;
-  content: string;
-  metadata: Record<string, unknown> | null;
-  mentions: Array<{ actorId: string; actorType?: string | null; label?: string | null }>;
-  attachments: ChannelAttachmentRecord[];
-  createdAt: string;
-};
-
-type ChannelChatStreamEvent =
-  | { type: 'user_message'; message: ChannelMessageRecord }
-  | { type: 'assistant_message_start'; message: ChannelMessageRecord }
-  | { type: 'assistant_message_content'; messageId: string; content: string }
-  | { type: 'assistant_message_complete'; temporaryMessageId: string; message: ChannelMessageRecord }
-  | { type: 'status'; message: string }
-  | { type: 'error'; error: string };
-
-type TeamApi = {
-  fetchChannelMessages: (
-    channelId: string,
-    sessionId?: string | null,
-  ) => Promise<ChannelMessageRecord[]>;
-  stopChannelRun: (channelId: string) => Promise<unknown>;
-  streamChannelChatMessageViaServer: (
-    input: {
-      channelId: string;
-      workspaceId: string;
-      content: string;
-      actorId: string;
-      attachments?: ChannelAttachmentRecord[];
-      scopeType: 'team';
-    },
-    handlers: {
-      signal?: AbortSignal;
-      onEvent: (event: ChannelChatStreamEvent) => void;
-    },
-  ) => Promise<void>;
-};
-
-const teamApi = api as unknown as TeamApi;
-
-function hasCompletedAssistantReply(messages: ChannelMessageRecord[]) {
+function hasCompletedAssistantReply(messages: ChannelMessage[]) {
   if (messages.some((message) => message.id.startsWith('stream-'))) {
     return false;
   }
@@ -120,12 +64,11 @@ export function TeamChatView({
   channel,
   placeholder,
 }: {
-  channel: ChannelRecord;
+  channel: Channel;
   placeholder?: string;
 }) {
+  const conversationKey = `team-chat:${channel.id}`;
   const draftKey = `team:${channel.id}`;
-  const [messages, setMessages] = useState<ChannelMessageRecord[]>([]);
-  const [loading, setLoading] = useState(true);
   const [sendError, setSendError] = useState<string | null>(null);
   const [dragActive, setDragActive] = useState(false);
   const dragDepthRef = useRef(0);
@@ -139,33 +82,17 @@ export function TeamChatView({
     failRun,
     completeRun,
   } = runState;
-
-  useEffect(() => {
-    let cancelled = false;
-
-    async function load() {
-      setLoading(true);
-      try {
-        const data = await teamApi.fetchChannelMessages(channel.id);
-        if (!cancelled) {
-          setMessages(data);
-        }
-      } catch {
-        if (!cancelled) {
-          setMessages([]);
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      }
-    }
-
-    void load();
-    return () => {
-      cancelled = true;
-    };
-  }, [channel.id]);
+  const {
+    messages,
+    loading,
+    updateMessages,
+    refreshFromServer,
+  } = usePersistentChannelConversation({
+    conversationKey,
+    fetchMessages: useCallback(() => fetchChannelMessages(channel.id), [channel.id]),
+    runActive,
+    hasCompletedReply: hasCompletedAssistantReply,
+  });
 
   useEffect(() => {
     if (!runActive || !hasCompletedAssistantReply(messages)) {
@@ -184,11 +111,10 @@ export function TeamChatView({
 
     const refreshMessages = async () => {
       try {
-        const data = await teamApi.fetchChannelMessages(channel.id);
+        const data = await refreshFromServer();
         if (cancelled) {
           return;
         }
-        setMessages(data);
         if (hasCompletedAssistantReply(data)) {
           completeRun();
         }
@@ -206,7 +132,7 @@ export function TeamChatView({
       cancelled = true;
       window.clearInterval(intervalId);
     };
-  }, [channel.id, completeRun, runActive]);
+  }, [completeRun, refreshFromServer, runActive]);
 
   useEffect(() => {
     function hasFiles(event: DragEvent) {
@@ -260,7 +186,7 @@ export function TeamChatView({
   const handleSubmit = useCallback(
     async ({ text, files }: PromptInputMessage) => {
       const content = text.trim();
-      const attachments = files.map<ChannelAttachmentRecord>((file) => ({
+      const attachments = files.map<ChannelAttachment>((file) => ({
         type: 'file',
         filename: file.filename,
         mediaType: file.mediaType,
@@ -271,7 +197,7 @@ export function TeamChatView({
         return;
       }
 
-      const optimisticUser: ChannelMessageRecord = {
+      const optimisticUser: ChannelMessage = {
         id: `local-${Date.now()}`,
         channelId: channel.id,
         actorId: 'local-user',
@@ -287,13 +213,13 @@ export function TeamChatView({
 
       setSendError(null);
       startRun('Coordinating team...');
-      setMessages((prev) => [...prev, optimisticUser]);
+      updateMessages((prev) => [...prev, optimisticUser], true);
 
       try {
         const controller = new AbortController();
         streamAbortRef.current = controller;
 
-        await teamApi.streamChannelChatMessageViaServer(
+        await streamChannelChatMessageViaServer(
           {
             channelId: channel.id,
             workspaceId: channel.workspaceId,
@@ -306,38 +232,42 @@ export function TeamChatView({
             signal: controller.signal,
             onEvent(event) {
               if (event.type === 'user_message') {
-                setMessages((prev) => [
+                updateMessages((prev) => [
                   ...prev.filter((message) => message.id !== optimisticUser.id),
                   event.message,
-                ]);
+                ], true);
                 return;
               }
 
               if (event.type === 'assistant_message_start') {
                 updateStatus('Coordinating team...');
-                setMessages((prev) =>
+                updateMessages(
+                  (prev) =>
                   prev.some((message) => message.id === event.message.id)
                     ? prev
                     : [...prev, event.message],
+                  true,
                 );
                 return;
               }
 
               if (event.type === 'assistant_message_content') {
                 updateStatus('Coordinating team...');
-                setMessages((prev) =>
-                  prev.map((message) =>
-                    message.id === event.messageId
-                      ? { ...message, content: event.content }
-                      : message,
-                  ),
+                updateMessages(
+                  (prev) =>
+                    prev.map((message) =>
+                      message.id === event.messageId
+                        ? { ...message, content: event.content }
+                        : message,
+                    ),
+                  true,
                 );
                 return;
               }
 
               if (event.type === 'assistant_message_complete') {
                 completeRun();
-                setMessages((prev) => {
+                updateMessages((prev) => {
                   const hasTemporary = prev.some(
                     (message) => message.id === event.temporaryMessageId,
                   );
@@ -350,7 +280,7 @@ export function TeamChatView({
                   return prev.some((message) => message.id === event.message.id)
                     ? prev
                     : [...prev, event.message];
-                });
+                }, true);
                 return;
               }
 
@@ -370,10 +300,12 @@ export function TeamChatView({
           return;
         }
 
-        setMessages((prev) =>
-          prev.filter(
-            (message) => message.id !== optimisticUser.id && !message.id.startsWith('stream-'),
-          ),
+        updateMessages(
+          (prev) =>
+            prev.filter(
+              (message) => message.id !== optimisticUser.id && !message.id.startsWith('stream-'),
+            ),
+          true,
         );
         const message = error instanceof Error ? error.message : 'Failed to send message';
         setSendError(message);
@@ -383,21 +315,21 @@ export function TeamChatView({
         streamAbortRef.current = null;
       }
     },
-    [channel.id, channel.workspaceId, completeRun, failRun, startRun, updateStatus],
+    [channel.id, channel.workspaceId, completeRun, failRun, startRun, updateMessages, updateStatus],
   );
 
   const handleStop = useCallback(async () => {
     updateStatus('Stopping response...');
     try {
-      await teamApi.stopChannelRun(channel.id);
+      await stopChannelRun(channel.id);
     } finally {
       streamAbortRef.current?.abort();
       completeRun();
       window.setTimeout(() => {
-        void teamApi.fetchChannelMessages(channel.id).then(setMessages).catch(() => {});
+        void refreshFromServer().catch(() => {});
       }, 250);
     }
-  }, [channel.id, completeRun, updateStatus]);
+  }, [channel.id, completeRun, refreshFromServer, updateStatus]);
 
   const isEmpty = messages.length === 0 && !loading;
 
@@ -509,7 +441,7 @@ function TeamComposerAttachments() {
   );
 }
 
-function TeamMessageItem({ message }: { message: ChannelMessageRecord }) {
+function TeamMessageItem({ message }: { message: ChannelMessage }) {
   const isAssistant = message.actorType === 'agent';
   const hasContent = message.content.trim().length > 0;
 
@@ -558,7 +490,7 @@ function TeamMessageItem({ message }: { message: ChannelMessageRecord }) {
   );
 }
 
-function MessageAttachments({ attachments }: { attachments: ChannelAttachmentRecord[] }) {
+function MessageAttachments({ attachments }: { attachments: ChannelAttachment[] }) {
   return (
     <Attachments variant="list" className="mt-2 w-full max-w-xl">
       {attachments.map((attachment, index) => (

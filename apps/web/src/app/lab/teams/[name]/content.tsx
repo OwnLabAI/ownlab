@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import * as api from '@/lib/api';
-import type { TeamRecord } from '@/lib/api';
+import type { Channel, TeamRecord } from '@/lib/api';
 import { Loader2, Users2 } from 'lucide-react';
 import { TeamHeader } from '@/features/teams/components/team-header';
 import { TeamChat } from '@/features/teams/components/team-chat';
@@ -28,20 +28,10 @@ type TeamMemberRecord = {
   adapterType?: string | null;
 };
 
-type ChannelRecord = {
-  id: string;
-  workspaceId: string;
-  scopeType: string;
-  scopeRefId: string | null;
-  name: string;
-  title: string | null;
-  description: string | null;
-};
-
 type TeamApi = {
   fetchTeamByName: (name: string) => Promise<TeamRecord>;
   fetchTeamMembers: (teamId: string) => Promise<TeamMemberRecord[]>;
-  ensureTeamChannel: (workspaceId: string, teamId: string) => Promise<ChannelRecord>;
+  ensureTeamChannel: (workspaceId: string, teamId: string) => Promise<Channel>;
   deleteTeam: (teamId: string) => Promise<unknown>;
 };
 
@@ -55,7 +45,7 @@ export function TeamPageContent({ name }: Props) {
   const router = useRouter();
   const [team, setTeam] = useState<TeamRecord | null>(null);
   const [members, setMembers] = useState<TeamMemberRecord[]>([]);
-  const [channel, setChannel] = useState<ChannelRecord | null>(null);
+  const [channel, setChannel] = useState<Channel | null>(null);
   const [loading, setLoading] = useState(true);
   const [channelLoading, setChannelLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

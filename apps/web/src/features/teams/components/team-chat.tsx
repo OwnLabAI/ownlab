@@ -1,5 +1,6 @@
 'use client';
 
+import type { Channel } from '@/lib/api';
 import { TeamChatView } from './team-chat-view';
 
 type TeamRecord = {
@@ -7,22 +8,12 @@ type TeamRecord = {
   name: string;
 };
 
-type ChannelRecord = {
-  id: string;
-  workspaceId: string;
-  scopeType: string;
-  scopeRefId: string | null;
-  name: string;
-  title: string | null;
-  description: string | null;
-};
-
 export function TeamChat({
   team,
   channel,
 }: {
   team: TeamRecord;
-  channel: ChannelRecord;
+  channel: Channel;
 }) {
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden">

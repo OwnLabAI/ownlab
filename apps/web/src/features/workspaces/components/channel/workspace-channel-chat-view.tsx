@@ -50,6 +50,7 @@ import { PaperclipIcon } from 'lucide-react';
 import { useChannelRun } from '@/features/channels/stores/use-channel-run-store';
 import { PromptInputDraftProvider } from '@/features/channels/components/prompt-input-draft-provider';
 import { MessageCopyButton } from '@/features/channels/components/message-copy-button';
+import { usePersistentChannelConversation } from '@/features/channels/hooks/use-persistent-channel-conversation';
 
 interface WorkspaceChannelChatViewProps {
   channel: Channel;
@@ -84,9 +85,8 @@ export function WorkspaceChannelChatView({
   appearance = 'default',
 }: WorkspaceChannelChatViewProps) {
   const runKey = sessionId ? `${channel.id}:${sessionId}` : channel.id;
+  const conversationKey = `workspace-chat:${runKey}`;
   const draftKey = sessionId ? `workspace:${channel.id}:${sessionId}` : `workspace:${channel.id}`;
-  const [messages, setMessages] = useState<ChannelMessage[]>([]);
-  const [loading, setLoading] = useState(true);
   const [sendError, setSendError] = useState<string | null>(null);
   const [dragActive, setDragActive] = useState(false);
   const [workspaceAgents, setWorkspaceAgents] = useState<WorkspaceAgent[]>([]);
@@ -101,40 +101,25 @@ export function WorkspaceChannelChatView({
   const {
     active: runActive,
     status: runStatus,
-    startedAt: runStartedAt,
     startRun,
     updateStatus,
     failRun,
     completeRun,
   } = runState;
-
-  useEffect(() => {
-    let cancelled = false;
-
-    async function load() {
-      setLoading(true);
-      try {
-        const data = await fetchChannelMessages(channel.id, sessionId);
-        if (!cancelled) {
-          setMessages(data);
-        }
-      } catch {
-        if (!cancelled) {
-          setMessages([]);
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      }
-    }
-
-    void load();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [channel.id, sessionId]);
+  const {
+    messages,
+    loading,
+    updateMessages,
+    refreshFromServer,
+  } = usePersistentChannelConversation({
+    conversationKey,
+    fetchMessages: useCallback(
+      () => fetchChannelMessages(channel.id, sessionId),
+      [channel.id, sessionId],
+    ),
+    runActive,
+    hasCompletedReply: hasCompletedAssistantReply,
+  });
 
   useEffect(() => {
     let cancelled = false;
@@ -185,11 +170,10 @@ export function WorkspaceChannelChatView({
 
     const refreshMessages = async () => {
       try {
-        const data = await fetchChannelMessages(channel.id, sessionId);
+        const data = await refreshFromServer();
         if (cancelled) {
           return;
         }
-        setMessages(data);
         if (hasCompletedAssistantReply(data)) {
           completeRun();
         }
@@ -208,7 +192,7 @@ export function WorkspaceChannelChatView({
       cancelled = true;
       window.clearInterval(intervalId);
     };
-  }, [channel.id, completeRun, runActive, sessionId]);
+  }, [completeRun, refreshFromServer, runActive]);
 
   useEffect(() => {
     function hasFiles(event: DragEvent) {
@@ -292,7 +276,7 @@ export function WorkspaceChannelChatView({
       setMentionRange(null);
       setHighlightedMentionIndex(0);
       startRun('Thinking...');
-      setMessages((prev) => [...prev, optimisticUser]);
+      updateMessages((prev) => [...prev, optimisticUser], true);
 
       try {
         const controller = new AbortController();
@@ -310,38 +294,38 @@ export function WorkspaceChannelChatView({
           signal: controller.signal,
           onEvent(event: ChannelChatStreamEvent) {
             if (event.type === 'user_message') {
-              setMessages((prev) => [
+              updateMessages((prev) => [
                 ...prev.filter((message) => message.id !== optimisticUser.id),
                 event.message,
-              ]);
+              ], true);
               onChannelActivity?.();
               return;
             }
 
             if (event.type === 'assistant_message_start') {
               updateStatus('Thinking...');
-              setMessages((prev) => {
+              updateMessages((prev) => {
                 if (prev.some((message) => message.id === event.message.id)) {
                   return prev;
                 }
                 return [...prev, event.message];
-              });
+              }, true);
               return;
             }
 
             if (event.type === 'assistant_message_content') {
               updateStatus('Thinking...');
-              setMessages((prev) => prev.map((message) => (
+              updateMessages((prev) => prev.map((message) => (
                 message.id === event.messageId
                   ? { ...message, content: event.content }
                   : message
-              )));
+              )), true);
               return;
             }
 
             if (event.type === 'assistant_message_complete') {
               completeRun();
-              setMessages((prev) => {
+              updateMessages((prev) => {
                 const hasTemporary = prev.some(
                   (message) => message.id === event.temporaryMessageId,
                 );
@@ -354,7 +338,7 @@ export function WorkspaceChannelChatView({
                   return prev;
                 }
                 return [...prev, event.message];
-              });
+              }, true);
               onChannelActivity?.();
               return;
             }
@@ -373,9 +357,9 @@ export function WorkspaceChannelChatView({
         if (error instanceof Error && error.name === 'AbortError') {
           return;
         }
-        setMessages((prev) => prev.filter((message) => (
+        updateMessages((prev) => prev.filter((message) => (
           message.id !== optimisticUser.id && !message.id.startsWith('stream-')
-        )));
+        )), true);
         const message =
           error instanceof Error
             ? error.message
@@ -387,7 +371,19 @@ export function WorkspaceChannelChatView({
         streamAbortRef.current = null;
       }
     },
-    [channel.id, channel.workspaceId, completeRun, extraBody, failRun, onChannelActivity, selectedMentions, sessionId, startRun, updateStatus],
+    [
+      channel.id,
+      channel.workspaceId,
+      completeRun,
+      extraBody,
+      failRun,
+      onChannelActivity,
+      selectedMentions,
+      sessionId,
+      startRun,
+      updateMessages,
+      updateStatus,
+    ],
   );
 
   const mentionSuggestions = getMentionSuggestions(workspaceAgents, mentionQuery, selectedMentions);
@@ -471,10 +467,10 @@ export function WorkspaceChannelChatView({
       streamAbortRef.current?.abort();
       completeRun();
       window.setTimeout(() => {
-        void fetchChannelMessages(channel.id, sessionId).then(setMessages).catch(() => {});
+        void refreshFromServer().catch(() => {});
       }, 250);
     }
-  }, [channel.id, completeRun, sessionId, updateStatus]);
+  }, [channel.id, completeRun, refreshFromServer, updateStatus]);
 
   const isEmpty = messages.length === 0 && !loading;
 
