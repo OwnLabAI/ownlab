@@ -16,6 +16,7 @@ import {
 import { Loader } from '@/components/ai-elements/loader';
 import {
   Message,
+  MessageActions,
   MessageContent,
   MessageResponse,
 } from '@/components/ai-elements/message';
@@ -42,6 +43,7 @@ import {
 } from '@/lib/api';
 import { PaperclipIcon } from 'lucide-react';
 import { useChannelRun } from '@/features/channels/stores/use-channel-run-store';
+import { MessageCopyButton } from '@/features/channels/components/message-copy-button';
 
 interface AgentChatViewProps {
   channel: Channel;
@@ -451,6 +453,7 @@ function AgentComposerAttachments() {
 
 function AgentMessageItem({ message }: { message: ChannelMessage }) {
   const isAssistant = message.actorType === 'agent';
+  const hasContent = message.content.trim().length > 0;
 
   return (
     <Message from={isAssistant ? 'assistant' : 'user'}>
@@ -473,6 +476,11 @@ function AgentMessageItem({ message }: { message: ChannelMessage }) {
           </div>
 
           <MessageContent className="w-full rounded-none bg-transparent px-0 py-0 shadow-none">
+            {hasContent ? (
+              <MessageActions className={cn(!isAssistant && 'justify-end')}>
+                <MessageCopyButton content={message.content} align={isAssistant ? 'left' : 'right'} />
+              </MessageActions>
+            ) : null}
             {message.content ? (
               isAssistant ? (
                 <MessageResponse>{message.content}</MessageResponse>

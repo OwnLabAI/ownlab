@@ -16,6 +16,7 @@ import {
 import { Loader } from '@/components/ai-elements/loader';
 import {
   Message,
+  MessageActions,
   MessageContent,
   MessageResponse,
 } from '@/components/ai-elements/message';
@@ -34,6 +35,7 @@ import { cn } from '@/lib/utils';
 import * as api from '@/lib/api';
 import { PaperclipIcon } from 'lucide-react';
 import { useChannelRun } from '@/features/channels/stores/use-channel-run-store';
+import { MessageCopyButton } from '@/features/channels/components/message-copy-button';
 
 type ChannelRecord = {
   id: string;
@@ -506,6 +508,7 @@ function TeamComposerAttachments() {
 function TeamMessageItem({ message }: { message: ChannelMessageRecord }) {
   const isAssistant = message.actorType === 'agent';
 
+  const hasContent = message.content.trim().length > 0;
   return (
     <Message from={isAssistant ? 'assistant' : 'user'}>
       <div
@@ -530,6 +533,11 @@ function TeamMessageItem({ message }: { message: ChannelMessageRecord }) {
 
           <MessageContent className="w-full rounded-none bg-transparent px-0 py-0 shadow-none">
             {message.content ? (
+            {hasContent ? (
+              <MessageActions className={cn(!isAssistant && 'justify-end')}>
+                <MessageCopyButton content={message.content} align={isAssistant ? 'left' : 'right'} />
+              </MessageActions>
+            ) : null}
               isAssistant ? (
                 <MessageResponse>{message.content}</MessageResponse>
               ) : (
