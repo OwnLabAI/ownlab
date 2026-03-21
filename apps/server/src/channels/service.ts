@@ -577,16 +577,30 @@ export function createChannelService(db: Db) {
       .from(channels)
       .where(
         and(
-          eq(channels.workspaceId, workspaceId),
           eq(channels.scopeType, "agent_dm"),
           eq(channels.scopeRefId, agentId),
         ),
       )
+      .orderBy(desc(channels.updatedAt), desc(channels.createdAt))
       .limit(1);
 
     if (existing.length > 0) {
-      await ensureScopedChannelSeedMembers(existing[0]);
-      return existing[0];
+      const current = existing[0];
+      const channel =
+        current.workspaceId === workspaceId
+          ? current
+          : (
+              await db
+                .update(channels)
+                .set({
+                  workspaceId,
+                  updatedAt: new Date(),
+                })
+                .where(eq(channels.id, current.id))
+                .returning()
+            )[0] ?? current;
+      await ensureScopedChannelSeedMembers(channel);
+      return channel;
     }
 
     const [channel] = await db
