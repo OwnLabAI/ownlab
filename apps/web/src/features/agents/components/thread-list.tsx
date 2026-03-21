@@ -88,18 +88,23 @@ function ThreadRow({ thread, isActive, onSelect, onDelete }: ThreadRowProps) {
           onSelect(thread.id);
         }
       }}
-      className={`group/item relative flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-sm transition-all duration-150 ${
+      className={`group/item relative flex w-full items-start gap-2.5 rounded-xl px-3 py-2.5 text-left text-sm transition-all duration-150 ${
         isActive
           ? 'bg-accent/70 shadow-sm'
           : 'bg-background/70 hover:bg-accent/45 hover:shadow-sm'
       } focus-visible:outline-none focus-visible:bg-accent/55 focus-visible:shadow-sm`}
     >
-      <MessageSquare className="size-3.5 shrink-0 text-muted-foreground" />
-      <div className="min-w-0 flex-1">
-        <p className="truncate font-medium text-sm">{thread.title || 'Untitled'}</p>
+      <MessageSquare className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />
+      <div className="min-w-0 flex-1 overflow-hidden">
+        <p
+          className="line-clamp-2 break-all text-sm font-medium leading-snug text-foreground"
+          title={thread.title || 'Untitled'}
+        >
+          {thread.title || 'Untitled'}
+        </p>
       </div>
-      <div className="flex shrink-0 items-center">
-        <p className="text-[11px] text-muted-foreground transition-opacity group-hover/item:opacity-0 group-focus-visible/item:opacity-0">
+      <div className="flex shrink-0 items-center self-start">
+        <p className="pt-0.5 text-[11px] text-muted-foreground transition-opacity group-hover/item:opacity-0 group-focus-visible/item:opacity-0">
           {formatRelativeTime(thread.createdAt)}
         </p>
         <Button
@@ -166,7 +171,7 @@ export function ThreadList({ threads, currentThreadId, onSelect, onDelete }: Pro
                   <div className="space-y-1.5">
                     {group.threads.map((thread) => (
                       <ThreadRow
-                      key={thread.id}
+                        key={thread.id}
                         thread={thread}
                         isActive={currentThreadId === thread.id}
                         onSelect={onSelect}

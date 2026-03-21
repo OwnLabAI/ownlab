@@ -70,12 +70,14 @@ export function TeamHeader({
   const workerCount = members.filter((member) => member.teamRole === 'worker').length;
 
   return (
-    <header className="flex min-h-12 shrink-0 items-center justify-between border-b px-4 py-2">
-      <div className="flex min-w-0 items-center gap-2">
+    <header className="flex min-h-12 shrink-0 flex-wrap items-start justify-between gap-2 border-b px-4 py-2">
+      <div className="flex min-w-0 flex-1 items-center gap-2">
         <SidebarTrigger className="-ml-1" />
         <EntityIcon icon={team.icon} name={team.name} fallback="TM" className="size-8 rounded-lg" />
         <div className="flex min-w-0 flex-wrap items-center gap-1.5 text-sm leading-tight">
-          <span className="truncate font-semibold">{team.name}</span>
+          <span className="max-w-full truncate font-semibold" title={team.name}>
+            {team.name}
+          </span>
           {team.adapterType ? (
             <>
               <span className="text-muted-foreground/50">·</span>
@@ -90,12 +92,22 @@ export function TeamHeader({
               <span className="text-muted-foreground">{team.status}</span>
             </>
           ) : null}
-          <Badge variant="secondary">{members.length} members</Badge>
-          <Badge variant="outline">{workerCount} workers</Badge>
-          {leader ? <Badge variant="outline">Lead: {leader.name}</Badge> : null}
+          <Badge variant="secondary" className="max-w-full">
+            {members.length} members
+          </Badge>
+          <Badge variant="outline" className="max-w-full">
+            {workerCount} workers
+          </Badge>
+          {leader ? (
+            <Badge variant="outline" className="max-w-full">
+              <span className="truncate" title={`Lead: ${leader.name}`}>
+                Lead: {leader.name}
+              </span>
+            </Badge>
+          ) : null}
         </div>
       </div>
-      <div className="flex items-center gap-1">
+      <div className="flex shrink-0 flex-wrap items-center justify-end gap-1">
         <Button variant="ghost" size="sm" className="gap-1.5 text-xs" onClick={onOpenConfig}>
           <Settings2 className="size-3.5" />
           Config
