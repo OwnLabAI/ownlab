@@ -1,30 +1,68 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState, useTransition } from 'react';
-import { Check } from 'lucide-react';
 import { toast } from 'sonner';
-import { MarkdownEditor } from '@/components/markdown';
+import { MarkdownEditor, type MarkdownEditorRef } from '@/components/markdown';
 import { Button } from '@/components/ui/button';
 import { fetchWorkspaceGoal, updateWorkspaceGoal } from '@/lib/api';
 
 const DEFAULT_GOAL_MARKDOWN = '';
+const AUTOSAVE_DEBOUNCE_MS = 900;
 
-function formatGoalUpdatedAt(value: string | null) {
-  if (!value) return 'Not saved yet';
-  const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) return 'Not saved yet';
-  return parsed.toLocaleString();
+function normalizeGoalMarkdown(value: string) {
+  return value.replace(/\r\n?/g, '\n').trim();
+}
+
+function parseGoalMarkdown(markdown: string | null | undefined) {
+  const normalized = normalizeGoalMarkdown(markdown ?? '');
+  if (!normalized) {
+    return { title: '', description: '' };
+  }
+
+  const headingMatch = normalized.match(/^#\s+(.+?)(?:\n+([\s\S]*))?$/);
+  if (!headingMatch) {
+    return { title: '', description: normalized };
+  }
+
+  return {
+    title: headingMatch[1].trim(),
+    description: (headingMatch[2] ?? '').trim(),
+  };
+}
+
+function composeGoalMarkdown(title: string, description: string) {
+  const trimmedTitle = title.trim();
+  const trimmedDescription = description.trim();
+
+  if (trimmedTitle && trimmedDescription) {
+    return `# ${trimmedTitle}\n\n${trimmedDescription}`;
+  }
+
+  if (trimmedTitle) {
+    return `# ${trimmedTitle}`;
+  }
+
+  return trimmedDescription;
 }
 
 export function ToolPanelGoal({ workspaceId }: { workspaceId: string }) {
   const [isLoading, setIsLoading] = useState(true);
   const [isPending, startTransition] = useTransition();
-  const [markdown, setMarkdown] = useState(DEFAULT_GOAL_MARKDOWN);
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
   const [savedMarkdown, setSavedMarkdown] = useState(DEFAULT_GOAL_MARKDOWN);
   const [updatedAt, setUpdatedAt] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [autosaveState, setAutosaveState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const autosaveDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const titleInputRef = useRef<HTMLTextAreaElement | null>(null);
+  const descriptionEditorRef = useRef<MarkdownEditorRef>(null);
+
+  const markdown = useMemo(() => composeGoalMarkdown(title, description), [description, title]);
+  const hasChanges = useMemo(
+    () => normalizeGoalMarkdown(markdown) !== normalizeGoalMarkdown(savedMarkdown),
+    [markdown, savedMarkdown],
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -35,7 +73,9 @@ export function ToolPanelGoal({ workspaceId }: { workspaceId: string }) {
       .then((goal) => {
         if (cancelled) return;
         const nextMarkdown = goal.markdown?.trim() ? goal.markdown : DEFAULT_GOAL_MARKDOWN;
-        setMarkdown(nextMarkdown);
+        const parsed = parseGoalMarkdown(nextMarkdown);
+        setTitle(parsed.title);
+        setDescription(parsed.description);
         setSavedMarkdown(nextMarkdown);
         setUpdatedAt(goal.updatedAt);
       })
@@ -64,17 +104,24 @@ export function ToolPanelGoal({ workspaceId }: { workspaceId: string }) {
     };
   }, []);
 
-  const hasChanges = useMemo(() => markdown.trim() !== savedMarkdown.trim(), [markdown, savedMarkdown]);
-  const isEmpty = markdown.trim().length === 0;
+  useEffect(() => {
+    const element = titleInputRef.current;
+    if (!element) return;
+    element.style.height = 'auto';
+    element.style.height = `${element.scrollHeight}px`;
+  }, [title]);
 
   function handleSave(nextMarkdown = markdown) {
     startTransition(async () => {
       try {
         setAutosaveState('saving');
-        const trimmedMarkdown = nextMarkdown.trim() || DEFAULT_GOAL_MARKDOWN;
+        const trimmedMarkdown = normalizeGoalMarkdown(nextMarkdown) || DEFAULT_GOAL_MARKDOWN;
         const saved = await updateWorkspaceGoal(workspaceId, trimmedMarkdown);
-        setMarkdown(saved.markdown?.trim() ? saved.markdown : DEFAULT_GOAL_MARKDOWN);
-        setSavedMarkdown(saved.markdown?.trim() ? saved.markdown : DEFAULT_GOAL_MARKDOWN);
+        const nextSavedMarkdown = saved.markdown?.trim() ? saved.markdown : DEFAULT_GOAL_MARKDOWN;
+        const parsed = parseGoalMarkdown(nextSavedMarkdown);
+        setTitle(parsed.title);
+        setDescription(parsed.description);
+        setSavedMarkdown(nextSavedMarkdown);
         setUpdatedAt(saved.updatedAt);
         setAutosaveState('saved');
       } catch (nextError) {
@@ -101,7 +148,7 @@ export function ToolPanelGoal({ workspaceId }: { workspaceId: string }) {
 
     autosaveDebounceRef.current = setTimeout(() => {
       void handleSave(markdown);
-    }, 900);
+    }, AUTOSAVE_DEBOUNCE_MS);
 
     return () => {
       if (autosaveDebounceRef.current) {
@@ -132,7 +179,7 @@ export function ToolPanelGoal({ workspaceId }: { workspaceId: string }) {
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden">
       <div
-        className="relative flex min-h-0 flex-1 flex-col overflow-auto px-5 pt-5"
+        className="flex min-h-0 flex-1 flex-col overflow-auto"
         onBlurCapture={(event) => {
           if (event.currentTarget.contains(event.relatedTarget as Node | null)) return;
           if (autosaveDebounceRef.current) {
@@ -143,51 +190,46 @@ export function ToolPanelGoal({ workspaceId }: { workspaceId: string }) {
           }
         }}
       >
-        {isEmpty ? (
-          <div className="pointer-events-none absolute inset-x-5 top-5 z-40">
-            <div className="text-[2rem] leading-none font-semibold tracking-[-0.04em] text-muted-foreground/55">
-              Title: New Goal
-            </div>
-            <div className="mt-6 text-[1rem] leading-7 text-muted-foreground/70">
-              Add description...
-            </div>
-          </div>
-        ) : null}
-        <MarkdownEditor
-          markdown={markdown}
-          onChange={setMarkdown}
-          placeholder=""
-          bordered={false}
-          className="bg-transparent"
-          contentClassName="ownlab-goal-editor-content"
-          autoFocus={false}
-          onSubmit={() => {
-            if (autosaveDebounceRef.current) {
-              clearTimeout(autosaveDebounceRef.current);
-            }
-            if (hasChanges) {
-              void handleSave(markdown);
-            }
-          }}
-        />
-        <div className="flex min-h-5 items-center justify-end gap-2 px-1 pb-3 pt-2 text-[11px] text-muted-foreground">
-          <Check className="size-3.5" />
-          <span>Last updated {formatGoalUpdatedAt(updatedAt)}</span>
-          <span
-            className={[
-              'transition-opacity duration-150',
-              autosaveState === 'error' ? 'text-destructive' : 'text-muted-foreground',
-              autosaveState === 'idle' ? 'opacity-0' : 'opacity-100',
-            ].join(' ')}
-          >
-            {autosaveState === 'saving'
-              ? 'Autosaving...'
-              : autosaveState === 'saved'
-                ? 'Saved'
-                : autosaveState === 'error'
-                  ? 'Could not save'
-                  : 'Idle'}
-          </span>
+        <div className="shrink-0 px-4 pb-2 pt-4">
+          <textarea
+            ref={titleInputRef}
+            value={title}
+            rows={1}
+            placeholder="New Goal"
+            onChange={(event) => setTitle(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) {
+                event.preventDefault();
+                descriptionEditorRef.current?.focus();
+                return;
+              }
+              if (event.key === 'Tab' && !event.shiftKey) {
+                event.preventDefault();
+                descriptionEditorRef.current?.focus();
+              }
+            }}
+            className="ownlab-goal-title-input"
+          />
+        </div>
+        <div className="px-4 pb-2">
+          <MarkdownEditor
+            ref={descriptionEditorRef}
+            markdown={description}
+            onChange={setDescription}
+            placeholder="Add description..."
+            bordered={false}
+            className="bg-transparent"
+            contentClassName="ownlab-goal-editor-content text-sm text-muted-foreground min-h-[120px]"
+            autoFocus={false}
+            onSubmit={() => {
+              if (autosaveDebounceRef.current) {
+                clearTimeout(autosaveDebounceRef.current);
+              }
+              if (hasChanges) {
+                void handleSave(markdown);
+              }
+            }}
+          />
         </div>
       </div>
     </div>

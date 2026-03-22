@@ -229,22 +229,133 @@ html body[data-scroll-locked] {
 
 .ownlab-mdxeditor .mdxeditor-root-contenteditable,
 .ownlab-mdxeditor [class*="_contentEditable_"] {
-  font-size: 0.95rem;
-  line-height: 1.75;
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+
+.ownlab-mdxeditor,
+.ownlab-mdxeditor-content {
+  --baseBase: var(--background);
+  --baseBg: transparent;
+  --baseBgSubtle: color-mix(in oklab, var(--accent) 35%, transparent);
+  --baseLine: var(--border);
+  --baseSolid: var(--muted-foreground);
+  --baseSolidHover: var(--foreground);
+  --baseText: var(--muted-foreground);
+  --baseBorderColor: var(--border);
+  --baseBorder: var(--border);
+  --baseBorderHover: var(--ring);
+  --baseTextContrast: var(--foreground);
+  --baseTextContrastMuted: var(--muted-foreground);
+  --baseTextEmphasis: var(--foreground);
+  --basePageBg: var(--background);
+  --baseRadius: var(--radius);
+  --baseLineHeight: 1.5;
+  --accentBorder: color-mix(in oklab, var(--primary) 35%, var(--border));
+  --accentSolid: var(--primary);
+  --accentSolidHover: var(--primary);
+  --accentLine: color-mix(in oklab, var(--primary) 20%, transparent);
+  --accentBg: var(--accent);
+  --accentBgHover: color-mix(in oklab, var(--accent) 80%, var(--background));
+  --accentBgActive: color-mix(in oklab, var(--accent) 72%, var(--background));
+  --accentText: var(--accent-foreground);
+}
+
+.ownlab-mdxeditor [class*="_placeholder_"] {
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  color: color-mix(in oklab, var(--muted-foreground) 80%, transparent);
+}
+
+.ownlab-mdxeditor-content > *:first-child {
+  margin-top: 0;
+}
+
+.ownlab-mdxeditor-content > *:last-child {
+  margin-bottom: 0;
+}
+
+.ownlab-mdxeditor-content p {
+  margin: 0;
+  line-height: inherit;
+}
+
+.ownlab-mdxeditor-content p + p {
+  margin-top: 1.1em;
+}
+
+.ownlab-mdxeditor-content ul,
+.ownlab-mdxeditor-content ol {
+  margin: 1.1em 0;
+  padding-left: 1.6em;
+}
+
+.ownlab-mdxeditor-content ul {
+  list-style: disc;
+}
+
+.ownlab-mdxeditor-content ol {
+  list-style: decimal;
+}
+
+.ownlab-mdxeditor-content li {
+  display: list-item;
+  margin: 0.3em 0;
+  line-height: inherit;
+}
+
+.ownlab-mdxeditor-content li::marker {
+  color: var(--muted-foreground);
+}
+
+.ownlab-goal-title-input {
+  width: 100%;
+  resize: none;
+  overflow: hidden;
+  background: transparent;
+  color: var(--foreground);
+  font-size: 1.125rem;
+  line-height: 1.75rem;
+  font-weight: 600;
+  outline: none;
+}
+
+.ownlab-goal-title-input::placeholder {
+  color: color-mix(in oklab, var(--muted-foreground) 50%, transparent);
 }
 
 .ownlab-goal-editor-content {
   padding-inline: 0 !important;
   padding-top: 0 !important;
   padding-bottom: 0 !important;
-  min-height: calc(100vh - 18rem);
-  position: relative;
-  z-index: 10;
   background: transparent !important;
+  font-size: 0.875rem;
+  line-height: 1.4;
 }
 
 .ownlab-goal-editor-content > :first-child {
   margin-top: 0;
+}
+
+.ownlab-goal-editor-content ul,
+.ownlab-goal-editor-content ol {
+  margin: 1.1em 0;
+  padding-left: 1.6em;
+}
+
+.ownlab-goal-editor-content ul {
+  list-style: disc;
+}
+
+.ownlab-goal-editor-content ol {
+  list-style: decimal;
+}
+
+.ownlab-goal-editor-content li {
+  display: list-item;
+  margin: 0.3em 0;
+  line-height: inherit;
 }
 
 .ownlab-goal-editor-content h1,
@@ -255,14 +366,30 @@ html body[data-scroll-locked] {
 }
 
 .ownlab-goal-editor-content h1 {
-  font-size: 2.25rem;
-  letter-spacing: -0.04em;
-  margin-bottom: 1rem;
+  margin: 1.4em 0 0.9em;
+  font-size: 1.75em;
+  font-weight: 700;
+}
+
+.ownlab-goal-editor-content h2 {
+  margin: 1.3em 0 0.85em;
+  font-size: 1.35em;
+  font-weight: 700;
+}
+
+.ownlab-goal-editor-content h3 {
+  margin: 1.2em 0 0.8em;
+  font-size: 1.15em;
 }
 
 .ownlab-goal-editor-content p {
-  margin: 0.45rem 0;
-  color: var(--foreground);
+  margin: 0;
+  color: inherit;
+  line-height: inherit;
+}
+
+.ownlab-goal-editor-content p + p {
+  margin-top: 0.8em;
 }
 
 .ownlab-mdxeditor [class*="_toolbarButton_"],

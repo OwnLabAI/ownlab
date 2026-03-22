@@ -1,13 +1,9 @@
 'use client';
 
-import dynamic from 'next/dynamic';
+import { forwardRef } from 'react';
+import { MdxEditorClient, type MdxEditorClientRef } from './mdx-editor-client';
 
-const DynamicMdxEditorClient = dynamic(
-  () => import('./mdx-editor-client').then((mod) => mod.MdxEditorClient),
-  { ssr: false },
-);
-
-interface MarkdownEditorProps {
+export interface MarkdownEditorProps {
   markdown: string;
   onChange: (value: string) => void;
   placeholder?: string;
@@ -19,6 +15,11 @@ interface MarkdownEditorProps {
   autoFocus?: boolean;
 }
 
-export function MarkdownEditor(props: MarkdownEditorProps) {
-  return <DynamicMdxEditorClient {...props} />;
-}
+export type MarkdownEditorRef = MdxEditorClientRef;
+
+export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>(function MarkdownEditor(
+  props,
+  ref,
+) {
+  return <MdxEditorClient ref={ref} {...props} />;
+});

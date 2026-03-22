@@ -1,9 +1,13 @@
 'use client';
 
+import { forwardRef, useImperativeHandle, useMemo, useRef } from 'react';
 import {
+  CodeMirrorEditor,
   MDXEditor,
   codeBlockPlugin,
   codeMirrorPlugin,
+  type CodeBlockEditorDescriptor,
+  type MDXEditorMethods,
   headingsPlugin,
   linkDialogPlugin,
   linkPlugin,
@@ -27,6 +31,10 @@ export interface MdxEditorClientProps {
   autoFocus?: boolean;
 }
 
+export interface MdxEditorClientRef {
+  focus: () => void;
+}
+
 const CODE_BLOCK_LANGUAGES: Record<string, string> = {
   txt: 'Text',
   md: 'Markdown',
@@ -47,7 +55,13 @@ const CODE_BLOCK_LANGUAGES: Record<string, string> = {
   yml: 'YAML',
 };
 
-export function MdxEditorClient({
+const FALLBACK_CODE_BLOCK_DESCRIPTOR: CodeBlockEditorDescriptor = {
+  priority: 0,
+  match: () => true,
+  Editor: CodeMirrorEditor,
+};
+
+export const MdxEditorClient = forwardRef<MdxEditorClientRef, MdxEditorClientProps>(function MdxEditorClient({
   markdown,
   onChange,
   placeholder,
@@ -57,7 +71,38 @@ export function MdxEditorClient({
   onBlur,
   onSubmit,
   autoFocus = false,
-}: MdxEditorClientProps) {
+}: MdxEditorClientProps, forwardedRef) {
+  const editorRef = useRef<MDXEditorMethods>(null);
+
+  useImperativeHandle(
+    forwardedRef,
+    () => ({
+      focus: () => {
+        editorRef.current?.focus(undefined, { defaultSelection: 'rootEnd' });
+      },
+    }),
+    [],
+  );
+
+  const plugins = useMemo(
+    () => [
+      headingsPlugin(),
+      listsPlugin(),
+      quotePlugin(),
+      thematicBreakPlugin(),
+      linkPlugin(),
+      linkDialogPlugin(),
+      tablePlugin(),
+      codeBlockPlugin({
+        defaultCodeBlockLanguage: 'txt',
+        codeBlockEditorDescriptors: [FALLBACK_CODE_BLOCK_DESCRIPTOR],
+      }),
+      codeMirrorPlugin({ codeBlockLanguages: CODE_BLOCK_LANGUAGES }),
+      markdownShortcutPlugin(),
+    ],
+    [],
+  );
+
   return (
     <div
       className={cn(
@@ -74,6 +119,7 @@ export function MdxEditorClient({
       }}
     >
       <MDXEditor
+        ref={editorRef}
         markdown={markdown}
         onChange={onChange}
         placeholder={placeholder}
@@ -81,22 +127,11 @@ export function MdxEditorClient({
         onBlur={onBlur}
         className={cn(!bordered && 'ownlab-mdxeditor--borderless')}
         contentEditableClassName={cn(
-          'prose prose-sm max-w-none min-h-[280px] px-4 py-3 focus:outline-none',
+          'ownlab-mdxeditor-content focus:outline-none [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:list-item',
           contentClassName,
         )}
-        plugins={[
-          headingsPlugin(),
-          listsPlugin(),
-          quotePlugin(),
-          thematicBreakPlugin(),
-          linkPlugin(),
-          linkDialogPlugin(),
-          tablePlugin(),
-          codeBlockPlugin(),
-          codeMirrorPlugin({ codeBlockLanguages: CODE_BLOCK_LANGUAGES }),
-          markdownShortcutPlugin(),
-        ]}
+        plugins={plugins}
       />
     </div>
   );
-}
+});
