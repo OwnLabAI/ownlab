@@ -2,13 +2,17 @@
 
 import { useEffect, useEffectEvent, useRef, useState } from 'react';
 import { FileCode2, FileImage, FileText, RefreshCw } from 'lucide-react';
+import { TaskDetailPanel } from '@/features/tasks';
 import { Loader } from '@/components/ai-elements/loader';
 import { fetchWorkspaceFileContent } from '@/lib/api';
 import { Button } from '@/components/ui/button';
+import { dispatchWorkspaceTasksChanged } from '../tool-panel-tasks';
 
 interface ViewboardProps {
   workspaceId: string;
   selectedFilePath: string | null;
+  selectedTaskId: string | null;
+  onCloseTask: () => void;
 }
 
 type PreviewKind = 'text' | 'pdf' | 'png';
@@ -31,7 +35,12 @@ function getWorkspaceFilePreviewUrl(workspaceId: string, filePath: string): stri
   return `/api/workspaces/${encodeURIComponent(workspaceId)}/files/content?path=${encodeURIComponent(filePath)}`;
 }
 
-export function Viewboard({ workspaceId, selectedFilePath }: ViewboardProps) {
+export function Viewboard({
+  workspaceId,
+  selectedFilePath,
+  selectedTaskId,
+  onCloseTask,
+}: ViewboardProps) {
   const [fileContents, setFileContents] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -96,6 +105,21 @@ export function Viewboard({ workspaceId, selectedFilePath }: ViewboardProps) {
   useEffect(() => {
     void loadFile();
   }, [loadFile, selectedFilePath, workspaceId]);
+
+  if (selectedTaskId) {
+    return (
+      <TaskDetailPanel
+        taskId={selectedTaskId}
+        onClose={onCloseTask}
+        onUpdated={(_task) => dispatchWorkspaceTasksChanged(workspaceId)}
+        onDeleted={(_taskId) => {
+          dispatchWorkspaceTasksChanged(workspaceId);
+          onCloseTask();
+        }}
+        onTasksChanged={() => dispatchWorkspaceTasksChanged(workspaceId)}
+      />
+    );
+  }
 
   if (!selectedFilePath) {
     return (

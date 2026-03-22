@@ -8,8 +8,11 @@ import {
   tasks,
   workspaces,
   workspaceMembers,
+  and,
   eq,
   asc,
+  desc,
+  isNull,
   inArray,
 } from "@ownlab/db";
 import { createWorkspaceMembershipService } from "./membership-service.js";
@@ -216,6 +219,90 @@ export function workspaceRoutes(db: Db): RouterType {
       }
       console.error("Failed to update workspace:", error);
       res.status(500).json({ error: "Failed to update workspace" });
+    }
+  });
+
+  router.get("/:id/goal", async (req, res) => {
+    try {
+      const [workspace] = await db
+        .select({
+          workspaceId: workspaces.id,
+          markdown: workspaces.goalMarkdown,
+          updatedAt: workspaces.goalUpdatedAt,
+        })
+        .from(workspaces)
+        .where(eq(workspaces.id, req.params.id))
+        .limit(1);
+
+      if (!workspace) {
+        res.status(404).json({ error: "Workspace not found" });
+        return;
+      }
+
+      res.json(workspace);
+    } catch (error) {
+      console.error("Failed to fetch workspace goal:", error);
+      res.status(500).json({ error: "Failed to fetch workspace goal" });
+    }
+  });
+
+  router.patch("/:id/goal", async (req, res) => {
+    try {
+      const { markdown } = req.body as { markdown?: string };
+      if (typeof markdown !== "string") {
+        res.status(400).json({ error: "markdown is required" });
+        return;
+      }
+
+      const [updated] = await db
+        .update(workspaces)
+        .set({
+          goalMarkdown: markdown,
+          goalUpdatedAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .where(eq(workspaces.id, req.params.id))
+        .returning({
+          workspaceId: workspaces.id,
+          markdown: workspaces.goalMarkdown,
+          updatedAt: workspaces.goalUpdatedAt,
+        });
+
+      if (!updated) {
+        res.status(404).json({ error: "Workspace not found" });
+        return;
+      }
+
+      res.json(updated);
+    } catch (error) {
+      console.error("Failed to update workspace goal:", error);
+      res.status(500).json({ error: "Failed to update workspace goal" });
+    }
+  });
+
+  router.get("/:id/tasks", async (req, res) => {
+    try {
+      const [workspace] = await db
+        .select({ id: workspaces.id })
+        .from(workspaces)
+        .where(eq(workspaces.id, req.params.id))
+        .limit(1);
+
+      if (!workspace) {
+        res.status(404).json({ error: "Workspace not found" });
+        return;
+      }
+
+      const workspaceTasks = await db
+        .select()
+        .from(tasks)
+        .where(and(eq(tasks.workspaceId, req.params.id), isNull(tasks.parentId)))
+        .orderBy(desc(tasks.updatedAt), desc(tasks.createdAt));
+
+      res.json(workspaceTasks);
+    } catch (error) {
+      console.error("Failed to fetch workspace tasks:", error);
+      res.status(500).json({ error: "Failed to fetch workspace tasks" });
     }
   });
 

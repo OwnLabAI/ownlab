@@ -12,6 +12,8 @@ export const workspaces = pgTable(
     labId: uuid("lab_id").notNull().references(() => labs.id),
     name: text("name").notNull(),
     description: text("description"),
+    goalMarkdown: text("goal_markdown"),
+    goalUpdatedAt: timestamp("goal_updated_at", { withTimezone: true }),
     /** Local filesystem path for this workspace (e.g. project folder). Used to show file tree in File tab when server can read it. */
     worktreePath: text("worktree_path"),
     status: text("status").notNull().default("active"),

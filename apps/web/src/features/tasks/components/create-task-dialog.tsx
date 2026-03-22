@@ -24,9 +24,11 @@ import { createTask, fetchAgents, fetchTeams, fetchWorkspaces } from '@/lib/api'
 import type { Task, TeamRecord, Workspace } from '@/lib/api';
 
 interface CreateTaskDialogProps {
-  boardId: string;
+  boardId?: string | null;
   labId: string;
   defaultGroupName?: string;
+  initialWorkspaceId?: string | null;
+  lockWorkspace?: boolean;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onCreated: (task: Task) => void;
@@ -36,6 +38,8 @@ export function CreateTaskDialog({
   boardId,
   labId,
   defaultGroupName,
+  initialWorkspaceId = null,
+  lockWorkspace = false,
   open,
   onOpenChange,
   onCreated,
@@ -44,7 +48,7 @@ export function CreateTaskDialog({
   const [objective, setObjective] = useState('');
   const [mode, setMode] = useState<'scheduled' | 'auto'>('scheduled');
   const [targetType, setTargetType] = useState<'agent' | 'team'>('agent');
-  const [workspaceId, setWorkspaceId] = useState<string>('none');
+  const [workspaceId, setWorkspaceId] = useState<string>(initialWorkspaceId ?? 'none');
   const [agentId, setAgentId] = useState<string>('none');
   const [teamId, setTeamId] = useState<string>('none');
   const [intervalMinutes, setIntervalMinutes] = useState('30');
@@ -85,6 +89,11 @@ export function CreateTaskDialog({
     };
   }, [open, labId]);
 
+  useEffect(() => {
+    if (!open) return;
+    setWorkspaceId(initialWorkspaceId ?? 'none');
+  }, [initialWorkspaceId, open]);
+
   const canCreate = useMemo(() => {
     if (!title.trim()) {
       return false;
@@ -109,7 +118,7 @@ export function CreateTaskDialog({
     setCreating(true);
     try {
       const task = await createTask({
-        boardId,
+        boardId: boardId ?? undefined,
         title: nextTitle,
         objective: objective.trim() || undefined,
         priority: 'medium',
@@ -129,7 +138,7 @@ export function CreateTaskDialog({
       setObjective('');
       setMode('scheduled');
       setTargetType('agent');
-      setWorkspaceId('none');
+      setWorkspaceId(initialWorkspaceId ?? 'none');
       setAgentId('none');
       setTeamId('none');
       setIntervalMinutes('30');
@@ -137,6 +146,9 @@ export function CreateTaskDialog({
       setCreating(false);
     }
   };
+
+  const selectedWorkspaceName =
+    workspaces.find((workspace) => workspace.id === workspaceId)?.name ?? 'Current workspace';
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -196,19 +208,25 @@ export function CreateTaskDialog({
 
           <div className="space-y-2">
             <Label>Workspace</Label>
-            <Select value={workspaceId} onValueChange={setWorkspaceId}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select workspace" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">No workspace</SelectItem>
-                {workspaces.map((workspace) => (
-                  <SelectItem key={workspace.id} value={workspace.id}>
-                    {workspace.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            {lockWorkspace ? (
+              <div className="flex h-10 items-center rounded-md border px-3 text-sm text-foreground">
+                {selectedWorkspaceName}
+              </div>
+            ) : (
+              <Select value={workspaceId} onValueChange={setWorkspaceId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select workspace" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">No workspace</SelectItem>
+                  {workspaces.map((workspace) => (
+                    <SelectItem key={workspace.id} value={workspace.id}>
+                      {workspace.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-3">

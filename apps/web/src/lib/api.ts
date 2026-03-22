@@ -425,10 +425,18 @@ export interface Workspace {
   labId: string;
   name: string;
   description: string | null;
+  goalMarkdown?: string | null;
+  goalUpdatedAt?: string | null;
   worktreePath: string | null;
   status: string;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface WorkspaceGoalRecord {
+  workspaceId: string;
+  markdown: string | null;
+  updatedAt: string | null;
 }
 
 export interface FileTreeNode {
@@ -500,6 +508,44 @@ export async function updateWorkspaceApi(
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: 'Failed to update workspace' }));
     throw new Error(err.error || 'Failed to update workspace');
+  }
+  return res.json();
+}
+
+export async function fetchWorkspaceGoal(workspaceId: string): Promise<WorkspaceGoalRecord> {
+  const res = await fetch(`${API_BASE}/workspaces/${encodeURIComponent(workspaceId)}/goal`, {
+    cache: 'no-store',
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: 'Failed to fetch workspace goal' }));
+    throw new Error(err.error || 'Failed to fetch workspace goal');
+  }
+  return res.json();
+}
+
+export async function fetchWorkspaceTasks(workspaceId: string): Promise<Task[]> {
+  const res = await fetch(`${API_BASE}/workspaces/${encodeURIComponent(workspaceId)}/tasks`, {
+    cache: 'no-store',
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: 'Failed to fetch workspace tasks' }));
+    throw new Error(err.error || 'Failed to fetch workspace tasks');
+  }
+  return res.json();
+}
+
+export async function updateWorkspaceGoal(
+  workspaceId: string,
+  markdown: string,
+): Promise<WorkspaceGoalRecord> {
+  const res = await fetch(`${SERVER_BASE}/api/workspaces/${encodeURIComponent(workspaceId)}/goal`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ markdown }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: 'Failed to update workspace goal' }));
+    throw new Error(err.error || 'Failed to update workspace goal');
   }
   return res.json();
 }

@@ -8,6 +8,7 @@ import {
   taskboards,
   tasks,
   teams,
+  workspaces,
 } from "@ownlab/db";
 import { stopTaskRuns } from "./run-control-service.js";
 
@@ -215,6 +216,13 @@ export function createTaskService(db: Db) {
         .where(eq(taskboards.id, input.boardId))
         .limit(1);
       resolvedLabId = board?.labId ?? null;
+    } else if (input.workspaceId) {
+      const [workspace] = await db
+        .select()
+        .from(workspaces)
+        .where(eq(workspaces.id, input.workspaceId))
+        .limit(1);
+      resolvedLabId = workspace?.labId ?? null;
     }
 
     if (!resolvedLabId) {

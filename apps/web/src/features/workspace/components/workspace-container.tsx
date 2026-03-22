@@ -93,11 +93,22 @@ function WorkspacePanels({
   workspaces: WorkspaceForSwitcher[];
   children: React.ReactNode;
 }) {
-  const { selectedFilePath, setSelectedFilePath, viewboardOpen, setViewboardOpen } = useWorkspaceView(workspaceId);
+  const {
+    selectedFilePath,
+    selectedTaskId,
+    setSelectedFilePath,
+    setSelectedTaskId,
+    viewboardOpen,
+    setViewboardOpen,
+  } = useWorkspaceView(workspaceId);
   const [toolPanelOpen, setToolPanelOpen] = useState(true);
 
   function handleFileSelect(path: string | null) {
     setSelectedFilePath(path);
+  }
+
+  function handleTaskSelect(taskId: string | null) {
+    setSelectedTaskId(taskId);
   }
 
   return (
@@ -128,6 +139,7 @@ function WorkspacePanels({
                 items={items}
                 workspaces={workspaces}
                 onFileSelect={handleFileSelect}
+                onTaskSelect={handleTaskSelect}
               />
             </ResizablePanel>
             <ResizableHandle
@@ -165,6 +177,8 @@ function WorkspacePanels({
                 <Viewboard
                   workspaceId={workspaceId}
                   selectedFilePath={selectedFilePath}
+                  selectedTaskId={selectedTaskId}
+                  onCloseTask={() => setSelectedTaskId(null)}
                 />
               </div>
             </ResizablePanel>

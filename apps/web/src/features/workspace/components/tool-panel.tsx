@@ -2,7 +2,7 @@
 
 import { useTransition } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { FolderOpen, Users } from 'lucide-react';
+import { FolderOpen, ListTodo, Target, Users } from 'lucide-react';
 import { toast } from 'sonner';
 import { useWorkspaceView } from '@/features/workspace/stores/use-workspace-view-store';
 import { Button } from '@/components/ui/button';
@@ -10,12 +10,16 @@ import { SidebarContent } from '@/components/ui/sidebar';
 import { cn } from '@/lib/utils';
 import { ToolPanelMembers } from './tool-panel-members';
 import { FileExplorer } from './file-explorer';
+import { ToolPanelGoal } from './tool-panel-goal';
+import { ToolPanelTasks } from './tool-panel-tasks';
 import { browseWorkspaceFolder, updateWorkspaceApi } from '@/lib/api';
 import type { Item } from '@/features/workspace/data/items';
 import type { WorkspaceForSwitcher } from '@/features/lab/data/workspaces';
 
 const TABS = [
   { id: 'file', label: 'Files', icon: FolderOpen },
+  { id: 'tasks', label: 'Tasks', icon: ListTodo },
+  { id: 'goal', label: 'Goal', icon: Target },
   { id: 'members', label: 'Members', icon: Users },
 ] as const;
 
@@ -25,6 +29,7 @@ interface ToolPanelProps {
   items: Item[];
   workspaces: WorkspaceForSwitcher[];
   onFileSelect?: (path: string | null) => void;
+  onTaskSelect?: (taskId: string | null) => void;
 }
 
 function WorkspaceFolderSetup({
@@ -77,6 +82,7 @@ export function ToolPanel({
   items: _initialItems,
   workspaces,
   onFileSelect,
+  onTaskSelect,
 }: ToolPanelProps) {
   const params = useParams();
   const workspaceId = params.workspaceId as string;
@@ -88,8 +94,11 @@ export function ToolPanel({
     activeToolTab,
     setActiveToolTab,
     setSelectedFilePath,
+    setSelectedTaskId,
+    selectedTaskId,
   } = useWorkspaceView(workspaceId);
   const handleFileSelect = onFileSelect ?? setSelectedFilePath;
+  const handleTaskSelect = onTaskSelect ?? setSelectedTaskId;
 
   return (
     <div className="flex h-full w-full min-h-0 flex-col bg-transparent px-2 py-2">
@@ -131,6 +140,18 @@ export function ToolPanel({
 
         {activeToolTab === 'members' && (
           <ToolPanelMembers />
+        )}
+
+        {activeToolTab === 'tasks' && currentWorkspace && (
+          <ToolPanelTasks
+            workspace={currentWorkspace}
+            selectedTaskId={selectedTaskId}
+            onTaskSelect={handleTaskSelect}
+          />
+        )}
+
+        {activeToolTab === 'goal' && (
+          <ToolPanelGoal workspaceId={workspaceId} />
         )}
       </div>
     </div>
