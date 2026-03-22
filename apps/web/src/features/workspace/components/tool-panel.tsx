@@ -4,14 +4,14 @@ import { useTransition } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { FolderOpen, Users } from 'lucide-react';
 import { toast } from 'sonner';
-import { useWorkspaceView } from '@/features/workspaces/stores/use-workspace-view-store';
+import { useWorkspaceView } from '@/features/workspace/stores/use-workspace-view-store';
 import { Button } from '@/components/ui/button';
 import { SidebarContent } from '@/components/ui/sidebar';
 import { cn } from '@/lib/utils';
 import { ToolPanelMembers } from './tool-panel-members';
 import { FileExplorer } from './file-explorer';
 import { browseWorkspaceFolder, updateWorkspaceApi } from '@/lib/api';
-import type { Item } from '@/features/workspaces/data/items';
+import type { Item } from '@/features/workspace/data/items';
 import type { WorkspaceForSwitcher } from '@/features/lab/data/workspaces';
 
 const TABS = [

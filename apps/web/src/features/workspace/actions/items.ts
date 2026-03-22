@@ -8,7 +8,7 @@ import {
   deleteItemById,
   getItemById,
   type Item,
-} from '@/features/workspaces/data/items';
+} from '@/features/workspace/data/items';
 
 const CREATOR_ID = 'local-user';
 
@@ -35,7 +35,7 @@ export async function createFolder(input: {
       createdAt: now,
       updatedAt: now,
     });
-    revalidatePath(`/lab/workspace/${workspaceId}`);
+    revalidatePath(`/workspace/${workspaceId}`);
     return { data: { success: true, message: 'Folder created.', id } };
   } catch (e) {
     console.error('createFolder:', e);
@@ -66,7 +66,7 @@ export async function createNote(input: {
       createdAt: now,
       updatedAt: now,
     });
-    revalidatePath(`/lab/workspace/${workspaceId}`);
+    revalidatePath(`/workspace/${workspaceId}`);
     return { data: { success: true, message: 'Note created.', id, url: null } };
   } catch (e) {
     console.error('createNote:', e);
@@ -99,7 +99,7 @@ export async function createPdfRecord(input: {
       createdAt: now,
       updatedAt: now,
     });
-    revalidatePath(`/lab/workspace/${workspaceId}`);
+    revalidatePath(`/workspace/${workspaceId}`);
     return { data: { success: true, message: 'File added.', id, url } };
   } catch (e) {
     console.error('createPdfRecord:', e);
@@ -114,7 +114,7 @@ export async function renameItem(input: { itemId: string; newName: string }) {
       return { data: { success: false, error: 'Item not found.' } };
     }
     updateItemById(input.itemId, { name: input.newName });
-    revalidatePath(`/lab/workspace/${item.workspaceId}`);
+    revalidatePath(`/workspace/${item.workspaceId}`);
     return { data: { success: true, message: 'Renamed.' } };
   } catch (e) {
     console.error('renameItem:', e);
@@ -132,7 +132,7 @@ export async function moveItem(input: {
       return { data: { success: false, error: 'Item not found.' } };
     }
     updateItemById(input.itemId, { parentId: input.newParentId });
-    revalidatePath(`/lab/workspace/${item.workspaceId}`);
+    revalidatePath(`/workspace/${item.workspaceId}`);
     return { data: { success: true, message: 'Moved.' } };
   } catch (e) {
     console.error('moveItem:', e);
@@ -147,7 +147,7 @@ export async function deleteItem(input: { itemId: string }) {
       return { data: { success: false, error: 'Item not found.' } };
     }
     deleteItemById(input.itemId);
-    revalidatePath(`/lab/workspace/${item.workspaceId}`);
+    revalidatePath(`/workspace/${item.workspaceId}`);
     return { data: { success: true, message: 'Deleted.' } };
   } catch (e) {
     console.error('deleteItem:', e);

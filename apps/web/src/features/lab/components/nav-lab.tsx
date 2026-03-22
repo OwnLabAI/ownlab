@@ -10,7 +10,7 @@ export function NavLab({
   workspaces?: WorkspaceNavItem[];
 }) {
   const pathname = usePathname();
-  const workspaceIdMatch = pathname.match(/^\/lab\/workspace\/([^/]+)/);
+  const workspaceIdMatch = pathname.match(/^\/workspace\/([^/]+)/);
   const currentWorkspaceId = workspaceIdMatch?.[1] ?? null;
 
   return (

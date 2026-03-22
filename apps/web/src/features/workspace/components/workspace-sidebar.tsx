@@ -9,7 +9,7 @@ import { SidebarContent, SidebarHeader } from '@/components/ui/sidebar';
 import { NavNew } from './nav-new';
 import { WorkspaceNavItems } from './workspace-nav-items';
 import { WorkspaceSwitcher } from './workspace-switcher';
-import type { Item } from '@/features/workspaces/data/items';
+import type { Item } from '@/features/workspace/data/items';
 import type { WorkspaceForSwitcher } from '@/features/lab/data/workspaces';
 
 interface WorkspaceSidebarProps {
@@ -41,7 +41,7 @@ export function WorkspaceSidebar({
   return (
     <div className="border-l h-full w-full flex flex-col bg-sidebar">
       <div className="flex h-10 items-center justify-between shrink-0 px-3">
-        <Link href="/lab">
+        <Link href="/lab/workspaces">
           <img
             src="/logo-name.svg"
             alt="OwnLab"

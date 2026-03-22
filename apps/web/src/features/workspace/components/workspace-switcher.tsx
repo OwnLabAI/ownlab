@@ -28,7 +28,7 @@ export function WorkspaceSwitcher({ workspaces }: WorkspaceSwitcherProps) {
   if (!active) return null;
 
   const handleSelect = (workspaceId: string) => {
-    router.push(`/lab/workspace/${workspaceId}`);
+    router.push(`/workspace/${workspaceId}`);
   };
 
   return (
@@ -68,7 +68,7 @@ export function WorkspaceSwitcher({ workspaces }: WorkspaceSwitcherProps) {
             ))}
             <DropdownMenuSeparator />
             <DropdownMenuItem
-              onSelect={() => router.push('/lab')}
+              onSelect={() => router.push('/lab/workspaces')}
               className="cursor-pointer"
             >
               <LayoutDashboard className="mr-2 h-4 w-4" />

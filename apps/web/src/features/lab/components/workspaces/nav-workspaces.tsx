@@ -1,16 +1,15 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Plus, ChevronDown, FolderGit2, MoreHorizontal, Trash2 } from 'lucide-react';
 import {
   SidebarGroup,
   SidebarGroupLabel,
-  SidebarGroupAction,
   SidebarMenu,
+  SidebarMenuAction,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarMenuAction,
 } from '@/components/ui/sidebar';
 import {
   Collapsible,
@@ -37,14 +36,16 @@ export function NavWorkspaces({
   currentWorkspaceId?: string | null;
 }) {
   const router = useRouter();
+  const pathname = usePathname();
   const [open, setOpen] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const workspacesIndexActive = pathname === '/lab/workspaces';
 
   const handleCreated = useCallback(
     (workspaceId: string) => {
       setDialogOpen(false);
       router.refresh();
-      router.push(`/lab/workspace/${workspaceId}`);
+      router.push(`/workspace/${workspaceId}`);
     },
     [router],
   );
@@ -54,7 +55,7 @@ export function NavWorkspaces({
       try {
         await deleteWorkspaceApi(id);
         if (currentWorkspaceId === id) {
-          router.push('/lab');
+          router.push('/lab/workspaces');
         }
         router.refresh();
       } catch {
@@ -69,10 +70,20 @@ export function NavWorkspaces({
       <Collapsible open={open} onOpenChange={setOpen}>
         <SidebarGroup className="group-data-[collapsible=icon]:hidden pl-1">
           <SidebarGroupLabel className="flex items-center gap-1 text-sm font-medium text-sidebar-foreground/70 w-full px-1">
+            <Link
+              href="/lab/workspaces"
+              className={`min-w-0 flex-1 truncate rounded-md px-2 py-1 text-sidebar-foreground transition-colors ${
+                workspacesIndexActive
+                  ? 'bg-sidebar-accent/70 text-sidebar-accent-foreground'
+                  : 'hover:bg-sidebar-accent/55 hover:text-sidebar-accent-foreground active:bg-sidebar-accent/70'
+              }`}
+            >
+              Workspaces
+            </Link>
             <CollapsibleTrigger asChild>
               <button
                 type="button"
-                className="flex size-5 shrink-0 items-center justify-center rounded-md text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
+                className="flex size-7 shrink-0 items-center justify-center rounded-md text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
                 aria-label={open ? 'Collapse Workspaces' : 'Expand Workspaces'}
               >
                 <ChevronDown
@@ -80,14 +91,7 @@ export function NavWorkspaces({
                 />
               </button>
             </CollapsibleTrigger>
-            <span>Workspaces</span>
           </SidebarGroupLabel>
-          <SidebarGroupAction
-            onClick={() => setDialogOpen(true)}
-            title="Add workspace"
-          >
-            <Plus className="size-4" />
-          </SidebarGroupAction>
           <CollapsibleContent>
             <SidebarMenu>
               {workspaces.length === 0 && (
@@ -107,7 +111,7 @@ export function NavWorkspaces({
                   <SidebarMenuItem key={ws.id}>
                     <SidebarMenuButton asChild isActive={isActive}>
                       <Link
-                        href={`/lab/workspace/${ws.id}`}
+                        href={`/workspace/${ws.id}`}
                         title={ws.name}
                       >
                         <FolderGit2 className="size-4 text-amber-500" />

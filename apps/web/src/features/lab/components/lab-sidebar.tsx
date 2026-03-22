@@ -47,7 +47,7 @@ export function LabSidebar({
     <Sidebar className="border-r border-border/60" {...props}>
       <SidebarHeader>
         <div className="flex items-center justify-start p-2">
-          <a href="/lab">
+          <a href="/lab/workspaces">
             <img
               src="/logo-name.svg"
               alt="OwnLab Logo"

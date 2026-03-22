@@ -10,7 +10,7 @@ export { NavUser } from './components/nav-user';
 export { NavAgents } from './components/agents/nav-agents';
 export { NavTasks } from './components/tasks/nav-tasks';
 
-export { CreateWorkspaceDialog } from './components/workspaces';
+export { CreateWorkspaceDialog, WorkspaceCard } from './components/workspaces';
 export { getWorkspaces } from './data/workspaces';
 export type { Workspace, WorkspaceForSwitcher } from './data/workspaces';
 export {

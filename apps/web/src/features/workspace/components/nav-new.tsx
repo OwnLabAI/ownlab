@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 import { useState, useTransition } from 'react';
 import { toast } from 'sonner';
-import { createFolder, createNote } from '@/features/workspaces/actions/items';
+import { createFolder, createNote } from '@/features/workspace/actions/items';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -28,7 +28,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { SidebarMenuButton } from '@/components/ui/sidebar';
-import type { Item } from '@/features/workspaces/data/items';
+import type { Item } from '@/features/workspace/data/items';
 
 interface NavNewProps {
   workspaceId: string;

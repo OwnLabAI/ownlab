@@ -1,19 +1,12 @@
-import { ChannelChat } from '@/features/workspaces/components/channel-chat';
-import { getWorkspaces } from '@/features/lab/data/workspaces';
+import { redirect } from 'next/navigation';
 
-export default async function LabWorkspacePage({
+export default async function LabWorkspacePage(
+{
   params,
 }: {
   params: Promise<{ workspaceId: string }>;
-}) {
+},
+) {
   const { workspaceId } = await params;
-  const { workspaces } = await getWorkspaces(workspaceId);
-  const workspace = workspaces?.find((ws) => ws.id === workspaceId);
-
-  return (
-    <ChannelChat
-      workspaceId={workspaceId}
-      workspaceName={workspace?.name}
-    />
-  );
+  redirect(`/workspace/${workspaceId}`);
 }

@@ -11,7 +11,7 @@ import {
   Trash2,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { deleteItem, renameItem } from '@/features/workspaces/actions/items';
+import { deleteItem, renameItem } from '@/features/workspace/actions/items';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -28,7 +28,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { SidebarGroup, SidebarGroupLabel } from '@/components/ui/sidebar';
-import type { Item } from '@/features/workspaces/data/items';
+import type { Item } from '@/features/workspace/data/items';
 import { cn } from '@/lib/utils';
 
 interface WorkspaceNavItemsProps {

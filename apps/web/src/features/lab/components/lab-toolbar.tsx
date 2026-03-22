@@ -203,7 +203,7 @@ function SearchDialog() {
         onSelect: () => {
           setOpen(false);
           setQuery('');
-          router.push(`/lab/workspace/${workspace.id}`);
+          router.push(`/workspace/${workspace.id}`);
         },
       }));
 
