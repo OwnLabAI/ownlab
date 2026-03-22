@@ -21,6 +21,9 @@ interface WorkspaceContainerProps {
   children: React.ReactNode;
 }
 
+const CARD_CLASS =
+  'flex h-full min-h-0 flex-col overflow-hidden rounded-[24px] border border-black/5 bg-white shadow-[0_10px_30px_rgba(15,23,42,0.05)]';
+
 function WorkspaceTopBar({
   viewboardOpen,
   onToggleViewboard,
@@ -86,7 +89,7 @@ function WorkspacePanels({
       <ResizablePanelGroup
         id="workspace-panels"
         direction="horizontal"
-        className="h-full flex-1 gap-0 px-2 pb-2 pt-1"
+        className="h-full flex-1 gap-1 px-2 pb-2 pt-1"
       >
         <ResizablePanel
           id="workspace-panels-tools"
@@ -104,7 +107,7 @@ function WorkspacePanels({
         </ResizablePanel>
         <ResizableHandle
           id="workspace-panels-handle-tools"
-          className="group mx-1 w-px shrink-0 cursor-col-resize bg-border/70 transition-colors hover:bg-border data-[resize-handle-active]:bg-border"
+          className="group w-1.5 shrink-0 cursor-col-resize rounded-full bg-transparent transition-colors hover:bg-white/20 data-[resize-handle-active]:bg-white/25"
         />
         <ResizablePanel
           id="workspace-panels-channel"
@@ -113,7 +116,7 @@ function WorkspacePanels({
           minSize={24}
           className="h-full min-h-0 min-w-0 overflow-hidden"
         >
-          <div className="flex h-full min-h-0 flex-col overflow-hidden">
+          <div className={CARD_CLASS}>
             <div className="flex min-h-0 flex-1 flex-col">{children}</div>
           </div>
         </ResizablePanel>
@@ -122,7 +125,7 @@ function WorkspacePanels({
           <>
             <ResizableHandle
               id="workspace-panels-handle-viewboard"
-              className="group mx-1 w-px shrink-0 cursor-col-resize bg-border/70 transition-colors hover:bg-border data-[resize-handle-active]:bg-border"
+              className="group w-1.5 shrink-0 cursor-col-resize rounded-full bg-transparent transition-colors hover:bg-white/20 data-[resize-handle-active]:bg-white/25"
             />
             <ResizablePanel
               id="workspace-panels-viewboard"
@@ -131,10 +134,12 @@ function WorkspacePanels({
               minSize={24}
               className="h-full min-h-0 min-w-0 overflow-hidden"
             >
-              <Viewboard
-                workspaceId={workspaceId}
-                selectedFilePath={selectedFilePath}
-              />
+              <div className={CARD_CLASS}>
+                <Viewboard
+                  workspaceId={workspaceId}
+                  selectedFilePath={selectedFilePath}
+                />
+              </div>
             </ResizablePanel>
           </>
         ) : null}
@@ -150,7 +155,7 @@ export function WorkspaceContainer({
   children,
 }: WorkspaceContainerProps) {
   return (
-    <div className="flex h-full min-h-0 w-full overflow-hidden bg-background">
+    <div className="flex h-full min-h-0 w-full overflow-hidden bg-sidebar">
       <WorkspacePanels workspaceId={workspaceId} items={items} workspaces={workspaces}>
         {children}
       </WorkspacePanels>
