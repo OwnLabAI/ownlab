@@ -6,7 +6,6 @@ drizzle/meta/
 .vite/
 coverage/
 .DS_Store
-data/
 .pnpm-store/
 tmp-*
 
