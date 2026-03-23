@@ -10,6 +10,7 @@ type WorkspaceViewState = {
   selectedTaskId: string | null;
   viewboardOpen: boolean;
   activeToolTab: WorkspaceToolTab;
+  membersVersion: number;
 };
 
 type WorkspaceViewStore = {
@@ -19,6 +20,7 @@ type WorkspaceViewStore = {
   setSelectedTaskId: (workspaceId: string, taskId: string | null) => void;
   setViewboardOpen: (workspaceId: string, open: boolean) => void;
   setActiveToolTab: (workspaceId: string, tab: WorkspaceToolTab) => void;
+  bumpMembersVersion: (workspaceId: string) => void;
   resetWorkspaceView: (workspaceId: string) => void;
 };
 
@@ -27,6 +29,7 @@ const DEFAULT_WORKSPACE_VIEW: WorkspaceViewState = {
   selectedTaskId: null,
   viewboardOpen: false,
   activeToolTab: 'file',
+  membersVersion: 0,
 };
 
 export const useWorkspaceViewStore = create<WorkspaceViewStore>()(
@@ -88,6 +91,18 @@ export const useWorkspaceViewStore = create<WorkspaceViewStore>()(
           },
         }));
       },
+      bumpMembersVersion: (workspaceId) => {
+        if (!workspaceId) return;
+        set((state) => ({
+          views: {
+            ...state.views,
+            [workspaceId]: {
+              ...(state.views[workspaceId] ?? DEFAULT_WORKSPACE_VIEW),
+              membersVersion: (state.views[workspaceId]?.membersVersion ?? 0) + 1,
+            },
+          },
+        }));
+      },
       resetWorkspaceView: (workspaceId) => {
         if (!workspaceId) return;
         set((state) => ({
@@ -111,6 +126,7 @@ export function useWorkspaceView(workspaceId: string): WorkspaceViewState & {
   setSelectedTaskId: (taskId: string | null) => void;
   setViewboardOpen: (open: boolean) => void;
   setActiveToolTab: (tab: WorkspaceToolTab) => void;
+  bumpMembersVersion: () => void;
   resetWorkspaceView: () => void;
 } {
   const view = useWorkspaceViewStore((state) => state.views[workspaceId] ?? DEFAULT_WORKSPACE_VIEW);
@@ -118,6 +134,7 @@ export function useWorkspaceView(workspaceId: string): WorkspaceViewState & {
   const setSelectedTaskId = useWorkspaceViewStore((state) => state.setSelectedTaskId);
   const setViewboardOpen = useWorkspaceViewStore((state) => state.setViewboardOpen);
   const setActiveToolTab = useWorkspaceViewStore((state) => state.setActiveToolTab);
+  const bumpMembersVersion = useWorkspaceViewStore((state) => state.bumpMembersVersion);
   const resetWorkspaceView = useWorkspaceViewStore((state) => state.resetWorkspaceView);
 
   return {
@@ -126,6 +143,7 @@ export function useWorkspaceView(workspaceId: string): WorkspaceViewState & {
     setSelectedTaskId: (taskId) => setSelectedTaskId(workspaceId, taskId),
     setViewboardOpen: (open) => setViewboardOpen(workspaceId, open),
     setActiveToolTab: (tab) => setActiveToolTab(workspaceId, tab),
+    bumpMembersVersion: () => bumpMembersVersion(workspaceId),
     resetWorkspaceView: () => resetWorkspaceView(workspaceId),
   };
 }

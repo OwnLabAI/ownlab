@@ -51,6 +51,7 @@ import { useChannelRun } from '@/features/channels/stores/use-channel-run-store'
 import { PromptInputDraftProvider } from '@/features/channels/components/prompt-input-draft-provider';
 import { MessageCopyButton } from '@/features/channels/components/message-copy-button';
 import { usePersistentChannelConversation } from '@/features/channels/hooks/use-persistent-channel-conversation';
+import { useWorkspaceView } from '@/features/workspace/stores/use-workspace-view-store';
 
 interface WorkspaceChannelChatViewProps {
   channel: Channel;
@@ -84,6 +85,7 @@ export function WorkspaceChannelChatView({
   onChannelActivity,
   appearance = 'default',
 }: WorkspaceChannelChatViewProps) {
+  const { membersVersion } = useWorkspaceView(channel.workspaceId);
   const runKey = sessionId ? `${channel.id}:${sessionId}` : channel.id;
   const conversationKey = `workspace-chat:${runKey}`;
   const draftKey = sessionId ? `workspace:${channel.id}:${sessionId}` : `workspace:${channel.id}`;
@@ -151,7 +153,7 @@ export function WorkspaceChannelChatView({
     return () => {
       cancelled = true;
     };
-  }, [channel.workspaceId]);
+  }, [channel.workspaceId, membersVersion]);
 
   useEffect(() => {
     if (!runActive || !hasCompletedAssistantReply(messages)) {

@@ -8,6 +8,7 @@ import {
   fetchWorkspaceMembers,
   type Channel,
 } from '@/lib/api';
+import { useWorkspaceView } from '@/features/workspace/stores/use-workspace-view-store';
 import { WorkspaceChannelChatView } from './channel';
 import { Button } from '@/components/ui/button';
 import {
@@ -30,6 +31,7 @@ interface ChannelChatProps {
 }
 
 export function ChannelChat({ workspaceId, workspaceName }: ChannelChatProps) {
+  const { membersVersion } = useWorkspaceView(workspaceId);
   const [channel, setChannel] = useState<Channel | null>(null);
   const [memberCount, setMemberCount] = useState<number | null>(null);
   const [membersOpen, setMembersOpen] = useState(false);
@@ -64,6 +66,31 @@ export function ChannelChat({ workspaceId, workspaceName }: ChannelChatProps) {
       });
     return () => { cancelled = true; };
   }, [workspaceId]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    if (!channel) {
+      return;
+    }
+
+    fetchWorkspaceMembers(workspaceId)
+      .then((members) => {
+        if (!cancelled) {
+          setMemberCount(members.length);
+        }
+      })
+      .catch((memberError) => {
+        console.error('Failed to refresh channel members:', memberError);
+        if (!cancelled) {
+          setMemberCount(null);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [channel, membersVersion, workspaceId]);
 
   if (loading) {
     return (

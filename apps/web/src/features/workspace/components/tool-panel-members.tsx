@@ -6,6 +6,12 @@ import { Loader2, UserPlus, UserMinus } from 'lucide-react';
 import { EntityIcon } from '@/components/entity-icon';
 import { Button } from '@/components/ui/button';
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import {
   fetchWorkspaceMembers,
   fetchAvailableWorkspaceAgents,
   addWorkspaceMember,
@@ -13,6 +19,7 @@ import {
   type ChannelMember,
   type WorkspaceAgent,
 } from '@/lib/api';
+import { useWorkspaceView } from '@/features/workspace/stores/use-workspace-view-store';
 
 export function ToolPanelMembers({
   onMemberCountChange,
@@ -21,6 +28,7 @@ export function ToolPanelMembers({
 }) {
   const params = useParams();
   const workspaceId = params.workspaceId as string;
+  const { bumpMembersVersion } = useWorkspaceView(workspaceId);
   const [members, setMembers] = useState<ChannelMember[]>([]);
   const [agents, setAgents] = useState<WorkspaceAgent[]>([]);
   const [loading, setLoading] = useState(true);
@@ -63,6 +71,7 @@ export function ToolPanelMembers({
     try {
       await addWorkspaceMember(workspaceId, { actorId: agentId, actorType: 'agent' });
       await loadData();
+      bumpMembersVersion();
     } catch (err) {
       console.error('Failed to add member:', err);
     }
@@ -72,6 +81,7 @@ export function ToolPanelMembers({
     try {
       await removeWorkspaceMember(workspaceId, agentId);
       await loadData();
+      bumpMembersVersion();
     } catch (err) {
       console.error('Failed to remove member:', err);
     }
@@ -94,106 +104,118 @@ export function ToolPanelMembers({
   }
 
   return (
-    <div className="flex flex-1 flex-col overflow-hidden">
-      <div className="flex flex-col gap-4 overflow-auto p-3">
-        {humanMembers.length > 0 && (
-          <div>
-            <h3 className="mb-2 text-xs font-medium text-muted-foreground">
-              Humans
-            </h3>
-            <ul className="space-y-1">
-              {humanMembers.map((member) => (
-                <li
-                  key={member.actorId}
-                  className="flex items-center justify-between gap-2 rounded-md px-2 py-1.5 hover:bg-muted/50"
-                >
-                  <span className="flex items-center gap-2 truncate text-sm">
-                    <span>{member.icon ?? '🙂'}</span>
-                    <span>{member.name ?? member.actorId}</span>
-                    {member.role ? (
-                      <span className="text-xs text-muted-foreground">
-                        {member.role}
-                      </span>
-                    ) : null}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-
-        {agentMembers.length > 0 && (
-          <div>
-            <h3 className="mb-2 text-xs font-medium text-muted-foreground">
-              Agents in workspace
-            </h3>
-            <ul className="space-y-1">
-              {agentMembers.map((agent) => (
-                <li
-                  key={agent.actorId}
-                  className="flex items-center justify-between gap-2 rounded-md px-2 py-1.5 hover:bg-muted/50"
-                >
-                  <span className="flex items-center gap-2 truncate text-sm">
-                    <EntityIcon icon={agent.icon} name={agent.name ?? agent.actorId} fallback="AI" className="size-6 rounded-md" fallbackClassName="rounded-md text-[10px]" />
-                    <span>{agent.name ?? agent.actorId}</span>
-                    {agent.status && (
-                      <span className="text-xs text-muted-foreground">
-                        {agent.status}
-                      </span>
-                    )}
-                  </span>
-                  {agent.source !== 'team' ? (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-7 w-7 shrink-0"
-                      onClick={() => handleRemove(agent.actorId)}
-                      title="Remove from workspace"
-                    >
-                      <UserMinus className="h-3.5 w-3.5" />
-                    </Button>
-                  ) : null}
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-
-        {notInChannel.length > 0 && (
-          <div>
-            <h3 className="mb-2 text-xs font-medium text-muted-foreground">
-              Add standalone agents
-            </h3>
-            <ul className="space-y-1">
-              {notInChannel.map((agent) => (
-                <li
-                  key={agent.id}
-                  className="flex items-center justify-between gap-2 rounded-md px-2 py-1.5 hover:bg-muted/50"
-                >
-                  <span className="flex items-center gap-2 truncate text-sm">
-                    <EntityIcon icon={agent.icon} name={agent.name} fallback="AI" className="size-6 rounded-md" fallbackClassName="rounded-md text-[10px]" />
-                    <span>{agent.name}</span>
-                    {agent.status && (
-                      <span className="text-xs text-muted-foreground">
-                        {agent.status}
-                      </span>
-                    )}
-                  </span>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-7 w-7 shrink-0"
-                    onClick={() => handleAdd(agent.id)}
-                    title="Add to channel"
+    <TooltipProvider delayDuration={0}>
+      <div className="flex flex-1 flex-col overflow-hidden">
+        <div className="flex flex-col gap-4 overflow-auto p-3">
+          {humanMembers.length > 0 && (
+            <div>
+              <h3 className="mb-2 text-xs font-medium text-muted-foreground">
+                Humans
+              </h3>
+              <ul className="space-y-1">
+                {humanMembers.map((member) => (
+                  <li
+                    key={member.actorId}
+                    className="flex items-center justify-between gap-2 rounded-md px-2 py-1.5"
                   >
-                    <UserPlus className="h-3.5 w-3.5" />
-                  </Button>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
+                    <span className="flex items-center gap-2 truncate text-sm">
+                      <span>{member.icon ?? '🙂'}</span>
+                      <span>{member.name ?? member.actorId}</span>
+                      {member.role ? (
+                        <span className="text-xs text-muted-foreground">
+                          {member.role}
+                        </span>
+                      ) : null}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {agentMembers.length > 0 && (
+            <div>
+              <h3 className="mb-2 text-xs font-medium text-muted-foreground">
+                Agents in workspace
+              </h3>
+              <ul className="space-y-1">
+                {agentMembers.map((agent) => (
+                  <li
+                    key={agent.actorId}
+                    className="flex items-center justify-between gap-2 rounded-md px-2 py-1.5"
+                  >
+                    <span className="flex items-center gap-2 truncate text-sm">
+                      <EntityIcon icon={agent.icon} name={agent.name ?? agent.actorId} fallback="AI" className="size-6 rounded-md" fallbackClassName="rounded-md text-[10px]" />
+                      <span>{agent.name ?? agent.actorId}</span>
+                      {agent.status && (
+                        <span className="text-xs text-muted-foreground">
+                          {agent.status}
+                        </span>
+                      )}
+                    </span>
+                    {agent.source !== 'team' ? (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 shrink-0 rounded-md hover:bg-muted"
+                          onClick={() => handleRemove(agent.actorId)}
+                          aria-label="Remove from workspace"
+                        >
+                            <UserMinus className="h-3.5 w-3.5" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent side="top">Remove from workspace</TooltipContent>
+                      </Tooltip>
+                    ) : null}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {notInChannel.length > 0 && (
+            <div>
+              <h3 className="mb-2 text-xs font-medium text-muted-foreground">
+                Add standalone agents
+              </h3>
+              <ul className="space-y-1">
+                {notInChannel.map((agent) => (
+                  <li
+                    key={agent.id}
+                    className="flex items-center justify-between gap-2 rounded-md px-2 py-1.5"
+                  >
+                    <span className="flex items-center gap-2 truncate text-sm">
+                      <EntityIcon icon={agent.icon} name={agent.name} fallback="AI" className="size-6 rounded-md" fallbackClassName="rounded-md text-[10px]" />
+                      <span>{agent.name}</span>
+                      {agent.status && (
+                        <span className="text-xs text-muted-foreground">
+                          {agent.status}
+                        </span>
+                      )}
+                    </span>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 shrink-0 rounded-md hover:bg-muted"
+                          onClick={() => handleAdd(agent.id)}
+                          aria-label="Add to workspace"
+                        >
+                          <UserPlus className="h-3.5 w-3.5" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent side="top">Add to workspace</TooltipContent>
+                    </Tooltip>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+    </TooltipProvider>
   );
 }
