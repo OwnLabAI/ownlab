@@ -32,6 +32,7 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogFooter,
@@ -169,6 +170,9 @@ export function NavTasks() {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>New Taskboard</DialogTitle>
+            <DialogDescription>
+              Enter a name to create a new taskboard.
+            </DialogDescription>
           </DialogHeader>
           <div className="py-4">
             <Input

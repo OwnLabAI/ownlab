@@ -5,6 +5,7 @@ import { Loader2 } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -155,6 +156,9 @@ export function CreateTaskDialog({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>New Task</DialogTitle>
+          <DialogDescription>
+            Define the goal, assignee, and execution mode for this task.
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">

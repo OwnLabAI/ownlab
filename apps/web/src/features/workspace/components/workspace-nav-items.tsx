@@ -16,6 +16,7 @@ import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -158,6 +159,9 @@ function ItemRow({
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Rename</DialogTitle>
+            <DialogDescription>
+              Enter a new name for this item.
+            </DialogDescription>
           </DialogHeader>
           <Input
             value={newName}
