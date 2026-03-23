@@ -61,6 +61,23 @@ async function pathExists(candidate: string): Promise<boolean> {
   return fs.access(candidate).then(() => true).catch(() => false);
 }
 
+async function isInsideGitRepository(startDir: string): Promise<boolean> {
+  let current = path.resolve(startDir);
+
+  while (true) {
+    const gitPath = path.join(current, ".git");
+    if (await pathExists(gitPath)) {
+      return true;
+    }
+
+    const parent = path.dirname(current);
+    if (parent === current) {
+      return false;
+    }
+    current = parent;
+  }
+}
+
 async function ensureParentDir(target: string): Promise<void> {
   await fs.mkdir(path.dirname(target), { recursive: true });
 }
@@ -287,6 +304,9 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
     if (fromExtraArgs.length > 0) return fromExtraArgs;
     return asStringArray(config.args);
   })();
+  const skipGitRepoCheckSetting =
+    typeof config.skipGitRepoCheck === "boolean" ? config.skipGitRepoCheck : null;
+  const shouldSkipGitRepoCheck = skipGitRepoCheckSetting ?? !(await isInsideGitRepository(cwd));
 
   const runtimeSessionParams = parseObject(runtime.sessionParams);
   const runtimeSessionId = asString(runtimeSessionParams.sessionId, runtime.sessionId ?? "");
@@ -336,10 +356,18 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
     if (modelReasoningEffort) args.push("-c", `model_reasoning_effort=${JSON.stringify(modelReasoningEffort)}`);
     if (extraArgs.length > 0) args.push(...extraArgs);
     args.push("exec", "--json");
+    if (shouldSkipGitRepoCheck) args.push("--skip-git-repo-check");
     if (resumeSessionId) args.push("resume", resumeSessionId, "-");
     else args.push("-");
     return args;
   };
+
+  if (shouldSkipGitRepoCheck && skipGitRepoCheckSetting !== false) {
+    await onLog(
+      "stderr",
+      `[ownlab] Codex run cwd "${cwd}" is outside a Git repository; enabling --skip-git-repo-check.\n`,
+    );
+  }
 
   const runAttempt = async (resumeSessionId: string | null) => {
     const args = buildArgs(resumeSessionId);

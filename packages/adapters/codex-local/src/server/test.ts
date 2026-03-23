@@ -33,6 +33,22 @@ async function fileExists(candidate: string): Promise<boolean> {
   }
 }
 
+async function isInsideGitRepository(startDir: string): Promise<boolean> {
+  let current = path.resolve(startDir);
+
+  while (true) {
+    if (await fileExists(path.join(current, ".git"))) {
+      return true;
+    }
+
+    const parent = path.dirname(current);
+    if (parent === current) {
+      return false;
+    }
+    current = parent;
+  }
+}
+
 function collectCandidateCodexHomes(env: Record<string, string>): string[] {
   if (isNonEmpty(env.CODEX_HOME)) {
     return [path.resolve(env.CODEX_HOME)];
@@ -89,6 +105,32 @@ export async function testEnvironment(
       level: "error",
       message: err instanceof Error ? err.message : "Command is not executable",
       detail: command,
+    });
+  }
+
+  const skipGitRepoCheckSetting =
+    typeof config.skipGitRepoCheck === "boolean" ? config.skipGitRepoCheck : null;
+  const insideGitRepository = await isInsideGitRepository(cwd);
+  if (insideGitRepository) {
+    checks.push({
+      code: "codex_git_repo_detected",
+      level: "info",
+      message: `Codex working directory is inside a Git repository: ${cwd}`,
+    });
+  } else if (skipGitRepoCheckSetting === false) {
+    checks.push({
+      code: "codex_git_repo_missing",
+      level: "warn",
+      message: "Codex working directory is not inside a Git repository.",
+      detail: cwd,
+      hint: "Enable skipGitRepoCheck or point the agent at a workspace/repository path.",
+    });
+  } else {
+    checks.push({
+      code: "codex_git_repo_check_auto_skipped",
+      level: "info",
+      message: "Codex will auto-enable --skip-git-repo-check for this working directory.",
+      detail: cwd,
     });
   }
 

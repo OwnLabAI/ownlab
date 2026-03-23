@@ -24,6 +24,7 @@ Core fields:
 - promptTemplate (string, optional): run prompt template
 - search (boolean, optional): run codex with --search
 - dangerouslyBypassApprovalsAndSandbox (boolean, optional): run with bypass flag
+- skipGitRepoCheck (boolean, optional): override OwnLab's auto-detection for Codex's Git repository check
 - command (string, optional): defaults to "codex"
 - extraArgs (string[], optional): additional CLI args
 - env (object, optional): KEY=VALUE environment variables
@@ -37,6 +38,7 @@ Operational fields:
 Notes:
 - Prompts are piped via stdin (Codex receives "-" prompt argument).
 - Ownlab injects effective local skills into "$CODEX_HOME/skills" for local runs.
+- OwnLab automatically enables "--skip-git-repo-check" when the resolved cwd is not inside a Git repository.
 - Some model/tool combinations reject certain effort levels.
 - When OwnLab realizes a workspace/runtime for a run, it injects OWNLAB_* env vars for agent-side tooling.
 `;

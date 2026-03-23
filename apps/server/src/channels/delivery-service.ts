@@ -248,6 +248,10 @@ function normalizeStatusLines(chunk: string): string[] {
     .slice(-5);
 }
 
+// Only explicitly approved user-facing progress text may leave the server as
+// a status event. Internal adapter/runtime diagnostics must stay in logs.
+const USER_VISIBLE_OWNLAB_STATUS_PATTERNS: RegExp[] = [];
+
 function getUserVisibleStatusLine(line: string): string | null {
   const normalized = line.trim();
   if (!normalized) {
@@ -255,7 +259,10 @@ function getUserVisibleStatusLine(line: string): string | null {
   }
 
   if (normalized.startsWith("[ownlab]")) {
-    return normalized.replace(/^\[ownlab\]\s*/, "");
+    const message = normalized.replace(/^\[ownlab\]\s*/, "");
+    return USER_VISIBLE_OWNLAB_STATUS_PATTERNS.some((pattern) => pattern.test(message))
+      ? message
+      : null;
   }
 
   return null;
