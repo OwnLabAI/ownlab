@@ -21,6 +21,9 @@ import { syncSkillLinks } from "./runtime-links.js";
 
 const __moduleDir = path.dirname(fileURLToPath(import.meta.url));
 const BUILTIN_SKILL_ROOT_CANDIDATES = [
+  path.resolve(__moduleDir, "../../../../mart/skills"),
+  path.resolve(process.cwd(), "mart/skills"),
+  path.resolve(__moduleDir, "../../../mart/skills"),
   path.resolve(__moduleDir, "../../../../skills"),
   path.resolve(process.cwd(), "skills"),
   path.resolve(__moduleDir, "../../../skills"),

@@ -609,7 +609,7 @@ export function CreateAgentDialog({
                     <div className="space-y-2">
                       <Label className="text-sm font-medium">Agency</Label>
                       <p className="text-xs text-muted-foreground">
-                        Pick a reusable role template from `agency/templates` and install it as the
+                        Pick a reusable role template from `mart/agency` and install it as the
                         agent&apos;s local profile bundle.
                       </p>
                     </div>

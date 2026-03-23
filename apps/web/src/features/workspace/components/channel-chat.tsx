@@ -28,9 +28,10 @@ import { ToolPanelMembers } from './tool-panel-members';
 interface ChannelChatProps {
   workspaceId: string;
   workspaceName?: string;
+  workspaceRootPath?: string | null;
 }
 
-export function ChannelChat({ workspaceId, workspaceName }: ChannelChatProps) {
+export function ChannelChat({ workspaceId, workspaceName, workspaceRootPath }: ChannelChatProps) {
   const { membersVersion } = useWorkspaceView(workspaceId);
   const [channel, setChannel] = useState<Channel | null>(null);
   const [memberCount, setMemberCount] = useState<number | null>(null);
@@ -177,6 +178,7 @@ export function ChannelChat({ workspaceId, workspaceName }: ChannelChatProps) {
       ) : null}
       <WorkspaceChannelChatView
         channel={channel}
+        workspaceRootPath={workspaceRootPath ?? null}
         placeholder="Type @ to chat with a member"
         extraBody={{ scopeType: 'workspace', scopeRefId: channel.workspaceId }}
       />

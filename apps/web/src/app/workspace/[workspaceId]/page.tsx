@@ -14,6 +14,7 @@ export default async function WorkspacePage({
     <ChannelChat
       workspaceId={workspaceId}
       workspaceName={workspace?.name}
+      workspaceRootPath={workspace?.worktreePath ?? null}
     />
   );
 }

@@ -1,7 +1,7 @@
 import { Router, type Router as RouterType } from "express";
 import type { Db } from "@ownlab/db";
 import { createAgentService } from "./service.js";
-import { createAgencyTemplateService } from "../agency/templates.js";
+import { createAgencyTemplateService } from "../agency/service.js";
 
 export function agentRoutes(db: Db): RouterType {
   const router = Router();

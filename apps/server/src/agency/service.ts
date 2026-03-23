@@ -4,9 +4,9 @@ import { fileURLToPath } from "node:url";
 
 const __moduleDir = path.dirname(fileURLToPath(import.meta.url));
 const AGENCY_TEMPLATES_ROOT_CANDIDATES = [
-  path.resolve(__moduleDir, "../../../../agency/templates"),
-  path.resolve(__moduleDir, "../../../agency/templates"),
-  path.resolve(process.cwd(), "agency/templates"),
+  path.resolve(__moduleDir, "../../../../mart/agency"),
+  path.resolve(__moduleDir, "../../../mart/agency"),
+  path.resolve(process.cwd(), "mart/agency"),
 ];
 
 const EXCLUDED_DIRS = new Set([".git", ".github", "scripts", "examples", "integrations", "strategy"]);

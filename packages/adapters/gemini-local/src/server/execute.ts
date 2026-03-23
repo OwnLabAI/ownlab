@@ -31,6 +31,8 @@ import { firstNonEmptyLine } from "./utils.js";
 
 const __moduleDir = path.dirname(fileURLToPath(import.meta.url));
 const OWNLAB_SKILLS_CANDIDATES = [
+  path.resolve(__moduleDir, "../../../../../mart/skills"),
+  path.resolve(process.cwd(), "mart/skills"),
   path.resolve(__moduleDir, "../../skills"),
   path.resolve(__moduleDir, "../../../../../skills"),
 ];

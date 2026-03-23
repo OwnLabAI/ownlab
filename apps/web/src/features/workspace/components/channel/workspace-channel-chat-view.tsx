@@ -1,7 +1,7 @@
 'use client';
 
-import type { KeyboardEvent as ReactKeyboardEvent, ReactNode } from 'react';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import type { ComponentProps, KeyboardEvent as ReactKeyboardEvent, ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Conversation,
   ConversationContent,
@@ -46,6 +46,7 @@ import {
   type WorkspaceAgent,
 } from '@/lib/api';
 import { PaperclipIcon } from 'lucide-react';
+import { toast } from 'sonner';
 import { useChannelRun } from '@/features/channels/stores/use-channel-run-store';
 import { PromptInputDraftProvider } from '@/features/channels/components/prompt-input-draft-provider';
 import { MessageCopyButton } from '@/features/channels/components/message-copy-button';
@@ -54,6 +55,7 @@ import { useWorkspaceView } from '@/features/workspace/stores/use-workspace-view
 
 interface WorkspaceChannelChatViewProps {
   channel: Channel;
+  workspaceRootPath?: string | null;
   sessionId?: string | null;
   placeholder?: string;
   extraBody?: Record<string, unknown>;
@@ -77,6 +79,7 @@ function hasCompletedAssistantReply(messages: ChannelMessage[]) {
 
 export function WorkspaceChannelChatView({
   channel,
+  workspaceRootPath = null,
   sessionId = null,
   placeholder,
   extraBody,
@@ -84,7 +87,7 @@ export function WorkspaceChannelChatView({
   onChannelActivity,
   appearance = 'default',
 }: WorkspaceChannelChatViewProps) {
-  const { membersVersion } = useWorkspaceView(channel.workspaceId);
+  const { membersVersion, setActiveToolTab, setSelectedFilePath } = useWorkspaceView(channel.workspaceId);
   const runKey = sessionId ? `${channel.id}:${sessionId}` : channel.id;
   const conversationKey = `workspace-chat:${runKey}`;
   const draftKey = sessionId ? `workspace:${channel.id}:${sessionId}` : `workspace:${channel.id}`;
@@ -121,6 +124,59 @@ export function WorkspaceChannelChatView({
     runActive,
     hasCompletedReply: hasCompletedAssistantReply,
   });
+  const handleOpenLocalPath = useCallback(
+    (relativePath: string) => {
+      setActiveToolTab('file');
+      setSelectedFilePath(relativePath);
+    },
+    [setActiveToolTab, setSelectedFilePath],
+  );
+  const handleMessageLinkClickCapture = useCallback(
+    (event: React.MouseEvent<HTMLDivElement>) => {
+      const target = event.target;
+      if (!(target instanceof Element)) {
+        return;
+      }
+
+      const anchor = target.closest('a[href]');
+      if (!(anchor instanceof HTMLAnchorElement)) {
+        return;
+      }
+
+      const localTarget = getLocalWorkspaceTarget(
+        anchor.getAttribute('href') ?? anchor.href,
+        workspaceRootPath,
+        typeof window !== 'undefined' ? window.location.origin : null,
+      );
+
+      if (!localTarget) {
+        return;
+      }
+
+      event.preventDefault();
+      event.stopPropagation();
+
+      if (!localTarget.relativePath || localTarget.looksLikeDirectory) {
+        toast.info('Local folders are not previewable in the viewboard yet.');
+        return;
+      }
+
+      handleOpenLocalPath(localTarget.relativePath);
+    },
+    [handleOpenLocalPath, workspaceRootPath],
+  );
+  const markdownComponents = useMemo(
+    () => ({
+      a: (props: ComponentProps<'a'> & { node?: unknown }) => (
+        <WorkspaceMessageLink
+          {...props}
+          workspaceRootPath={workspaceRootPath}
+          onOpenLocalPath={handleOpenLocalPath}
+        />
+      ),
+    }),
+    [handleOpenLocalPath, workspaceRootPath],
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -503,12 +559,14 @@ export function WorkspaceChannelChatView({
           <Conversation className="h-full min-h-0">
             <ConversationContent
               className={cn('min-h-full', appearance === 'floating' && 'px-5 py-5')}
+              onClickCapture={handleMessageLinkClickCapture}
             >
               {messages.map((message) => (
                 <ChannelMessageItem
                   key={message.id}
                   message={message}
                   appearance={appearance}
+                  markdownComponents={markdownComponents}
                 />
               ))}
               {runActive && runStatus ? (
@@ -673,9 +731,11 @@ function ComposerAttachments() {
 function ChannelMessageItem({
   message,
   appearance = 'default',
+  markdownComponents,
 }: {
   message: ChannelMessage;
   appearance?: 'default' | 'floating';
+  markdownComponents?: ComponentProps<typeof MessageResponse>['components'];
 }) {
   const isAssistant = message.actorType === 'agent';
   const hasContent = message.content.trim().length > 0;
@@ -720,7 +780,7 @@ function ChannelMessageItem({
           >
             {message.content ? (
               isAssistant ? (
-                <MessageResponse>{message.content}</MessageResponse>
+                <MessageResponse components={markdownComponents}>{message.content}</MessageResponse>
               ) : (
                 <p className="whitespace-pre-wrap text-right">{message.content}</p>
               )
@@ -755,6 +815,147 @@ function MessageAttachments({ attachments }: { attachments: ChannelAttachment[] 
       ))}
     </Attachments>
   );
+}
+
+function WorkspaceMessageLink({
+  href,
+  children,
+  className,
+  workspaceRootPath,
+  onOpenLocalPath,
+  ...props
+}: ComponentProps<'a'> & {
+  node?: unknown;
+  workspaceRootPath: string | null;
+  onOpenLocalPath: (relativePath: string) => void;
+}) {
+  const localTarget = getLocalWorkspaceTarget(
+    href,
+    workspaceRootPath,
+    typeof window !== 'undefined' ? window.location.origin : null,
+  );
+  const linkClassName = cn('underline underline-offset-4 hover:text-primary', className);
+
+  if (localTarget) {
+    return (
+      <button
+        type="button"
+        className={cn('inline cursor-pointer text-left', linkClassName)}
+        onClick={() => {
+          if (!localTarget.relativePath || localTarget.looksLikeDirectory) {
+            toast.info('Local folders are not previewable in the viewboard yet.');
+            return;
+          }
+          onOpenLocalPath(localTarget.relativePath);
+        }}
+        title={href}
+      >
+        {children}
+      </button>
+    );
+  }
+
+  if (isHttpUrl(href)) {
+    return (
+      <a
+        {...props}
+        href={href}
+        className={linkClassName}
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        {children}
+      </a>
+    );
+  }
+
+  return (
+    <a {...props} href={href} className={linkClassName}>
+      {children}
+    </a>
+  );
+}
+
+function getLocalWorkspaceTarget(
+  href: string | undefined,
+  workspaceRootPath: string | null,
+  currentOrigin: string | null,
+) {
+  if (!href || !workspaceRootPath) {
+    return null;
+  }
+
+  const normalizedRoot = normalizeFilesystemPath(workspaceRootPath);
+  const resolvedHref = resolveLocalFilesystemHref(href, currentOrigin);
+  const normalizedHref = normalizeFilesystemPath(resolvedHref);
+
+  if (!normalizedRoot || !isLocalFilesystemPath(normalizedHref)) {
+    return null;
+  }
+
+  if (normalizedHref !== normalizedRoot && !normalizedHref.startsWith(`${normalizedRoot}/`)) {
+    return null;
+  }
+
+  const relativePath = normalizedHref === normalizedRoot
+    ? ''
+    : normalizedHref.slice(normalizedRoot.length + 1);
+  const basename = relativePath.split('/').pop() ?? '';
+
+  return {
+    relativePath,
+    looksLikeDirectory: !basename || !basename.includes('.'),
+  };
+}
+
+function normalizeFilesystemPath(value: string): string {
+  let normalized = value.trim();
+
+  try {
+    normalized = decodeURIComponent(normalized);
+  } catch {
+    // Keep the original string when decoding fails.
+  }
+
+  normalized = normalized.replace(/^file:\/\//, '').replace(/\\/g, '/');
+
+  if (normalized.length > 1) {
+    normalized = normalized.replace(/\/+$/, '');
+  }
+
+  return normalized;
+}
+
+function resolveLocalFilesystemHref(href: string, currentOrigin: string | null): string {
+  if (!href) {
+    return href;
+  }
+
+  if (href.startsWith('file://')) {
+    return href;
+  }
+
+  try {
+    const parsed = new URL(href, currentOrigin ?? undefined);
+    if (parsed.protocol === 'file:') {
+      return parsed.pathname;
+    }
+    if (currentOrigin && parsed.origin === currentOrigin && isLocalFilesystemPath(parsed.pathname)) {
+      return parsed.pathname;
+    }
+  } catch {
+    // Fall back to the raw href if URL parsing fails.
+  }
+
+  return href;
+}
+
+function isLocalFilesystemPath(value: string): boolean {
+  return value.startsWith('/') || /^[A-Za-z]:\//.test(value);
+}
+
+function isHttpUrl(value: string | undefined): value is string {
+  return !!value && /^https?:\/\//i.test(value);
 }
 
 function ActorAvatar({
