@@ -8,6 +8,7 @@ import {
   Grid2x2,
   List,
   Loader2,
+  X,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
@@ -23,21 +24,27 @@ import {
 } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import {
+  DialogClose,
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { MarkdownBody } from '@/components/markdown';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { SkillCardGrid, SkillCardList, getSkillSection, type SectionTab } from './skill-card';
 
 const PAGE_SIZE = 15;
 type ViewMode = 'grid' | 'list';
-const SECTION_TABS = ['Research'] as const;
+const SECTION_TABS = ['Research', 'Work'] as const;
 type AgentAssignmentsMap = Record<string, AgentSkillAssignmentRecord[]>;
+
+function stripFrontmatter(markdown: string): string {
+  return markdown.replace(/^---\s*\n[\s\S]*?\n---\s*\n?/, '').trim();
+}
 
 export function SkillsPage() {
   const [skills, setSkills] = useState<SkillRecord[]>([]);
@@ -156,6 +163,12 @@ export function SkillsPage() {
     () => skills.find((skill) => skill.id === installSkillId) ?? selectedSkill ?? null,
     [installSkillId, selectedSkill, skills],
   );
+
+  const selectedSkillMarkdown = useMemo(() => {
+    const content = selectedSkill?.content?.trim();
+    if (!content) return '';
+    return stripFrontmatter(content);
+  }, [selectedSkill]);
 
   const handleInstall = useCallback(
     async (agent: AgentRecord) => {
@@ -321,47 +334,82 @@ export function SkillsPage() {
       </div>
 
       <Dialog open={Boolean(selectedSkillId)} onOpenChange={(open) => !open && setSelectedSkillId(null)}>
-        <DialogContent className="max-h-[85vh] max-w-2xl overflow-hidden p-0">
-          <DialogHeader className="flex flex-row items-start gap-3 border-b px-5 py-4 text-left">
-            <Avatar size="lg">
-              <AvatarFallback className="bg-muted text-xs font-semibold text-muted-foreground">
-                {selectedSkill?.name?.slice(0, 2).toUpperCase() ?? '??'}
-              </AvatarFallback>
-            </Avatar>
-            <div className="min-w-0 flex-1">
-              <DialogTitle className="text-base">{selectedSkill?.name ?? 'Skill detail'}</DialogTitle>
-              <DialogDescription className="mt-1 text-xs">
-                {selectedSkill?.description || selectedSkill?.slug || 'Inspect the instruction content for this skill.'}
-              </DialogDescription>
+        <DialogContent
+          showCloseButton={false}
+          className="flex h-[90vh] w-[min(92vw,64rem)] max-w-[64rem] flex-col overflow-hidden p-0 sm:max-w-[64rem]"
+        >
+          <DialogHeader className="relative gap-0 border-b px-5 py-4 text-left">
+            <div className="flex items-start gap-3 pr-40">
+              <Avatar size="lg">
+                <AvatarFallback className="bg-muted text-xs font-semibold text-muted-foreground">
+                  {selectedSkill?.name?.slice(0, 2).toUpperCase() ?? '??'}
+                </AvatarFallback>
+              </Avatar>
+              <div className="min-w-0 flex-1 pr-2">
+                <DialogTitle className="pt-1 text-xl font-semibold leading-none">
+                  {selectedSkill?.name ?? 'Skill detail'}
+                </DialogTitle>
+                <DialogDescription className="mt-3 max-w-2xl text-sm leading-6">
+                  {selectedSkill?.description || selectedSkill?.slug || 'Inspect the instruction content for this skill.'}
+                </DialogDescription>
+              </div>
             </div>
-            {selectedSkillId && (
-              <Button
-                size="sm"
-                className="shrink-0 rounded-full bg-foreground text-background hover:bg-foreground/90"
-                onClick={() => {
-                  setInstallSkillId(selectedSkillId);
-                  setSelectedSkillId(null);
-                }}
-              >
-                <Download className="size-4" />
-                Install
-              </Button>
-            )}
+
+            <div className="absolute top-4 right-5 flex items-center gap-2">
+              {selectedSkillId && (
+                <Button
+                  size="sm"
+                  className="shrink-0 rounded-full bg-foreground text-background hover:bg-foreground/90"
+                  onClick={() => {
+                    setInstallSkillId(selectedSkillId);
+                    setSelectedSkillId(null);
+                  }}
+                >
+                  <Download className="size-4" />
+                  Install
+                </Button>
+              )}
+              <DialogClose asChild>
+                <Button variant="ghost" size="icon-sm" className="shrink-0 rounded-full">
+                  <X className="size-4" />
+                  <span className="sr-only">Close</span>
+                </Button>
+              </DialogClose>
+            </div>
+
           </DialogHeader>
-          <ScrollArea className="max-h-[calc(85vh-80px)]">
-            <div className="px-5 py-4">
+          <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
+            <div className="mx-auto w-full">
               {loadingDetail ? (
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Loader2 className="size-4 animate-spin" />
                   Loading...
                 </div>
               ) : (
-                <pre className="whitespace-pre-wrap rounded-xl border border-border/60 bg-muted/30 p-4 text-xs leading-6 text-foreground">
-                  {selectedSkill?.content || 'No skill content found.'}
-                </pre>
+                <div className="rounded-2xl border border-border/60 bg-muted/20 p-5 shadow-sm">
+                  <MarkdownBody
+                    markdown={selectedSkillMarkdown || 'No skill content found.'}
+                    className={cn(
+                      'max-w-none text-[15px] leading-8 text-foreground',
+                      '[&_h1]:mt-0 [&_h1]:text-3xl [&_h1]:font-semibold',
+                      '[&_h2]:mt-10 [&_h2]:text-2xl [&_h2]:font-semibold',
+                      '[&_h3]:mt-8 [&_h3]:text-xl [&_h3]:font-semibold',
+                      '[&_p]:my-4 [&_p]:break-words',
+                      '[&_ul]:my-4 [&_ul]:list-disc [&_ul]:pl-6',
+                      '[&_ol]:my-4 [&_ol]:list-decimal [&_ol]:pl-6',
+                      '[&_li]:my-1',
+                      '[&_pre]:my-5 [&_pre]:overflow-x-auto [&_pre]:rounded-xl [&_pre]:border [&_pre]:border-border/60 [&_pre]:bg-background [&_pre]:p-4 [&_pre]:text-sm [&_pre]:leading-7',
+                      '[&_code]:break-words [&_code]:rounded [&_code]:bg-background/80 [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:text-[0.9em]',
+                      '[&_pre_code]:bg-transparent [&_pre_code]:p-0',
+                      '[&_table]:block [&_table]:max-w-full [&_table]:overflow-x-auto [&_table]:border-collapse',
+                      '[&_th]:border [&_th]:border-border/60 [&_th]:px-3 [&_th]:py-2 [&_th]:text-left',
+                      '[&_td]:border [&_td]:border-border/60 [&_td]:px-3 [&_td]:py-2',
+                    )}
+                  />
+                </div>
               )}
             </div>
-          </ScrollArea>
+          </div>
         </DialogContent>
       </Dialog>
 

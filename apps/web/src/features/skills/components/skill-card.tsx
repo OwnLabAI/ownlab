@@ -6,10 +6,11 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 
-export type SectionTab = 'Research';
+export type SectionTab = 'Research' | 'Work';
 
 const AVATAR_COLORS: Record<SectionTab, string> = {
   Research: 'bg-emerald-100 text-emerald-700',
+  Work: 'bg-sky-100 text-sky-700',
 };
 
 export function getSkillCategory(skill: SkillRecord): string {
@@ -31,7 +32,15 @@ export function getSkillSummary(skill: SkillRecord): string {
   return text.length > 120 ? `${text.slice(0, 117)}...` : text;
 }
 
-export function getSkillSection(_skill: SkillRecord): SectionTab {
+export function getSkillSection(skill: SkillRecord): SectionTab {
+  const category = skill.metadata?.category;
+  if (category === 'Work') return 'Work';
+  if (category === 'Research') return 'Research';
+
+  const localPath = typeof skill.localPath === 'string' ? skill.localPath.toLowerCase() : '';
+  if (localPath.includes('/work-skills/')) return 'Work';
+  if (localPath.includes('/scientific-skills/')) return 'Research';
+
   return 'Research';
 }
 
