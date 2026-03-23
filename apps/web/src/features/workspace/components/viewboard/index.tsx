@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useEffectEvent, useRef, useState } from 'react';
-import { FileCode2, FileImage, FileText, RefreshCw } from 'lucide-react';
+import { FileCode2, FileImage, FileText, FileWarning, RefreshCw } from 'lucide-react';
 import { TaskDetailPanel } from '@/features/tasks';
 import { Loader } from '@/components/ai-elements/loader';
 import { fetchWorkspaceFileContent } from '@/lib/api';
@@ -15,10 +15,34 @@ interface ViewboardProps {
   onCloseTask: () => void;
 }
 
-type PreviewKind = 'text' | 'pdf' | 'png';
+const UNSUPPORTED_PREVIEW_EXTENSIONS = new Set([
+  '.doc',
+  '.docx',
+  '.ppt',
+  '.pptx',
+  '.xls',
+  '.xlsx',
+]);
+
+type PreviewKind = 'text' | 'pdf' | 'png' | 'unsupported';
+
+function getFileExtension(filePath: string | null): string {
+  if (!filePath) {
+    return '';
+  }
+
+  const fileName = filePath.split('/').pop() ?? filePath;
+  const dotIndex = fileName.lastIndexOf('.');
+  if (dotIndex < 0) {
+    return '';
+  }
+
+  return fileName.slice(dotIndex).toLowerCase();
+}
 
 function getPreviewKind(filePath: string | null): PreviewKind {
   const normalizedPath = filePath?.toLowerCase() ?? '';
+  const extension = getFileExtension(filePath);
 
   if (normalizedPath.endsWith('.pdf')) {
     return 'pdf';
@@ -26,6 +50,10 @@ function getPreviewKind(filePath: string | null): PreviewKind {
 
   if (normalizedPath.endsWith('.png')) {
     return 'png';
+  }
+
+  if (UNSUPPORTED_PREVIEW_EXTENSIONS.has(extension)) {
+    return 'unsupported';
   }
 
   return 'text';
@@ -173,6 +201,7 @@ export function Viewboard({
   }
 
   const fileName = selectedFilePath.split('/').pop() ?? selectedFilePath;
+  const fileExtension = getFileExtension(selectedFilePath);
   const content = fileContents[selectedFilePath];
   const hasContent = typeof content === 'string';
   const lineCount = hasContent ? content.split('\n').length : 0;
@@ -185,6 +214,8 @@ export function Viewboard({
           <div className="flex items-center gap-2">
             {previewKind === 'text' ? (
               <FileText className="size-4 text-muted-foreground" />
+            ) : previewKind === 'unsupported' ? (
+              <FileWarning className="size-4 text-muted-foreground" />
             ) : (
               <FileImage className="size-4 text-muted-foreground" />
             )}
@@ -200,23 +231,25 @@ export function Viewboard({
               {lineCount} lines
             </span>
           ) : null}
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon-sm"
-            className="rounded-full"
-            onClick={() => {
-              if (previewKind === 'text') {
-                void loadFile({ force: true });
-                return;
-              }
+          {previewKind !== 'unsupported' ? (
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-sm"
+              className="rounded-full"
+              onClick={() => {
+                if (previewKind === 'text') {
+                  void loadFile({ force: true });
+                  return;
+                }
 
-              setPreviewVersion((current) => current + 1);
-            }}
-            title="Refresh file"
-          >
-            <RefreshCw className="size-4" />
-          </Button>
+                setPreviewVersion((current) => current + 1);
+              }}
+              title="Refresh file"
+            >
+              <RefreshCw className="size-4" />
+            </Button>
+          ) : null}
         </div>
       </header>
       <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden p-4">
@@ -235,6 +268,19 @@ export function Viewboard({
               alt={fileName}
               className="h-auto max-w-full rounded-2xl border border-border/80 bg-background object-contain shadow-sm"
             />
+          </div>
+        ) : previewKind === 'unsupported' ? (
+          <div className="flex h-full min-h-40 items-center justify-center rounded-2xl border border-dashed border-border/80 bg-muted/25 p-6 text-center">
+            <div className="max-w-md">
+              <div className="mx-auto mb-4 flex size-12 items-center justify-center rounded-2xl bg-background shadow-sm ring-1 ring-border/60">
+                <FileWarning className="size-5 text-muted-foreground" />
+              </div>
+              <p className="text-sm font-medium text-foreground">Preview not supported yet</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {fileExtension || 'This file type'} cannot be previewed in the viewboard yet. You can
+                still keep it in the workspace and open it with a local editor when needed.
+              </p>
+            </div>
           </div>
         ) : !hasContent && loading ? (
           <div className="flex h-full min-h-40 items-center justify-center">
