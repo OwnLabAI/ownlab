@@ -534,7 +534,7 @@ export function WorkspaceChannelChatView({
       <div
         className={cn(
           'shrink-0 p-4',
-          appearance === 'default' ? 'border-t bg-background' : 'bg-transparent pt-3',
+          appearance === 'default' ? 'bg-background' : 'bg-transparent pt-3',
         )}
       >
         {sendError ? (

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { type ReactNode, useEffect, useState } from 'react';
 import { Hash, Users } from 'lucide-react';
 import { Loader } from '@/components/ai-elements/loader';
 import {
@@ -114,9 +114,32 @@ export function ChannelChat({ workspaceId, workspaceName }: ChannelChatProps) {
     );
   }
 
+  const memberAction = (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="gap-2 rounded-full"
+          onClick={() => setMembersOpen(true)}
+        >
+          <Users className="size-4" />
+          <span className="hidden sm:inline">View members</span>
+          {memberCount != null ? (
+            <span className="rounded-full bg-muted px-1.5 py-0.5 text-[11px] leading-none text-muted-foreground">
+              {memberCount}
+            </span>
+          ) : null}
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent side="bottom">View members</TooltipContent>
+    </Tooltip>
+  );
+
   return (
     <div className="flex h-full flex-col overflow-hidden">
-      <ChannelHeader workspaceName={workspaceName ?? 'Workspace'} />
+      <ChannelHeader workspaceName={workspaceName ?? 'Workspace'} actions={memberAction} />
       {channel ? (
         <WorkspaceMembersDialog
           open={membersOpen}
@@ -127,28 +150,6 @@ export function ChannelChat({ workspaceId, workspaceName }: ChannelChatProps) {
       ) : null}
       <WorkspaceChannelChatView
         channel={channel}
-        headerActions={(
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="gap-2 rounded-full"
-                onClick={() => setMembersOpen(true)}
-              >
-                <Users className="size-4" />
-                <span className="hidden sm:inline">View members</span>
-                {memberCount != null ? (
-                  <span className="rounded-full bg-muted px-1.5 py-0.5 text-[11px] leading-none text-muted-foreground">
-                    {memberCount}
-                  </span>
-                ) : null}
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent side="bottom">View members</TooltipContent>
-          </Tooltip>
-        )}
         placeholder="Type @ to chat with a member"
         extraBody={{ scopeType: 'workspace', scopeRefId: channel.workspaceId }}
       />
@@ -156,10 +157,17 @@ export function ChannelChat({ workspaceId, workspaceName }: ChannelChatProps) {
   );
 }
 
-function ChannelHeader({ workspaceName }: { workspaceName: string }) {
+function ChannelHeader({
+  workspaceName,
+  actions,
+}: {
+  workspaceName: string;
+  actions?: ReactNode;
+}) {
   return (
-    <header className="flex h-12 shrink-0 items-center justify-between gap-2 px-4">
+    <header className="flex h-16 shrink-0 items-start justify-between gap-3 px-4 pt-4">
       <span className="font-medium text-sm">{workspaceName}</span>
+      {actions ? <div className="shrink-0">{actions}</div> : null}
     </header>
   );
 }

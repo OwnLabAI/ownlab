@@ -1,11 +1,17 @@
 'use client';
 
-import { useTransition } from 'react';
+import { useEffect, useRef, useState, useTransition } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { FolderOpen, ListTodo, Target, Users } from 'lucide-react';
+import { FolderOpen, ListTodo, MoreHorizontal, Target, Users } from 'lucide-react';
 import { toast } from 'sonner';
 import { useWorkspaceView } from '@/features/workspace/stores/use-workspace-view-store';
 import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { SidebarContent } from '@/components/ui/sidebar';
 import { cn } from '@/lib/utils';
 import { ToolPanelMembers } from './tool-panel-members';
@@ -24,6 +30,9 @@ const TABS = [
 ] as const;
 
 type TabId = (typeof TABS)[number]['id'];
+
+const TAB_GAP = 4;
+const MORE_BUTTON_WIDTH = 40;
 
 interface ToolPanelProps {
   items: Item[];
@@ -99,24 +108,188 @@ export function ToolPanel({
   } = useWorkspaceView(workspaceId);
   const handleFileSelect = onFileSelect ?? setSelectedFilePath;
   const handleTaskSelect = onTaskSelect ?? setSelectedTaskId;
+  const tabsRef = useRef<HTMLDivElement | null>(null);
+  const measureRefs = useRef<Partial<Record<TabId, HTMLButtonElement | null>>>({});
+  const [layout, setLayout] = useState<{
+    visibleTabIds: TabId[];
+    hiddenTabIds: TabId[];
+  }>({
+    visibleTabIds: TABS.map((tab) => tab.id),
+    hiddenTabIds: [],
+  });
+
+  useEffect(() => {
+    const container = tabsRef.current;
+    if (!container) {
+      return;
+    }
+
+    const updateLayout = () => {
+      const containerWidth = container.clientWidth;
+      if (!containerWidth) {
+        return;
+      }
+
+      const widthById = Object.fromEntries(
+        TABS.map((tab) => [tab.id, measureRefs.current[tab.id]?.offsetWidth ?? 96]),
+      ) as Record<TabId, number>;
+
+      let used = 0;
+      let directCount = 0;
+
+      for (let index = 0; index < TABS.length; index += 1) {
+        const tab = TABS[index];
+        const gapBefore = directCount > 0 ? TAB_GAP : 0;
+        const nextUsed = used + gapBefore + widthById[tab.id];
+        const remainingTabs = TABS.length - (index + 1);
+        const reserveForMore = remainingTabs > 0 ? TAB_GAP + MORE_BUTTON_WIDTH : 0;
+
+        if (nextUsed + reserveForMore <= containerWidth) {
+          used = nextUsed;
+          directCount += 1;
+          continue;
+        }
+
+        break;
+      }
+
+      if (directCount >= TABS.length) {
+        const nextVisible = TABS.map((tab) => tab.id);
+        setLayout((current) => (
+          current.hiddenTabIds.length === 0 &&
+          current.visibleTabIds.length === nextVisible.length &&
+          current.visibleTabIds.every((tabId, index) => tabId === nextVisible[index])
+            ? current
+            : { visibleTabIds: nextVisible, hiddenTabIds: [] }
+        ));
+        return;
+      }
+
+      directCount = Math.max(1, directCount);
+      const leadingIds = TABS.slice(0, directCount).map((tab) => tab.id);
+
+      let nextVisible = leadingIds;
+      if (!nextVisible.includes(activeToolTab)) {
+        nextVisible = [...leadingIds.slice(0, Math.max(0, directCount - 1)), activeToolTab];
+      }
+
+      nextVisible = TABS
+        .map((tab) => tab.id)
+        .filter((tabId, index, ids) => nextVisible.includes(tabId) && ids.indexOf(tabId) === index)
+        .slice(0, directCount);
+
+      const nextHidden = TABS
+        .map((tab) => tab.id)
+        .filter((tabId) => !nextVisible.includes(tabId));
+
+      setLayout((current) => (
+        current.visibleTabIds.length === nextVisible.length &&
+        current.hiddenTabIds.length === nextHidden.length &&
+        current.visibleTabIds.every((tabId, index) => tabId === nextVisible[index]) &&
+        current.hiddenTabIds.every((tabId, index) => tabId === nextHidden[index])
+          ? current
+          : { visibleTabIds: nextVisible, hiddenTabIds: nextHidden }
+      ));
+    };
+
+    updateLayout();
+
+    const resizeObserver = new ResizeObserver(updateLayout);
+    resizeObserver.observe(container);
+
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, [activeToolTab]);
+
+  const visibleTabs = TABS.filter((tab) => layout.visibleTabIds.includes(tab.id));
+  const hiddenTabs = TABS.filter((tab) => layout.hiddenTabIds.includes(tab.id));
+  const useCompactToolbar = hiddenTabs.length > 0 && visibleTabs.length <= 2;
 
   return (
-    <div className="flex h-full w-full min-h-0 flex-col bg-transparent px-2 py-2">
-      <div className="mb-3 flex h-12 shrink-0 items-center gap-1 rounded-full bg-background/70 p-1">
-        {TABS.map((tab) => (
+    <div className="relative flex h-full w-full min-h-0 flex-col bg-transparent px-2 py-2">
+      <div
+        ref={tabsRef}
+        className={cn(
+          'mb-2.5 h-10 shrink-0 overflow-hidden rounded-full bg-background/70 px-1 py-0.5',
+          useCompactToolbar
+            ? 'flex items-center gap-1.5'
+            : hiddenTabs.length > 0
+              ? 'grid items-center gap-1'
+              : 'grid items-center gap-1',
+        )}
+        style={
+          useCompactToolbar
+            ? undefined
+            : hiddenTabs.length > 0
+              ? { gridTemplateColumns: `repeat(${Math.max(1, visibleTabs.length)}, minmax(0, 1fr)) auto` }
+              : { gridTemplateColumns: `repeat(${Math.max(1, visibleTabs.length)}, minmax(0, 1fr))` }
+        }
+      >
+        {visibleTabs.map((tab) => (
           <button
             key={tab.id}
             type="button"
             onClick={() => setActiveToolTab(tab.id)}
             className={cn(
-              'flex flex-1 items-center justify-center gap-2 rounded-full px-3 py-2 text-sm font-medium transition-all',
+              'flex min-w-0 items-center justify-center gap-1.5 rounded-full px-2.5 py-1.5 text-[13px] font-medium transition-all',
+              useCompactToolbar && 'flex-none px-4',
               activeToolTab === tab.id
                 ? 'bg-background text-foreground shadow-sm'
                 : 'text-muted-foreground hover:bg-background/70 hover:text-foreground',
             )}
           >
-            <tab.icon className="size-4" />
-            {tab.label}
+            <tab.icon className="size-3.5" />
+            <span className="truncate">{tab.label}</span>
+          </button>
+        ))}
+
+        {hiddenTabs.length > 0 ? (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                className={cn(
+                  'flex items-center justify-center rounded-full text-muted-foreground transition-all hover:bg-background/70 hover:text-foreground',
+                  useCompactToolbar ? 'ml-auto size-8.5 shrink-0' : 'h-full min-w-0 px-2',
+                )}
+                aria-label="More tools"
+                title="More tools"
+              >
+                <MoreHorizontal className="size-3.5" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-44">
+              {hiddenTabs.map((tab) => (
+                <DropdownMenuItem
+                  key={tab.id}
+                  onClick={() => setActiveToolTab(tab.id)}
+                  className="cursor-pointer"
+                >
+                  <tab.icon className="size-4" />
+                  <span className="flex-1">{tab.label}</span>
+                  {activeToolTab === tab.id ? (
+                    <span className="text-[11px] text-muted-foreground">Current</span>
+                  ) : null}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ) : null}
+      </div>
+
+      <div className="pointer-events-none absolute left-0 top-0 -z-10 opacity-0">
+        {TABS.map((tab) => (
+          <button
+            key={`measure-${tab.id}`}
+            ref={(node) => {
+              measureRefs.current[tab.id] = node;
+            }}
+            type="button"
+            className="flex items-center justify-center gap-1.5 rounded-full px-4 py-1.5 text-[13px] font-medium"
+          >
+            <tab.icon className="size-3.5" />
+            <span>{tab.label}</span>
           </button>
         ))}
       </div>
