@@ -480,6 +480,7 @@ async function readSkillEntry(
     localPath: skillDir,
     adapterCompat: ["codex_local", "claude_local"],
     metadata: {
+      category: inferSkillCategory(skillDir, sourceType),
       contentFile: path.basename(skillFile),
       hasReferences: await fs.stat(path.join(skillDir, "references")).then((s) => s.isDirectory()).catch(() => false),
       hasScripts: await fs.stat(path.join(skillDir, "scripts")).then((s) => s.isDirectory()).catch(() => false),
@@ -533,6 +534,23 @@ function sanitizeSlug(value: string): string {
     .toLowerCase()
     .replace(/[^a-z0-9-_]+/g, "-")
     .replace(/^-+|-+$/g, "") || "skill";
+}
+
+function inferSkillCategory(
+  skillDir: string,
+  sourceType: "builtin" | "community",
+): string {
+  const normalized = skillDir.replace(/\\/g, "/").toLowerCase();
+
+  if (normalized.includes("/work-skills/")) {
+    return "Work";
+  }
+
+  if (normalized.includes("/scientific-skills/")) {
+    return "Research";
+  }
+
+  return sourceType === "community" ? "Collection" : "Research";
 }
 
 async function readMarketplaceSkillEntries(
