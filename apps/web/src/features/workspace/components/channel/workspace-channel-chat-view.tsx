@@ -451,10 +451,24 @@ export function WorkspaceChannelChatView({
     setSelectedMentions((prev) => filterMentionsByContent(prev, textarea.value));
 
     const draft = findMentionDraft(textarea.value, textarea.selectionStart ?? textarea.value.length);
-    setMentionQuery(draft?.query ?? null);
-    setMentionRange(draft ? { start: draft.start, end: draft.end } : null);
-    setHighlightedMentionIndex(0);
+    const nextQuery = draft?.query ?? null;
+    setMentionQuery((prev) => (prev === nextQuery ? prev : nextQuery));
+    setMentionRange((prev) => {
+      if (!draft) {
+        return prev === null ? prev : null;
+      }
+
+      if (prev && prev.start === draft.start && prev.end === draft.end) {
+        return prev;
+      }
+
+      return { start: draft.start, end: draft.end };
+    });
   }, []);
+
+  useEffect(() => {
+    setHighlightedMentionIndex(0);
+  }, [mentionQuery, mentionRange?.start, mentionRange?.end]);
 
   const insertMention = useCallback((agent: WorkspaceAgent) => {
     const textarea = textareaRef.current;
