@@ -45,6 +45,18 @@ function resolveCodexHomeDir(env: NodeJS.ProcessEnv = process.env): string {
   return path.resolve(fromEnv ?? path.join(os.homedir(), ".codex"));
 }
 
+function uniquePaths(paths: string[]): string[] {
+  const seen = new Set<string>();
+  const result: string[] = [];
+  for (const candidate of paths) {
+    const normalized = path.resolve(candidate);
+    if (seen.has(normalized)) continue;
+    seen.add(normalized);
+    result.push(normalized);
+  }
+  return result;
+}
+
 async function pathExists(candidate: string): Promise<boolean> {
   return fs.access(candidate).then(() => true).catch(() => false);
 }
@@ -172,7 +184,7 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
   const search = asBoolean(config.search, false);
   const bypass = asBoolean(
     config.dangerouslyBypassApprovalsAndSandbox,
-    asBoolean(config.dangerouslyBypassSandbox, true),
+    asBoolean(config.dangerouslyBypassSandbox, false),
   );
 
   const workspaceContext = parseObject(context.ownlabWorkspace);
@@ -292,14 +304,38 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
   }
 
   const prompt = asString(context.prompt as string, "You are a helpful coding assistant.");
+  const effectivePrompt = [
+    workspaceId
+      ? [
+          "Filesystem boundary note:",
+          `This run is bound to workspace ${cwd}.`,
+          "Treat paths outside the workspace and explicit runtime support directories as unavailable.",
+          "Do not claim host-wide filesystem access unless a command actually proves it inside the sandbox.",
+          "",
+        ].join("\n")
+      : "",
+    prompt,
+  ].filter(Boolean).join("\n");
+  const sandboxWritableDirs = uniquePaths(
+    [cwd, agentHome, effectiveCodexHome].filter((value) => value.trim().length > 0),
+  );
 
   const buildArgs = (resumeSessionId: string | null) => {
-    const args = ["exec", "--json"];
-    if (search) args.unshift("--search");
-    if (bypass) args.push("--dangerously-bypass-approvals-and-sandbox");
+    const args: string[] = [];
+    if (search) args.push("--search");
+    if (bypass) {
+      args.push("--dangerously-bypass-approvals-and-sandbox");
+    } else {
+      args.push("--sandbox", "workspace-write", "--ask-for-approval", "never", "--cd", cwd);
+      for (const dir of sandboxWritableDirs) {
+        if (dir === path.resolve(cwd)) continue;
+        args.push("--add-dir", dir);
+      }
+    }
     if (model) args.push("--model", model);
     if (modelReasoningEffort) args.push("-c", `model_reasoning_effort=${JSON.stringify(modelReasoningEffort)}`);
     if (extraArgs.length > 0) args.push(...extraArgs);
+    args.push("exec", "--json");
     if (resumeSessionId) args.push("resume", resumeSessionId, "-");
     else args.push("-");
     return args;
@@ -314,7 +350,7 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
         cwd,
         commandArgs: args,
         env: redactEnvForLogs(env),
-        prompt,
+        prompt: effectivePrompt,
         context,
       });
     }
@@ -322,7 +358,7 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
     const proc = await runChildProcess(runId, command, args, {
       cwd,
       env,
-      stdin: prompt,
+      stdin: effectivePrompt,
       timeoutSec,
       graceSec,
       onLog,

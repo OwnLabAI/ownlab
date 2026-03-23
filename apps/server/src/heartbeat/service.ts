@@ -14,6 +14,7 @@ import type {
 } from "@ownlab/adapter-utils";
 import { clearInterruptedProcess, wasProcessInterrupted } from "@ownlab/adapter-utils/server-utils";
 import { getServerAdapter } from "../adapters/registry.js";
+import { resolveAgentExecutionRuntimeContext } from "../agents/runtime-context.js";
 import { createChannelService } from "../channels/service.js";
 import {
   buildAgencyPromptNote,
@@ -127,6 +128,12 @@ export function createHeartbeatService(db: Db) {
       sessionParams: null,
       sessionDisplayId: null,
     };
+    const runtimeWorkspace = await resolveAgentExecutionRuntimeContext(
+      db,
+      agent,
+      task.workspaceId,
+      taskId,
+    );
 
     let execution: AdapterExecutionResult;
     registerTaskRun(task.id, runId);
@@ -147,6 +154,15 @@ export function createHeartbeatService(db: Db) {
           taskId,
           workspaceId: task.workspaceId ?? undefined,
           labId: task.labId,
+          ownlabWorkspace: {
+            cwd: runtimeWorkspace.cwd,
+            source: runtimeWorkspace.workspaceSource,
+            workspaceId: runtimeWorkspace.workspaceId,
+            worktreePath: runtimeWorkspace.worktreePath,
+            agentHome: runtimeWorkspace.agentHome,
+            channelHome: runtimeWorkspace.channelHome,
+            name: runtimeWorkspace.workspaceName,
+          },
           agencyProfile: agencyProfile
             ? {
                 rootDir: agencyProfile.rootDir,

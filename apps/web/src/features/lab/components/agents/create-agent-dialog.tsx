@@ -390,7 +390,7 @@ export function CreateAgentDialog({
           model,
           promptTemplate: '{{context.prompt}}',
           ...(adapterType === 'codex_local'
-            ? { dangerouslyBypassApprovalsAndSandbox: true }
+            ? { dangerouslyBypassApprovalsAndSandbox: false }
             : {}),
         },
         runtimeConfig: {

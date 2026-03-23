@@ -31,7 +31,6 @@ import {
   usePromptInputAttachments,
 } from '@/components/ai-elements/prompt-input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import {
@@ -725,15 +724,6 @@ function ChannelMessageItem({
               ) : (
                 <p className="whitespace-pre-wrap text-right">{message.content}</p>
               )
-            ) : null}
-            {message.mentions.length > 0 ? (
-              <div className="mt-2 flex flex-wrap gap-2">
-                {message.mentions.map((mention) => (
-                  <Badge key={`${message.id}-${mention.id}`} variant="outline" className="text-[11px]">
-                    {mention.label}
-                  </Badge>
-                ))}
-              </div>
             ) : null}
             {message.attachments.length > 0 ? (
               <MessageAttachments attachments={message.attachments} />

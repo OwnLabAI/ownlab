@@ -31,6 +31,18 @@ import {
 
 const COPIED_SHARED_FILES = ["settings.json"] as const;
 
+function uniquePaths(paths: string[]): string[] {
+  const seen = new Set<string>();
+  const result: string[] = [];
+  for (const candidate of paths) {
+    const normalized = path.resolve(candidate);
+    if (seen.has(normalized)) continue;
+    seen.add(normalized);
+    result.push(normalized);
+  }
+  return result;
+}
+
 async function pathExists(candidate: string): Promise<boolean> {
   return fs.access(candidate).then(() => true).catch(() => false);
 }
@@ -499,6 +511,20 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
     sessionHandoffNote,
     renderedPrompt,
   ]);
+  const effectivePrompt = joinPromptSections([
+    workspaceId
+      ? [
+          "Filesystem boundary note:",
+          `This run is bound to workspace ${cwd}.`,
+          "Treat paths outside the workspace and explicit runtime support directories as unavailable.",
+          "Do not describe host-wide file access unless a command in the current session proves it.",
+        ].join("\n")
+      : "",
+    prompt,
+  ]);
+  const allowedDirs = uniquePaths(
+    [cwd, agentHome, claudeHome].filter((value) => value.trim().length > 0),
+  );
 
   const buildClaudeArgs = (resumeSessionId: string | null) => {
     const args = ["--print", "-", "--output-format", "stream-json", "--verbose"];
@@ -511,7 +537,10 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
     if (effectiveInstructionsFilePath) {
       args.push("--append-system-prompt-file", effectiveInstructionsFilePath);
     }
-    args.push("--add-dir", agentHome);
+    for (const dir of allowedDirs) {
+      if (dir === path.resolve(cwd)) continue;
+      args.push("--add-dir", dir);
+    }
     if (extraArgs.length > 0) args.push(...extraArgs);
     return args;
   };
@@ -542,7 +571,7 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
         commandArgs: args,
         commandNotes,
         env: redactEnvForLogs(env),
-        prompt,
+        prompt: effectivePrompt,
         context,
       });
     }
@@ -550,7 +579,7 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
     const proc = await runChildProcess(runId, command, args, {
       cwd,
       env,
-      stdin: prompt,
+      stdin: effectivePrompt,
       timeoutSec,
       graceSec,
       onLog,

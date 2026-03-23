@@ -45,7 +45,7 @@ export function createAgentService(db: Db) {
       model: input.model,
       promptTemplate: "{{context.prompt}}",
       ...(input.adapterType === "codex_local"
-        ? { dangerouslyBypassApprovalsAndSandbox: true }
+        ? { dangerouslyBypassApprovalsAndSandbox: false }
         : {}),
     };
   }

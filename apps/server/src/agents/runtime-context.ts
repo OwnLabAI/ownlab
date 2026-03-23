@@ -1,3 +1,4 @@
+import path from "node:path";
 import type { Db } from "@ownlab/db";
 import { eq, workspaces } from "@ownlab/db";
 import type { agents } from "@ownlab/db";
@@ -19,11 +20,11 @@ export interface AgentExecutionRuntimeContext {
 export async function resolveAgentExecutionRuntimeContext(
   db: Db,
   agent: AgentRecord,
-  _channelWorkspaceId?: string | null,
+  requestedWorkspaceId?: string | null,
   _channelId?: string | null,
 ): Promise<AgentExecutionRuntimeContext> {
   const runtimeConfig = asRecord(agent.runtimeConfig);
-  const requestedWorkspaceId = asString(runtimeConfig?.workspaceId);
+  const configuredWorkspaceId = asString(runtimeConfig?.workspaceId);
   const configuredProjectPath =
     asString(runtimeConfig?.projectPath) ||
     asString(runtimeConfig?.workingDirectory) ||
@@ -39,6 +40,29 @@ export async function resolveAgentExecutionRuntimeContext(
     runtimeConfig: agent.runtimeConfig,
   });
 
+  const effectiveWorkspaceId = requestedWorkspaceId ?? configuredWorkspaceId;
+
+  if (effectiveWorkspaceId) {
+    const [workspace] = await db
+      .select()
+      .from(workspaces)
+      .where(eq(workspaces.id, effectiveWorkspaceId))
+      .limit(1);
+
+    if (workspace?.worktreePath?.trim()) {
+      const workspacePath = path.resolve(workspace.worktreePath);
+      return {
+        cwd: workspacePath,
+        agentHome,
+        channelHome,
+        workspaceSource: "workspace",
+        workspaceId: workspace.id,
+        workspaceName: workspace.name,
+        worktreePath: workspacePath,
+      };
+    }
+  }
+
   if (configuredProjectPath) {
     return {
       cwd: configuredProjectPath,
@@ -49,26 +73,6 @@ export async function resolveAgentExecutionRuntimeContext(
       workspaceName: null,
       worktreePath: null,
     };
-  }
-
-  if (requestedWorkspaceId) {
-    const [workspace] = await db
-      .select()
-      .from(workspaces)
-      .where(eq(workspaces.id, requestedWorkspaceId))
-      .limit(1);
-
-    if (workspace?.worktreePath?.trim()) {
-      return {
-        cwd: workspace.worktreePath,
-        agentHome,
-        channelHome,
-        workspaceSource: "workspace",
-        workspaceId: workspace.id,
-        workspaceName: workspace.name,
-        worktreePath: workspace.worktreePath,
-      };
-    }
   }
 
   return {
