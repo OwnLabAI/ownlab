@@ -33,6 +33,10 @@ const nextConfig: NextConfig = {
         destination: `${SERVER_URL}/api/channels/:path*`,
       },
       {
+        source: '/api/workspace/:path*',
+        destination: `${SERVER_URL}/api/workspace/:path*`,
+      },
+      {
         source: '/api/workspaces/:path*',
         destination: `${SERVER_URL}/api/workspaces/:path*`,
       },

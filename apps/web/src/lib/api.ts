@@ -456,8 +456,8 @@ export async function fetchWorkspaces(opts?: { labId?: string }): Promise<Worksp
   const params = opts?.labId ? `?labId=${encodeURIComponent(opts.labId)}` : '';
   const url =
     typeof window === 'undefined'
-      ? `${SERVER_BASE}/api/workspaces${params}`
-      : `${API_BASE}/workspaces${params}`;
+      ? `${SERVER_BASE}/api/workspace${params}`
+      : `${API_BASE}/workspace${params}`;
   const res = await fetch(url, { cache: 'no-store' });
   if (!res.ok) throw new Error('Failed to fetch workspaces');
   return res.json();
@@ -468,7 +468,7 @@ export async function createWorkspaceApi(data: {
   description?: string | null;
   worktreePath?: string | null;
 }): Promise<Workspace> {
-  const res = await fetch(`${SERVER_BASE}/api/workspaces`, {
+  const res = await fetch(`${SERVER_BASE}/api/workspace`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
@@ -484,7 +484,7 @@ export async function browseWorkspaceFolder(): Promise<{
   path: string;
   name: string;
 } | null> {
-  const res = await fetch(`${API_BASE}/workspaces/browse-folder`, {
+  const res = await fetch(`${API_BASE}/workspace/browse-folder`, {
     method: 'POST',
   });
 
@@ -500,7 +500,7 @@ export async function updateWorkspaceApi(
   id: string,
   data: Partial<{ name: string; description: string | null; status: string; worktreePath: string | null }>,
 ): Promise<Workspace> {
-  const res = await fetch(`${SERVER_BASE}/api/workspaces/${id}`, {
+  const res = await fetch(`${SERVER_BASE}/api/workspace/${id}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
@@ -513,7 +513,7 @@ export async function updateWorkspaceApi(
 }
 
 export async function fetchWorkspaceGoal(workspaceId: string): Promise<WorkspaceGoalRecord> {
-  const res = await fetch(`${API_BASE}/workspaces/${encodeURIComponent(workspaceId)}/goal`, {
+  const res = await fetch(`${API_BASE}/workspace/${encodeURIComponent(workspaceId)}/goal`, {
     cache: 'no-store',
   });
   if (!res.ok) {
@@ -524,7 +524,7 @@ export async function fetchWorkspaceGoal(workspaceId: string): Promise<Workspace
 }
 
 export async function fetchWorkspaceTasks(workspaceId: string): Promise<Task[]> {
-  const res = await fetch(`${API_BASE}/workspaces/${encodeURIComponent(workspaceId)}/tasks`, {
+  const res = await fetch(`${API_BASE}/workspace/${encodeURIComponent(workspaceId)}/tasks`, {
     cache: 'no-store',
   });
   if (!res.ok) {
@@ -538,7 +538,7 @@ export async function updateWorkspaceGoal(
   workspaceId: string,
   markdown: string,
 ): Promise<WorkspaceGoalRecord> {
-  const res = await fetch(`${SERVER_BASE}/api/workspaces/${encodeURIComponent(workspaceId)}/goal`, {
+  const res = await fetch(`${SERVER_BASE}/api/workspace/${encodeURIComponent(workspaceId)}/goal`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ markdown }),
@@ -551,7 +551,7 @@ export async function updateWorkspaceGoal(
 }
 
 export async function deleteWorkspaceApi(id: string): Promise<void> {
-  const res = await fetch(`${SERVER_BASE}/api/workspaces/${id}`, { method: 'DELETE' });
+  const res = await fetch(`${SERVER_BASE}/api/workspace/${id}`, { method: 'DELETE' });
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: 'Failed to delete workspace' }));
     throw new Error(err.error || 'Failed to delete workspace');
@@ -559,7 +559,7 @@ export async function deleteWorkspaceApi(id: string): Promise<void> {
 }
 
 export async function fetchWorkspaceFileTree(workspaceId: string): Promise<WorkspaceFileTreeResponse> {
-  const res = await fetch(`${API_BASE}/workspaces/${workspaceId}/file-tree`);
+  const res = await fetch(`${API_BASE}/workspace/${workspaceId}/file-tree`);
   if (!res.ok) {
     if (res.status === 404) {
       return { rootName: '', rootPath: '', items: [] };
@@ -575,7 +575,7 @@ export async function fetchWorkspaceFolderContents(
   relativeDir?: string,
 ): Promise<FileTreeNode[]> {
   const q = relativeDir ? `?path=${encodeURIComponent(relativeDir)}` : '';
-  const res = await fetch(`${API_BASE}/workspaces/${workspaceId}/folder-contents${q}`);
+  const res = await fetch(`${API_BASE}/workspace/${workspaceId}/folder-contents${q}`);
   if (!res.ok) {
     if (res.status === 404) return [];
     const err = await res.json().catch(() => ({ error: 'Failed to fetch folder contents' }));
@@ -589,7 +589,7 @@ export async function createWorkspaceFileOrFolder(
   relativePath: string,
   type: 'file' | 'folder',
 ): Promise<void> {
-  const res = await fetch(`${API_BASE}/workspaces/${workspaceId}/files`, {
+  const res = await fetch(`${API_BASE}/workspace/${workspaceId}/files`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ path: relativePath, type }),
@@ -605,7 +605,7 @@ export async function renameWorkspaceFileOrFolder(
   relativePath: string,
   newName: string,
 ): Promise<{ path: string; name: string }> {
-  const res = await fetch(`${API_BASE}/workspaces/${workspaceId}/files`, {
+  const res = await fetch(`${API_BASE}/workspace/${workspaceId}/files`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ path: relativePath, newName }),
@@ -624,7 +624,7 @@ export async function deleteWorkspaceFileOrFolder(
   relativePath: string,
 ): Promise<void> {
   const res = await fetch(
-    `${API_BASE}/workspaces/${workspaceId}/files?path=${encodeURIComponent(relativePath)}`,
+    `${API_BASE}/workspace/${workspaceId}/files?path=${encodeURIComponent(relativePath)}`,
     { method: 'DELETE' },
   );
   if (!res.ok) {
@@ -638,7 +638,7 @@ export async function moveWorkspaceFileOrFolder(
   relativePath: string,
   destinationPath = '',
 ): Promise<{ path: string; name: string }> {
-  const res = await fetch(`${API_BASE}/workspaces/${workspaceId}/files/move`, {
+  const res = await fetch(`${API_BASE}/workspace/${workspaceId}/files/move`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ path: relativePath, destinationPath }),
@@ -657,7 +657,7 @@ export async function fetchWorkspaceFileContent(
   relativePath: string,
 ): Promise<string> {
   const res = await fetch(
-    `${API_BASE}/workspaces/${workspaceId}/files/content?path=${encodeURIComponent(relativePath)}`,
+    `${API_BASE}/workspace/${workspaceId}/files/content?path=${encodeURIComponent(relativePath)}`,
   );
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: 'Failed to fetch file content' }));
@@ -1076,7 +1076,7 @@ export async function fetchAvailableWorkspaceAgents(workspaceId: string): Promis
 }
 
 export async function fetchWorkspaceAccess(workspaceId: string): Promise<ChannelMember[]> {
-  const res = await fetch(`${API_BASE}/workspaces/${workspaceId}/access`);
+  const res = await fetch(`${API_BASE}/workspace/${workspaceId}/access`);
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: 'Failed to fetch workspace access' }));
     throw new Error(err.error || 'Failed to fetch workspace access');
@@ -1094,7 +1094,7 @@ export async function grantWorkspaceAccess(
     icon?: string | null;
   },
 ) {
-  const res = await fetch(`${API_BASE}/workspaces/${workspaceId}/access`, {
+  const res = await fetch(`${API_BASE}/workspace/${workspaceId}/access`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
@@ -1107,7 +1107,7 @@ export async function grantWorkspaceAccess(
 }
 
 export async function revokeWorkspaceAccess(workspaceId: string, actorId: string): Promise<void> {
-  const res = await fetch(`${API_BASE}/workspaces/${workspaceId}/access/${encodeURIComponent(actorId)}`, {
+  const res = await fetch(`${API_BASE}/workspace/${workspaceId}/access/${encodeURIComponent(actorId)}`, {
     method: 'DELETE',
   });
   if (!res.ok) {

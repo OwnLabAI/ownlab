@@ -73,7 +73,7 @@ Quick health checks:
 ```bash
 curl http://localhost:3100/health
 curl http://localhost:3100/api/agents
-curl http://localhost:3100/api/workspaces
+curl http://localhost:3100/api/workspace
 ```
 
 By default, OwnLab uses an embedded PostgreSQL instance in development when `DATABASE_URL` is not set.
@@ -91,7 +91,7 @@ The API is mounted under `/api` with routes such as:
 
 - `/api/agents`
 - `/api/teams`
-- `/api/workspaces`
+- `/api/workspace`
 - `/api/channels`
 - `/api/taskboards`
 - `/api/tasks`

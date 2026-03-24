@@ -3,7 +3,7 @@ import cors from "cors";
 import type { Db } from "@ownlab/db";
 import { agentRoutes } from "./agents/routes.js";
 import { channelRoutes } from "./channels/routes.js";
-import { workspaceRoutes } from "./workspaces/routes.js";
+import { workspaceRoutes } from "./workspace/routes.js";
 import { taskboardRoutes } from "./tasks/taskboard-routes.js";
 import { taskRoutes } from "./tasks/routes.js";
 import { chatRoutes } from "./channels/chat-routes.js";
@@ -24,7 +24,9 @@ export function createApp(db: Db): Express {
 
   app.use("/api/agents", agentRoutes(db));
   app.use("/api/teams", teamRoutes(db));
-  app.use("/api/workspaces", workspaceRoutes(db));
+  const workspaceRouter = workspaceRoutes(db);
+  app.use("/api/workspace", workspaceRouter);
+  app.use("/api/workspaces", workspaceRouter);
   app.use("/api/channels", channelRoutes(db));
   app.use("/api/taskboards", taskboardRoutes(db));
   app.use("/api/tasks", taskRoutes(db));

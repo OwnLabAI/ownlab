@@ -60,7 +60,7 @@ function getPreviewKind(filePath: string | null): PreviewKind {
 }
 
 function getWorkspaceFilePreviewUrl(workspaceId: string, filePath: string): string {
-  return `/api/workspaces/${encodeURIComponent(workspaceId)}/files/content?path=${encodeURIComponent(filePath)}`;
+  return `/api/workspace/${encodeURIComponent(workspaceId)}/files/content?path=${encodeURIComponent(filePath)}`;
 }
 
 export function Viewboard({

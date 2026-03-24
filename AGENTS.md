@@ -35,7 +35,7 @@ Then follow the feature area you are changing:
 - teams: `apps/server/src/teams/*`, `apps/web/src/features/teams/*`
 - channels/chat: `apps/server/src/channels/*`, `apps/web/src/features/channels/*`
 - tasks/taskboards: `apps/server/src/tasks/*`, `apps/web/src/features/tasks/*`
-- workspaces/files: `apps/server/src/workspaces/*`, `apps/web/src/features/workspaces/*`
+- workspace/files: `apps/server/src/workspace/*`, `apps/web/src/features/workspace/*`
 - skills: `apps/server/src/skills/*`, `apps/web/src/features/skills/*`
 
 Do not assume older docs reflect current behavior. Prefer the running code, route definitions, schema, and UI entrypoints.
@@ -97,7 +97,7 @@ Useful checks:
 ```sh
 curl http://localhost:3100/health
 curl http://localhost:3100/api/agents
-curl http://localhost:3100/api/workspaces
+curl http://localhost:3100/api/workspace
 ```
 
 Use external PostgreSQL if needed:
@@ -158,7 +158,7 @@ Current top-level API groups:
 
 - `/api/agents`
 - `/api/teams`
-- `/api/workspaces`
+- `/api/workspace`
 - `/api/channels`
 - `/api/taskboards`
 - `/api/tasks`

@@ -17,7 +17,7 @@ import {
   sql,
 } from "@ownlab/db";
 import type { ChannelAttachment, ChannelMention } from "@ownlab/shared";
-import { createWorkspaceMembershipService } from "../workspaces/membership-service.js";
+import { createWorkspaceMembershipService } from "../workspace/membership-service.js";
 
 export interface ListChannelsQuery {
   workspaceId?: string;
