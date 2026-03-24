@@ -51,6 +51,7 @@ export function ToolPanelChannels({
     setSelectedChannelId,
     bumpMembersVersion,
     bumpChannelsVersion,
+    channelsVersion,
   } = useWorkspaceView(workspaceId);
   const [channels, setChannels] = useState<Channel[]>([]);
   const [channelMembers, setChannelMembers] = useState<ChannelMember[]>([]);
@@ -94,7 +95,7 @@ export function ToolPanelChannels({
 
   useEffect(() => {
     void loadChannels();
-  }, [workspaceId]);
+  }, [workspaceId, channelsVersion]);
 
   useEffect(() => {
     if (!currentChannel) {
