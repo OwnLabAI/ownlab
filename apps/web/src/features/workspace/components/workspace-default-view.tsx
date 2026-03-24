@@ -17,11 +17,18 @@ export function WorkspaceDefaultView({
   return (
     <div className="flex h-full flex-1 items-center justify-center">
       <div className="mx-auto flex w-full max-w-xl flex-col items-center px-8 py-10 text-center">
-        <img
-          src="/logo-name.svg"
-          alt="OwnLab"
-          className="mx-auto mb-6 h-12 w-auto opacity-90"
-        />
+        <>
+          <img
+            src="/logo-name.svg"
+            alt="OwnLab"
+            className="mx-auto mb-6 h-12 w-auto opacity-90 dark:hidden"
+          />
+          <img
+            src="/logo-name-dark.svg"
+            alt="OwnLab"
+            className="mx-auto mb-6 hidden h-12 w-auto opacity-90 dark:block"
+          />
+        </>
         <h1 className="mb-2 text-xl font-semibold text-foreground">
           {workspaceName?.trim() || 'Workspace'}
         </h1>
@@ -45,21 +52,21 @@ export function WorkspaceDefaultView({
         </div>
 
         <div className="mt-8 grid w-full gap-3 sm:grid-cols-3">
-          <div className="rounded-2xl border border-black/5 bg-white/80 px-4 py-4 text-left shadow-[0_8px_24px_rgba(15,23,42,0.04)]">
+          <div className="rounded-2xl border border-border/60 bg-card/80 px-4 py-4 text-left shadow-[0_8px_24px_rgba(15,23,42,0.04)] dark:shadow-[0_10px_24px_rgba(0,0,0,0.28)]">
             <FolderOpen className="size-4 text-muted-foreground" />
             <p className="mt-3 text-sm font-medium text-foreground">Files</p>
             <p className="mt-1 text-xs leading-5 text-muted-foreground">
               Preview documents and code in the main workspace area.
             </p>
           </div>
-          <div className="rounded-2xl border border-black/5 bg-white/80 px-4 py-4 text-left shadow-[0_8px_24px_rgba(15,23,42,0.04)]">
+          <div className="rounded-2xl border border-border/60 bg-card/80 px-4 py-4 text-left shadow-[0_8px_24px_rgba(15,23,42,0.04)] dark:shadow-[0_10px_24px_rgba(0,0,0,0.28)]">
             <ListTodo className="size-4 text-muted-foreground" />
             <p className="mt-3 text-sm font-medium text-foreground">Tasks</p>
             <p className="mt-1 text-xs leading-5 text-muted-foreground">
               Review commitments here without leaving the workspace.
             </p>
           </div>
-          <div className="rounded-2xl border border-black/5 bg-white/80 px-4 py-4 text-left shadow-[0_8px_24px_rgba(15,23,42,0.04)]">
+          <div className="rounded-2xl border border-border/60 bg-card/80 px-4 py-4 text-left shadow-[0_8px_24px_rgba(15,23,42,0.04)] dark:shadow-[0_10px_24px_rgba(0,0,0,0.28)]">
             <MessagesSquare className="size-4 text-muted-foreground" />
             <p className="mt-3 text-sm font-medium text-foreground">Channel</p>
             <p className="mt-1 text-xs leading-5 text-muted-foreground">

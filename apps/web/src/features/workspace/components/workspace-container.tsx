@@ -23,7 +23,7 @@ interface WorkspaceContainerProps {
 }
 
 const CARD_CLASS =
-  'flex h-full min-h-0 flex-col overflow-hidden rounded-[24px] border border-black/5 bg-white shadow-[0_10px_30px_rgba(15,23,42,0.05)]';
+  'flex h-full min-h-0 flex-col overflow-hidden rounded-[24px] border border-border/60 bg-card shadow-[0_10px_30px_rgba(15,23,42,0.05)] dark:shadow-[0_12px_30px_rgba(0,0,0,0.35)]';
 
 function WorkspaceTopBar({
   toolPanelOpen,
@@ -45,11 +45,18 @@ function WorkspaceTopBar({
           aria-label="Back to workspaces"
           title="Back to workspaces"
         >
-          <img
-            src="/icon.svg"
-            alt="OwnLab"
-            className="size-5"
-          />
+          <>
+            <img
+              src="/icon.svg"
+              alt="OwnLab"
+              className="size-5 dark:hidden"
+            />
+            <img
+              src="/icon-dark.svg"
+              alt="OwnLab"
+              className="hidden size-5 dark:block"
+            />
+          </>
         </Link>
 
         <Button
@@ -146,7 +153,7 @@ function WorkspacePanels({
             </ResizablePanel>
             <ResizableHandle
               id="workspace-panels-handle-tools"
-              className="group w-1.5 shrink-0 cursor-col-resize rounded-full bg-transparent transition-colors hover:bg-white/20 data-[resize-handle-active]:bg-white/25"
+              className="group w-1.5 shrink-0 cursor-col-resize rounded-full bg-transparent transition-colors hover:bg-accent/70 data-[resize-handle-active]:bg-accent"
             />
           </>
         ) : null}
@@ -175,7 +182,7 @@ function WorkspacePanels({
           <>
             <ResizableHandle
               id="workspace-panels-handle-channel"
-              className="group w-1.5 shrink-0 cursor-col-resize rounded-full bg-transparent transition-colors hover:bg-white/20 data-[resize-handle-active]:bg-white/25"
+              className="group w-1.5 shrink-0 cursor-col-resize rounded-full bg-transparent transition-colors hover:bg-accent/70 data-[resize-handle-active]:bg-accent"
             />
             <ResizablePanel
               id="workspace-panels-channel"

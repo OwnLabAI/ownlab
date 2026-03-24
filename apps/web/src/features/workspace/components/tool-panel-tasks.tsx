@@ -147,11 +147,11 @@ export function ToolPanelTasks({
 
         {tasks.length === 0 ? (
           <div className="flex flex-1 flex-col items-center justify-center px-6 text-center">
-            <div className="mb-4 rounded-2xl bg-white/75 p-4 shadow-[0_6px_18px_rgba(15,23,42,0.05)]">
-              <ListTodo className="size-7 text-[#747474]" />
+            <div className="mb-4 rounded-2xl border border-border/50 bg-card/80 p-4 shadow-[0_6px_18px_rgba(15,23,42,0.05)] dark:shadow-[0_10px_24px_rgba(0,0,0,0.28)]">
+              <ListTodo className="size-7 text-muted-foreground" />
             </div>
-            <h3 className="text-base font-semibold text-[#3f3f3f]">No tasks yet</h3>
-            <p className="mt-2 max-w-xs text-sm leading-6 text-[#8a8a8a]">
+            <h3 className="text-base font-semibold text-foreground">No tasks yet</h3>
+            <p className="mt-2 max-w-xs text-sm leading-6 text-muted-foreground">
               This workspace does not have any commitments yet. Create the first task to start tracking work here.
             </p>
             <Button type="button" className="mt-5 rounded-full" onClick={() => setCreateDialogOpen(true)}>
@@ -172,7 +172,7 @@ export function ToolPanelTasks({
                       'w-full rounded-2xl border px-3 py-3 text-left transition-colors',
                       selectedTaskId === task.id
                         ? 'border-foreground/10 bg-background shadow-sm'
-                        : 'border-transparent bg-white/70 hover:border-border hover:bg-background/90',
+                        : 'border-transparent bg-card/70 hover:border-border hover:bg-accent/45',
                     )}
                   >
                     <div className="flex items-start justify-between gap-3">

@@ -2,7 +2,10 @@
 
 import {
   ChevronsUpDown,
+  LaptopIcon,
+  MoonIcon,
   Settings,
+  SunIcon,
 } from 'lucide-react';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -21,6 +24,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from '@/components/ui/sidebar';
+import { ThemeSwitcher } from './theme-switcher';
 
 export function NavUser({
   user,
@@ -77,6 +81,16 @@ export function NavUser({
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
+              <div className="px-1 py-1.5">
+                <div className="mb-2 flex items-center gap-2 text-xs font-medium text-muted-foreground">
+                  <SunIcon className="size-3.5" />
+                  <MoonIcon className="size-3.5" />
+                  <LaptopIcon className="size-3.5" />
+                  <span>Appearance</span>
+                </div>
+                <ThemeSwitcher />
+              </div>
+              <DropdownMenuSeparator />
               <DropdownMenuItem>
                 <Settings />
                 Settings

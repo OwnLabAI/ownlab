@@ -42,11 +42,18 @@ export function WorkspaceSidebar({
     <div className="border-l h-full w-full flex flex-col bg-sidebar">
       <div className="flex h-10 items-center justify-between shrink-0 px-3">
         <Link href="/lab/workspaces">
-          <img
-            src="/logo-name.svg"
-            alt="OwnLab"
-            className="h-5 w-auto"
-          />
+          <>
+            <img
+              src="/logo-name.svg"
+              alt="OwnLab"
+              className="h-5 w-auto dark:hidden"
+            />
+            <img
+              src="/logo-name-dark.svg"
+              alt="OwnLab"
+              className="hidden h-5 w-auto dark:block"
+            />
+          </>
         </Link>
         {onCollapse && (
           <Button

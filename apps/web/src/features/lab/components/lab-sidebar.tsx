@@ -48,11 +48,18 @@ export function LabSidebar({
       <SidebarHeader>
         <div className="flex items-center justify-start p-2">
           <a href="/lab/workspaces">
-            <img
-              src="/logo-name.svg"
-              alt="OwnLab Logo"
-              className="h-6 w-auto"
-            />
+            <>
+              <img
+                src="/logo-name.svg"
+                alt="OwnLab Logo"
+                className="h-6 w-auto dark:hidden"
+              />
+              <img
+                src="/logo-name-dark.svg"
+                alt="OwnLab Logo"
+                className="hidden h-6 w-auto dark:block"
+              />
+            </>
           </a>
         </div>
         <ClientOnly>

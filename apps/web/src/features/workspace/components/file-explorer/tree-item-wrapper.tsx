@@ -75,8 +75,8 @@ export function TreeItemWrapper({
             }
           }}
           className={cn(
-            'flex h-10 w-full items-center gap-2 rounded-xl pr-2 text-left outline-none transition-colors focus:ring-1 focus:ring-inset focus:ring-ring/60 hover:bg-white/70',
-            isActive && 'bg-white/92 shadow-[0_1px_0_rgba(255,255,255,0.85),0_8px_16px_rgba(15,23,42,0.04)]',
+            'flex h-10 w-full items-center gap-2 rounded-xl pr-2 text-left outline-none transition-colors focus:ring-1 focus:ring-inset focus:ring-ring/60 hover:bg-accent/60',
+            isActive && 'bg-card shadow-[0_1px_0_rgba(255,255,255,0.6),0_8px_16px_rgba(15,23,42,0.04)] dark:shadow-[0_8px_16px_rgba(0,0,0,0.28)]',
           )}
           style={{ paddingLeft: getItemPadding(level, item.type === 'file') }}
         >

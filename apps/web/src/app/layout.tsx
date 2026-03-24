@@ -1,5 +1,4 @@
 import type { ReactNode } from 'react';
-import { Toaster } from 'sonner';
 
 import {
   fontBricolageGrotesque,
@@ -8,9 +7,11 @@ import {
   fontNotoSansMono,
   fontNotoSerif,
 } from '@/assets/fonts';
+import { Toaster } from '@/components/ui/sonner';
 import { cn } from '@/lib/utils';
 
 import '@/styles/globals.css';
+import { Providers } from './providers';
 
 export const metadata = {
   title: 'OwnLab',
@@ -31,8 +32,10 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           fontBricolageGrotesque.variable
         )}
       >
-        {children}
-        <Toaster richColors position="top-right" offset={64} />
+        <Providers>
+          {children}
+          <Toaster richColors position="top-right" offset={64} />
+        </Providers>
       </body>
     </html>
   );

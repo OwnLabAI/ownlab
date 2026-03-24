@@ -93,8 +93,8 @@ export function Tree({
         onCopyRelativePath={() => onCopyRelativePath(item.path)}
         onDelete={() => onDelete(item.path)}
       >
-        <FileText className="size-4 shrink-0 text-[#8a8a8a]" />
-        <span className="truncate text-[15px] text-[#313131]">{item.name}</span>
+        <FileText className="size-4 shrink-0 text-muted-foreground" />
+        <span className="truncate text-[15px] text-foreground">{item.name}</span>
       </TreeItemWrapper>
     );
   }
@@ -160,13 +160,13 @@ export function Tree({
         >
           {item.hasChildren ? (
             <ChevronRight
-              className={cn('size-4 shrink-0 text-[#8f8f8f] transition-transform', isOpen && 'rotate-90')}
+              className={cn('size-4 shrink-0 text-muted-foreground transition-transform', isOpen && 'rotate-90')}
             />
           ) : (
             <span className="size-4 shrink-0" />
           )}
-          <Folder className="size-4 shrink-0 fill-[#d8ebff] text-[#4a90e2]" />
-          <span className="truncate text-[15px] text-[#313131]">{item.name}</span>
+          <Folder className="size-4 shrink-0 fill-primary/15 text-primary" />
+          <span className="truncate text-[15px] text-foreground">{item.name}</span>
         </TreeItemWrapper>
       )}
 

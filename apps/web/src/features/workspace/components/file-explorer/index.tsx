@@ -143,19 +143,19 @@ export function FileExplorer({ workspaceId, workspaceName, onFileSelect }: FileE
   return (
     <div className="flex h-full min-h-0 flex-col bg-transparent">
       <div className="flex items-center justify-between px-2 pb-3 pt-1">
-        <div className="flex min-w-0 items-center gap-2 text-[#4a4a4a]">
-          <FolderOpen className="mt-0.5 size-4 text-[#4a90e2]" />
+        <div className="flex min-w-0 items-center gap-2 text-foreground">
+          <FolderOpen className="mt-0.5 size-4 text-primary" />
           <div className="flex min-w-0 items-center gap-1">
             <span className="truncate text-[15px] font-medium">{rootName || workspaceName || 'Workspace'}</span>
-            <ChevronDown className="mt-0.5 size-3 text-[#8a8a8a]" />
+            <ChevronDown className="mt-0.5 size-3 text-muted-foreground" />
           </div>
         </div>
-        <div className="flex items-center gap-1 text-[#767676]">
+        <div className="flex items-center gap-1 text-muted-foreground">
           <Button
             type="button"
             variant="ghost"
             size="icon-sm"
-            className="size-8 rounded-full hover:bg-white/65"
+            className="size-8 rounded-full hover:bg-accent/70"
             title="Refresh"
             onClick={() => void refreshTree()}
           >
@@ -165,7 +165,7 @@ export function FileExplorer({ workspaceId, workspaceName, onFileSelect }: FileE
             type="button"
             variant="ghost"
             size="icon-sm"
-            className="size-8 rounded-full hover:bg-white/65"
+            className="size-8 rounded-full hover:bg-accent/70"
             title="New File"
             onClick={() => void handleStartCreate('', 'file')}
           >
@@ -175,7 +175,7 @@ export function FileExplorer({ workspaceId, workspaceName, onFileSelect }: FileE
             type="button"
             variant="ghost"
             size="icon-sm"
-            className="size-8 rounded-full hover:bg-white/65"
+            className="size-8 rounded-full hover:bg-accent/70"
             title="New Folder"
             onClick={() => void handleStartCreate('', 'folder')}
           >
@@ -184,14 +184,14 @@ export function FileExplorer({ workspaceId, workspaceName, onFileSelect }: FileE
         </div>
       </div>
 
-      <div className="mb-2 border-b border-black/5" />
+      <div className="mb-2 border-b border-border/60" />
 
       <div className="flex h-full min-h-0 flex-col bg-transparent">
         <ScrollArea className="min-h-0 flex-1">
           <div
             className={cn(
               'min-h-full pb-3',
-              dropTargetPath === '' && 'rounded-2xl bg-white/35',
+              dropTargetPath === '' && 'rounded-2xl bg-accent/45',
             )}
             onDragLeave={() => {
               if (dropTargetPath === '') {
@@ -234,7 +234,7 @@ export function FileExplorer({ workspaceId, workspaceName, onFileSelect }: FileE
 
           {!isLoading && nodes.length === 0 && !creatingAt ? (
             <div className="px-3 py-6 text-center text-sm text-muted-foreground">
-              <FolderOpen className="mx-auto mb-2 size-5 text-[#4a90e2]" />
+              <FolderOpen className="mx-auto mb-2 size-5 text-primary" />
               <div>This folder is empty</div>
             </div>
           ) : null}

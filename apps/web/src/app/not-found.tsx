@@ -9,11 +9,18 @@ import { Button } from '@/components/ui/button';
 export default function NotFound() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center gap-8 px-4">
-      <img
-        src="/logo-name.svg"
-        alt="OwnLab"
-        className="h-12 w-auto"
-      />
+      <>
+        <img
+          src="/logo-name.svg"
+          alt="OwnLab"
+          className="h-12 w-auto dark:hidden"
+        />
+        <img
+          src="/logo-name-dark.svg"
+          alt="OwnLab"
+          className="hidden h-12 w-auto dark:block"
+        />
+      </>
 
       <h1 className="text-4xl font-bold">Page not found</h1>
 
