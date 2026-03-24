@@ -856,6 +856,10 @@ export async function fetchChannelsByWorkspace(workspaceId: string): Promise<Cha
   return fetchChannels({ workspaceId });
 }
 
+export async function fetchWorkspaceChannels(workspaceId: string): Promise<Channel[]> {
+  return fetchChannels({ workspaceId, scopeType: 'workspace' });
+}
+
 export async function ensureDefaultChannel(workspaceId: string): Promise<Channel> {
   const res = await fetch(`${API_BASE}/channels/ensure-default`, {
     method: 'POST',
@@ -863,6 +867,32 @@ export async function ensureDefaultChannel(workspaceId: string): Promise<Channel
     body: JSON.stringify({ workspaceId }),
   });
   if (!res.ok) throw new Error('Failed to ensure default channel');
+  return res.json();
+}
+
+export async function createWorkspaceChannel(input: {
+  workspaceId: string;
+  name: string;
+  description?: string | null;
+  memberActorIds?: string[];
+}): Promise<Channel> {
+  const res = await fetch(`${API_BASE}/channels`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      workspaceId: input.workspaceId,
+      scopeType: 'workspace',
+      scopeRefId: null,
+      name: input.name,
+      title: input.name,
+      description: input.description ?? null,
+      memberActorIds: input.memberActorIds ?? [],
+    }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: 'Failed to create workspace channel' }));
+    throw new Error(err.error || 'Failed to create workspace channel');
+  }
   return res.json();
 }
 
@@ -1045,16 +1075,16 @@ export async function fetchAvailableWorkspaceAgents(workspaceId: string): Promis
   return res.json();
 }
 
-export async function fetchWorkspaceMembers(workspaceId: string): Promise<ChannelMember[]> {
-  const res = await fetch(`${API_BASE}/workspaces/${workspaceId}/members`);
+export async function fetchWorkspaceAccess(workspaceId: string): Promise<ChannelMember[]> {
+  const res = await fetch(`${API_BASE}/workspaces/${workspaceId}/access`);
   if (!res.ok) {
-    const err = await res.json().catch(() => ({ error: 'Failed to fetch workspace members' }));
-    throw new Error(err.error || 'Failed to fetch workspace members');
+    const err = await res.json().catch(() => ({ error: 'Failed to fetch workspace access' }));
+    throw new Error(err.error || 'Failed to fetch workspace access');
   }
   return res.json();
 }
 
-export async function addWorkspaceMember(
+export async function grantWorkspaceAccess(
   workspaceId: string,
   data: {
     actorId: string;
@@ -1064,25 +1094,25 @@ export async function addWorkspaceMember(
     icon?: string | null;
   },
 ) {
-  const res = await fetch(`${API_BASE}/workspaces/${workspaceId}/members`, {
+  const res = await fetch(`${API_BASE}/workspaces/${workspaceId}/access`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
   });
   if (!res.ok) {
-    const err = await res.json().catch(() => ({ error: 'Failed to add workspace member' }));
-    throw new Error(err.error || 'Failed to add workspace member');
+    const err = await res.json().catch(() => ({ error: 'Failed to grant workspace access' }));
+    throw new Error(err.error || 'Failed to grant workspace access');
   }
   return res.json();
 }
 
-export async function removeWorkspaceMember(workspaceId: string, actorId: string): Promise<void> {
-  const res = await fetch(`${API_BASE}/workspaces/${workspaceId}/members/${encodeURIComponent(actorId)}`, {
+export async function revokeWorkspaceAccess(workspaceId: string, actorId: string): Promise<void> {
+  const res = await fetch(`${API_BASE}/workspaces/${workspaceId}/access/${encodeURIComponent(actorId)}`, {
     method: 'DELETE',
   });
   if (!res.ok) {
-    const err = await res.json().catch(() => ({ error: 'Failed to remove workspace member' }));
-    throw new Error(err.error || 'Failed to remove workspace member');
+    const err = await res.json().catch(() => ({ error: 'Failed to revoke workspace access' }));
+    throw new Error(err.error || 'Failed to revoke workspace access');
   }
 }
 

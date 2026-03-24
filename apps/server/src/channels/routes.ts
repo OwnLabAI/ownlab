@@ -18,6 +18,10 @@ function getChannelMemberErrorStatus(error: unknown) {
     return 422;
   }
 
+  if (error.message === "Agent does not have workspace access") {
+    return 422;
+  }
+
   return 500;
 }
 
@@ -103,7 +107,7 @@ export function channelRoutes(db: Db): RouterType {
 
   router.post("/", async (req, res) => {
     try {
-      const { workspaceId, name, title, type, description, scopeType, scopeRefId } = req.body as {
+      const { workspaceId, name, title, type, description, scopeType, scopeRefId, memberActorIds } = req.body as {
         workspaceId: string;
         name?: string;
         title?: string | null;
@@ -111,6 +115,7 @@ export function channelRoutes(db: Db): RouterType {
         description?: string;
         scopeType?: string;
         scopeRefId?: string | null;
+        memberActorIds?: string[];
       };
       if (!workspaceId) {
         res.status(400).json({ error: "workspaceId is required" });
@@ -124,11 +129,14 @@ export function channelRoutes(db: Db): RouterType {
         description,
         scopeType,
         scopeRefId,
+        memberActorIds,
       });
       res.status(201).json(channel);
     } catch (error) {
       console.error("Failed to create channel:", error);
-      res.status(500).json({ error: "Failed to create channel" });
+      res
+        .status(getChannelMemberErrorStatus(error))
+        .json({ error: error instanceof Error ? error.message : "Failed to create channel" });
     }
   });
 

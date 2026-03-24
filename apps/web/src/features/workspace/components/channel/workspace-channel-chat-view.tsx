@@ -35,7 +35,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import {
   fetchChannelMessages,
-  fetchWorkspaceMembers,
+  fetchChannelMembers,
   stopChannelRun,
   streamChannelChatMessageViaServer,
   type Channel,
@@ -183,7 +183,7 @@ export function WorkspaceChannelChatView({
 
     async function loadWorkspaceAgents() {
       try {
-        const members = await fetchWorkspaceMembers(channel.workspaceId);
+        const members = await fetchChannelMembers(channel.id);
         const nextAgents = members
           .filter((member) => member.actorType === 'agent' && !!member.name)
           .map((member) => ({
@@ -208,7 +208,7 @@ export function WorkspaceChannelChatView({
     return () => {
       cancelled = true;
     };
-  }, [channel.workspaceId, membersVersion]);
+  }, [channel.id, membersVersion]);
 
   useEffect(() => {
     if (!runActive || !hasCompletedAssistantReply(messages)) {

@@ -3,19 +3,16 @@ import {
   agents,
   and,
   asc,
-  channelMembers,
-  channels,
   eq,
-  inArray,
   isNull,
   teamMembers,
   teams,
   sql,
   workspaces,
-  workspaceMembers,
+  workspaceAccessMembers,
 } from "@ownlab/db";
 
-export type WorkspaceMemberRecord = {
+export type WorkspaceAccessRecord = {
   workspaceId: string;
   actorId: string;
   actorType: string;
@@ -60,16 +57,16 @@ export function createWorkspaceMembershipService(db: Db) {
     return rows.length > 0;
   }
 
-  async function listWorkspaceMembers(workspaceId: string): Promise<WorkspaceMemberRecord[]> {
+  async function listWorkspaceAccess(workspaceId: string): Promise<WorkspaceAccessRecord[]> {
     const directRows = await db
       .select({
-        workspaceId: workspaceMembers.workspaceId,
-        actorId: workspaceMembers.actorId,
-        actorType: workspaceMembers.actorType,
-        role: workspaceMembers.role,
-        joinedAt: workspaceMembers.joinedAt,
-        storedDisplayName: workspaceMembers.displayName,
-        storedIcon: workspaceMembers.icon,
+        workspaceId: workspaceAccessMembers.workspaceId,
+        actorId: workspaceAccessMembers.actorId,
+        actorType: workspaceAccessMembers.actorType,
+        role: workspaceAccessMembers.role,
+        joinedAt: workspaceAccessMembers.joinedAt,
+        storedDisplayName: workspaceAccessMembers.displayName,
+        storedIcon: workspaceAccessMembers.icon,
         linkedAgentId: agents.id,
         agentName: agents.name,
         agentIcon: agents.icon,
@@ -77,11 +74,11 @@ export function createWorkspaceMembershipService(db: Db) {
         agentAdapterType: agents.adapterType,
         linkedTeamId: teamMembers.teamId,
       })
-      .from(workspaceMembers)
-      .leftJoin(agents, sql`${workspaceMembers.actorId} = ${agents.id}::text`)
+      .from(workspaceAccessMembers)
+      .leftJoin(agents, sql`${workspaceAccessMembers.actorId} = ${agents.id}::text`)
       .leftJoin(teamMembers, eq(agents.id, teamMembers.agentId))
-      .where(eq(workspaceMembers.workspaceId, workspaceId))
-      .orderBy(asc(workspaceMembers.joinedAt));
+      .where(eq(workspaceAccessMembers.workspaceId, workspaceId))
+      .orderBy(asc(workspaceAccessMembers.joinedAt));
 
     const teamRows = await db
       .select({
@@ -105,7 +102,7 @@ export function createWorkspaceMembershipService(db: Db) {
       .where(eq(teams.workspaceId, workspaceId))
       .orderBy(asc(teamMembers.joinedAt), asc(agents.name));
 
-    const membersByActorId = new Map<string, WorkspaceMemberRecord>();
+    const membersByActorId = new Map<string, WorkspaceAccessRecord>();
 
     for (const row of directRows) {
       // Workspace agent membership is only valid when it points to a real agent record.
@@ -158,9 +155,9 @@ export function createWorkspaceMembershipService(db: Db) {
     );
   }
 
-  async function listWorkspaceAgentMembers(workspaceId: string): Promise<WorkspaceMemberRecord[]> {
-    const members = await listWorkspaceMembers(workspaceId);
-    return members.filter((member) => member.actorType === "agent");
+  async function listWorkspaceAccessAgents(workspaceId: string): Promise<WorkspaceAccessRecord[]> {
+    const accessEntries = await listWorkspaceAccess(workspaceId);
+    return accessEntries.filter((entry) => entry.actorType === "agent");
   }
 
   async function listAvailableWorkspaceAgents(workspaceId: string) {
@@ -170,7 +167,7 @@ export function createWorkspaceMembershipService(db: Db) {
     }
 
     const memberAgentIds = new Set(
-      (await listWorkspaceAgentMembers(workspaceId)).map((member) => member.actorId),
+      (await listWorkspaceAccessAgents(workspaceId)).map((member) => member.actorId),
     );
 
     const rows = await db
@@ -189,7 +186,7 @@ export function createWorkspaceMembershipService(db: Db) {
     return rows.filter((row) => !memberAgentIds.has(row.id));
   }
 
-  async function addWorkspaceMember(input: {
+  async function grantWorkspaceAccess(input: {
     workspaceId: string;
     actorId: string;
     actorType?: string;
@@ -215,7 +212,7 @@ export function createWorkspaceMembershipService(db: Db) {
     }
 
     const inserted = await db
-      .insert(workspaceMembers)
+      .insert(workspaceAccessMembers)
       .values({
         workspaceId: input.workspaceId,
         actorId: input.actorId,
@@ -225,7 +222,7 @@ export function createWorkspaceMembershipService(db: Db) {
         icon: input.icon ?? null,
       })
       .onConflictDoUpdate({
-        target: [workspaceMembers.workspaceId, workspaceMembers.actorId],
+        target: [workspaceAccessMembers.workspaceId, workspaceAccessMembers.actorId],
         set: {
           actorType,
           role: input.role ?? (actorType === "human" ? "owner" : "member"),
@@ -238,13 +235,13 @@ export function createWorkspaceMembershipService(db: Db) {
     return inserted[0] ?? null;
   }
 
-  async function removeWorkspaceMember(workspaceId: string, actorId: string) {
+  async function revokeWorkspaceAccess(workspaceId: string, actorId: string) {
     const [removed] = await db
-      .delete(workspaceMembers)
+      .delete(workspaceAccessMembers)
       .where(
         and(
-          eq(workspaceMembers.workspaceId, workspaceId),
-          eq(workspaceMembers.actorId, actorId),
+          eq(workspaceAccessMembers.workspaceId, workspaceId),
+          eq(workspaceAccessMembers.actorId, actorId),
         ),
       )
       .returning();
@@ -252,11 +249,11 @@ export function createWorkspaceMembershipService(db: Db) {
     return removed ?? null;
   }
 
-  async function ensureDefaultWorkspaceHumanMember(
+  async function ensureDefaultWorkspaceOwnerAccess(
     workspaceId: string,
     input?: { actorId?: string; displayName?: string | null; icon?: string | null },
   ) {
-    return addWorkspaceMember({
+    return grantWorkspaceAccess({
       workspaceId,
       actorId: input?.actorId ?? "local-user",
       actorType: "human",
@@ -266,74 +263,12 @@ export function createWorkspaceMembershipService(db: Db) {
     });
   }
 
-  async function syncDefaultWorkspaceChannelMembers(channelId: string, workspaceId: string) {
-    const members = await listWorkspaceMembers(workspaceId);
-    const existing = await db
-      .select({
-        actorId: channelMembers.actorId,
-      })
-      .from(channelMembers)
-      .where(eq(channelMembers.channelId, channelId));
-
-    const desiredIds = new Set(members.map((member) => member.actorId));
-    const existingIds = new Set(existing.map((member) => member.actorId));
-
-    for (const member of members) {
-      if (existingIds.has(member.actorId)) {
-        continue;
-      }
-
-      await db
-        .insert(channelMembers)
-        .values({
-          channelId,
-          actorId: member.actorId,
-          actorType: member.actorType,
-        })
-        .onConflictDoNothing({
-          target: [channelMembers.channelId, channelMembers.actorId],
-        });
-    }
-
-    const staleIds = [...existingIds].filter((actorId) => !desiredIds.has(actorId));
-    if (staleIds.length > 0) {
-      await db
-        .delete(channelMembers)
-        .where(
-          and(
-            eq(channelMembers.channelId, channelId),
-            inArray(channelMembers.actorId, staleIds),
-          ),
-        );
-    }
-
-    return members;
-  }
-
-  async function findDefaultWorkspaceChannelId(workspaceId: string) {
-    const [channel] = await db
-      .select({ id: channels.id })
-      .from(channels)
-      .where(
-        and(
-          eq(channels.workspaceId, workspaceId),
-          eq(channels.scopeType, "workspace"),
-          eq(channels.scopeRefId, workspaceId),
-        ),
-      )
-      .limit(1);
-
-    return channel?.id ?? null;
-  }
-
   return {
-    listWorkspaceMembers,
-    listWorkspaceAgentMembers,
+    listWorkspaceAccess,
+    listWorkspaceAccessAgents,
     listAvailableWorkspaceAgents,
-    addWorkspaceMember,
-    removeWorkspaceMember,
-    ensureDefaultWorkspaceHumanMember,
-    syncDefaultWorkspaceChannelMembers,
-    findDefaultWorkspaceChannelId,
+    grantWorkspaceAccess,
+    revokeWorkspaceAccess,
+    ensureDefaultWorkspaceOwnerAccess,
   };
 }

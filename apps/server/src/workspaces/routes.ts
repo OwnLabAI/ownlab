@@ -7,7 +7,7 @@ import {
   labs,
   tasks,
   workspaces,
-  workspaceMembers,
+  workspaceAccessMembers,
   and,
   eq,
   asc,
@@ -147,7 +147,7 @@ export function workspaceRoutes(db: Db): RouterType {
         })
         .returning();
 
-      await membershipService.ensureDefaultWorkspaceHumanMember(workspace.id);
+      await membershipService.ensureDefaultWorkspaceOwnerAccess(workspace.id);
 
       res.status(201).json(workspace);
     } catch (error) {
@@ -562,9 +562,9 @@ export function workspaceRoutes(db: Db): RouterType {
     }
   });
 
-  router.get("/:id/members", async (req, res) => {
+  router.get("/:id/access", async (req, res) => {
     try {
-      const members = await membershipService.listWorkspaceMembers(req.params.id);
+      const members = await membershipService.listWorkspaceAccess(req.params.id);
       res.json(members.map((member) => ({
         workspaceId: member.workspaceId,
         actorId: member.actorId,
@@ -577,12 +577,12 @@ export function workspaceRoutes(db: Db): RouterType {
         status: member.status,
       })));
     } catch (error) {
-      console.error("Failed to list workspace members:", error);
-      res.status(500).json({ error: "Failed to list workspace members" });
+      console.error("Failed to list workspace access:", error);
+      res.status(500).json({ error: "Failed to list workspace access" });
     }
   });
 
-  router.post("/:id/members", async (req, res) => {
+  router.post("/:id/access", async (req, res) => {
     try {
       const { actorId, actorType, role, displayName, icon } = req.body as {
         actorId?: string;
@@ -597,7 +597,7 @@ export function workspaceRoutes(db: Db): RouterType {
         return;
       }
 
-      const member = await membershipService.addWorkspaceMember({
+      const member = await membershipService.grantWorkspaceAccess({
         workspaceId: req.params.id,
         actorId: actorId.trim(),
         actorType,
@@ -606,14 +606,9 @@ export function workspaceRoutes(db: Db): RouterType {
         icon,
       });
 
-      const defaultChannelId = await membershipService.findDefaultWorkspaceChannelId(req.params.id);
-      if (defaultChannelId) {
-        await membershipService.syncDefaultWorkspaceChannelMembers(defaultChannelId, req.params.id);
-      }
-
       res.status(201).json(member);
     } catch (error) {
-      console.error("Failed to add workspace member:", error);
+      console.error("Failed to grant workspace access:", error);
       if (error instanceof Error && error.message === "Workspace not found") {
         res.status(404).json({ error: error.message });
         return;
@@ -626,27 +621,22 @@ export function workspaceRoutes(db: Db): RouterType {
         res.status(422).json({ error: error.message });
         return;
       }
-      res.status(500).json({ error: "Failed to add workspace member" });
+      res.status(500).json({ error: "Failed to grant workspace access" });
     }
   });
 
-  router.delete("/:id/members/:actorId", async (req, res) => {
+  router.delete("/:id/access/:actorId", async (req, res) => {
     try {
-      const removed = await membershipService.removeWorkspaceMember(req.params.id, req.params.actorId);
+      const removed = await membershipService.revokeWorkspaceAccess(req.params.id, req.params.actorId);
       if (!removed) {
-        res.status(404).json({ error: "Workspace member not found" });
+        res.status(404).json({ error: "Workspace access entry not found" });
         return;
-      }
-
-      const defaultChannelId = await membershipService.findDefaultWorkspaceChannelId(req.params.id);
-      if (defaultChannelId) {
-        await membershipService.syncDefaultWorkspaceChannelMembers(defaultChannelId, req.params.id);
       }
 
       res.status(204).send();
     } catch (error) {
-      console.error("Failed to remove workspace member:", error);
-      res.status(500).json({ error: "Failed to remove workspace member" });
+      console.error("Failed to revoke workspace access:", error);
+      res.status(500).json({ error: "Failed to revoke workspace access" });
     }
   });
 
@@ -685,8 +675,8 @@ export function workspaceRoutes(db: Db): RouterType {
         }
 
         await tx
-          .delete(workspaceMembers)
-          .where(eq(workspaceMembers.workspaceId, workspace.id));
+          .delete(workspaceAccessMembers)
+          .where(eq(workspaceAccessMembers.workspaceId, workspace.id));
 
         await tx
           .update(tasks)

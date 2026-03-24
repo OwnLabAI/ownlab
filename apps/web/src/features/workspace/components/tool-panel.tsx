@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { SidebarContent } from '@/components/ui/sidebar';
 import { cn } from '@/lib/utils';
-import { ToolPanelMembers } from './tool-panel-members';
+import { ToolPanelChannels } from './tool-panel-channels';
 import { FileExplorer } from './file-explorer';
 import { ToolPanelGoal } from './tool-panel-goal';
 import { ToolPanelTasks } from './tool-panel-tasks';
@@ -26,7 +26,7 @@ const TABS = [
   { id: 'file', label: 'Files', icon: FolderOpen },
   { id: 'tasks', label: 'Tasks', icon: ListTodo },
   { id: 'goal', label: 'Goal', icon: Target },
-  { id: 'members', label: 'Members', icon: Users },
+  { id: 'members', label: 'Channels', icon: Users },
 ] as const;
 
 type TabId = (typeof TABS)[number]['id'];
@@ -312,7 +312,7 @@ export function ToolPanel({
         )}
 
         {activeToolTab === 'members' && (
-          <ToolPanelMembers />
+          <ToolPanelChannels />
         )}
 
         {activeToolTab === 'tasks' && currentWorkspace && (

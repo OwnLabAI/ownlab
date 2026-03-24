@@ -8,7 +8,7 @@ import {
 } from "drizzle-orm/pg-core";
 import { workspaces } from "./workspaces.js";
 
-export const workspaceMembers = pgTable(
+export const workspaceAccessMembers = pgTable(
   "workspace_members",
   {
     workspaceId: uuid("workspace_id")

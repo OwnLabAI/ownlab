@@ -1,12 +1,15 @@
 'use client';
 
 import { type ReactNode, useEffect, useState } from 'react';
-import { Hash, Users } from 'lucide-react';
+import { Hash, Trash2, Users } from 'lucide-react';
 import { Loader } from '@/components/ai-elements/loader';
 import {
+  deleteChannel,
+  fetchChannelMembers,
   ensureDefaultChannel,
-  fetchWorkspaceMembers,
+  fetchWorkspaceChannels,
   type Channel,
+  type ChannelMember,
 } from '@/lib/api';
 import { useWorkspaceView } from '@/features/workspace/stores/use-workspace-view-store';
 import { WorkspaceChannelChatView } from './channel';
@@ -23,7 +26,8 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { ToolPanelMembers } from './tool-panel-members';
+import { ToolPanelChannels } from './tool-panel-channels';
+import { toast } from 'sonner';
 
 interface ChannelChatProps {
   workspaceId: string;
@@ -32,66 +36,97 @@ interface ChannelChatProps {
 }
 
 export function ChannelChat({ workspaceId, workspaceName, workspaceRootPath }: ChannelChatProps) {
-  const { membersVersion } = useWorkspaceView(workspaceId);
-  const [channel, setChannel] = useState<Channel | null>(null);
-  const [memberCount, setMemberCount] = useState<number | null>(null);
-  const [membersOpen, setMembersOpen] = useState(false);
+  const {
+    selectedChannelId,
+    setSelectedChannelId,
+    channelsVersion,
+  } = useWorkspaceView(workspaceId);
+  const [channels, setChannels] = useState<Channel[]>([]);
+  const [channelsOpen, setChannelsOpen] = useState(false);
+  const [channelMemberCount, setChannelMemberCount] = useState<number | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
-    setLoading(true);
-    setError(null);
-    ensureDefaultChannel(workspaceId)
-      .then(async (ch) => {
-        if (!cancelled) setChannel(ch);
-        try {
-          const members = await fetchWorkspaceMembers(workspaceId);
-          if (!cancelled) {
-            setMemberCount(members.length);
-          }
-        } catch (memberError) {
-          console.error('Failed to load channel members:', memberError);
-          if (!cancelled) {
-            setMemberCount(null);
-          }
+
+    async function loadChannels() {
+      setLoading(true);
+      setError(null);
+      try {
+        let nextChannels = await fetchWorkspaceChannels(workspaceId);
+        if (nextChannels.length === 0) {
+          const defaultChannel = await ensureDefaultChannel(workspaceId);
+          nextChannels = [defaultChannel];
         }
-      })
-      .catch((err) => {
-        console.error('Failed to load channel:', err);
-        if (!cancelled) setError('Unable to connect to the server. Make sure the backend is running.');
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-    return () => { cancelled = true; };
-  }, [workspaceId]);
 
-  useEffect(() => {
-    let cancelled = false;
+        if (cancelled) {
+          return;
+        }
 
-    if (!channel) {
-      return;
+        setChannels(nextChannels);
+
+        const hasSelected = selectedChannelId && nextChannels.some((entry) => entry.id === selectedChannelId);
+        if (!hasSelected) {
+          const preferredDefault =
+            nextChannels.find((entry) => entry.scopeRefId === workspaceId) ?? nextChannels[0] ?? null;
+          setSelectedChannelId(preferredDefault?.id ?? null);
+        }
+      } catch (err) {
+        console.error('Failed to load channels:', err);
+        if (!cancelled) {
+          setError('Unable to connect to the server. Make sure the backend is running.');
+          setChannels([]);
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
     }
 
-    fetchWorkspaceMembers(workspaceId)
-      .then((members) => {
-        if (!cancelled) {
-          setMemberCount(members.length);
-        }
-      })
-      .catch((memberError) => {
-        console.error('Failed to refresh channel members:', memberError);
-        if (!cancelled) {
-          setMemberCount(null);
-        }
-      });
-
+    void loadChannels();
     return () => {
       cancelled = true;
     };
-  }, [channel, membersVersion, workspaceId]);
+  }, [channelsVersion, workspaceId]);
+
+  const channel =
+    channels.find((entry) => entry.id === selectedChannelId) ??
+    channels.find((entry) => entry.scopeRefId === workspaceId) ??
+    channels[0] ??
+    null;
+  const isDefaultWorkspaceChannel = !!channel && channel.scopeType === 'workspace' && channel.scopeRefId === workspaceId;
+
+  useEffect(() => {
+    if (!channel) {
+      setChannelMemberCount(null);
+      return;
+    }
+
+    let cancelled = false;
+
+    async function loadChannelMemberCount() {
+      try {
+        const members = await fetchChannelMembers(channel.id);
+        if (!cancelled) {
+          const agentCount = members.filter((member: ChannelMember) => member.actorType === 'agent').length;
+          setChannelMemberCount(agentCount);
+        }
+      } catch (err) {
+        console.error('Failed to load channel member count:', err);
+        if (!cancelled) {
+          setChannelMemberCount(null);
+        }
+      }
+    }
+
+    void loadChannelMemberCount();
+    return () => {
+      cancelled = true;
+    };
+  }, [channel?.id, channelsOpen]);
 
   if (loading) {
     return (
@@ -118,14 +153,8 @@ export function ChannelChat({ workspaceId, workspaceName, workspaceRootPath }: C
               setError(null);
               ensureDefaultChannel(workspaceId)
                 .then(async (ch) => {
-                  setChannel(ch);
-                  try {
-                    const members = await fetchWorkspaceMembers(workspaceId);
-                    setMemberCount(members.length);
-                  } catch (memberError) {
-                    console.error('Failed to reload channel members:', memberError);
-                    setMemberCount(null);
-                  }
+                  setChannels([ch]);
+                  setSelectedChannelId(ch.id);
                 })
                 .catch((err) => {
                   console.error(err);
@@ -142,87 +171,132 @@ export function ChannelChat({ workspaceId, workspaceName, workspaceRootPath }: C
     );
   }
 
-  const memberAction = (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="gap-2 rounded-full"
-          onClick={() => setMembersOpen(true)}
-        >
-          <Users className="size-4" />
-          <span className="hidden sm:inline">View members</span>
-          {memberCount != null ? (
-            <span className="rounded-full bg-muted px-1.5 py-0.5 text-[11px] leading-none text-muted-foreground">
-              {memberCount}
-            </span>
-          ) : null}
-        </Button>
-      </TooltipTrigger>
-      <TooltipContent side="bottom">View members</TooltipContent>
-    </Tooltip>
+  const channelsAction = (
+    <div className="flex items-center gap-2">
+      {!isDefaultWorkspaceChannel ? (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="rounded-full border-red-200 px-3 text-red-600 hover:border-red-300 hover:bg-red-50 hover:text-red-700"
+              onClick={async () => {
+                if (!channel || deleting) {
+                  return;
+                }
+
+                const confirmed = window.confirm(`Delete channel "${channel.title?.trim() || channel.name}"?`);
+                if (!confirmed) {
+                  return;
+                }
+
+                setDeleting(true);
+                try {
+                  await deleteChannel(channel.id);
+                  const remainingChannels = channels.filter((entry) => entry.id !== channel.id);
+                  if (remainingChannels.length > 0) {
+                    const fallbackChannel =
+                      remainingChannels.find((entry) => entry.scopeRefId === workspaceId) ??
+                      remainingChannels[0] ??
+                      null;
+                    setChannels(remainingChannels);
+                    setSelectedChannelId(fallbackChannel?.id ?? null);
+                  } else {
+                    const defaultChannel = await ensureDefaultChannel(workspaceId);
+                    setChannels([defaultChannel]);
+                    setSelectedChannelId(defaultChannel.id);
+                  }
+                  toast.success('Channel deleted.');
+                } catch (err) {
+                  console.error('Failed to delete channel:', err);
+                  toast.error(err instanceof Error ? err.message : 'Failed to delete channel');
+                } finally {
+                  setDeleting(false);
+                }
+              }}
+              disabled={deleting}
+            >
+              <Trash2 className="size-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="bottom">Delete channel</TooltipContent>
+        </Tooltip>
+      ) : null}
+
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="gap-2 rounded-full px-3"
+            onClick={() => setChannelsOpen(true)}
+          >
+            <Users className="size-4" />
+            {channelMemberCount != null ? (
+              <span className="rounded-full bg-muted px-1.5 py-0.5 text-[11px] leading-none text-muted-foreground">
+                {channelMemberCount}
+              </span>
+            ) : null}
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent side="bottom">Channel members</TooltipContent>
+      </Tooltip>
+    </div>
   );
 
   return (
     <div className="flex h-full flex-col overflow-hidden">
-      <ChannelHeader workspaceName={workspaceName ?? 'Workspace'} actions={memberAction} />
-      {channel ? (
-        <WorkspaceMembersDialog
-          open={membersOpen}
-          onOpenChange={setMembersOpen}
-          workspaceName={workspaceName ?? 'Workspace'}
-          onMemberCountChange={setMemberCount}
-        />
-      ) : null}
+      <ChannelHeader title={channel.title?.trim() || channel.name || workspaceName || 'Workspace'} actions={channelsAction} />
+      <WorkspaceChannelsDialog
+        open={channelsOpen}
+        onOpenChange={setChannelsOpen}
+        channel={channel}
+      />
       <WorkspaceChannelChatView
         channel={channel}
         workspaceRootPath={workspaceRootPath ?? null}
-        placeholder="Type @ to chat with a member"
-        extraBody={{ scopeType: 'workspace', scopeRefId: channel.workspaceId }}
+        placeholder={`Message ${channel.title ?? channel.name}`}
+        extraBody={{ scopeType: 'workspace', scopeRefId: channel.scopeRefId ?? channel.workspaceId }}
       />
     </div>
   );
 }
 
 function ChannelHeader({
-  workspaceName,
+  title,
   actions,
 }: {
-  workspaceName: string;
+  title: string;
   actions?: ReactNode;
 }) {
   return (
     <header className="flex h-16 shrink-0 items-start justify-between gap-3 px-4 pt-4">
-      <span className="font-medium text-sm">{workspaceName}</span>
+      <span className="font-medium text-sm">{title}</span>
       {actions ? <div className="shrink-0">{actions}</div> : null}
     </header>
   );
 }
 
-function WorkspaceMembersDialog({
+function WorkspaceChannelsDialog({
   open,
   onOpenChange,
-  workspaceName,
-  onMemberCountChange,
+  channel,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  workspaceName: string;
-  onMemberCountChange?: (count: number) => void;
+  channel: Channel;
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex max-h-[75vh] max-w-2xl flex-col overflow-hidden p-0">
+      <DialogContent className="flex max-h-[75vh] max-w-xl flex-col overflow-hidden p-0">
         <DialogHeader className="border-b px-6 py-4">
-          <DialogTitle>{workspaceName} members</DialogTitle>
-          <DialogDescription>
-            Manage the humans and agents who belong to this workspace.
-          </DialogDescription>
+          <DialogTitle>{channel.title?.trim() || channel.name}</DialogTitle>
+          <DialogDescription>Manage channel members.</DialogDescription>
         </DialogHeader>
         <div className="min-h-0 flex-1 overflow-hidden">
-          <ToolPanelMembers onMemberCountChange={onMemberCountChange} />
+          <ToolPanelChannels mode="members" />
         </div>
       </DialogContent>
     </Dialog>

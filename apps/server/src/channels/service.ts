@@ -34,6 +34,7 @@ export interface CreateChannelInput {
   description?: string | null;
   scopeType?: string;
   scopeRefId?: string | null;
+  memberActorIds?: string[];
 }
 
 export interface AppendMessageInput {
@@ -183,22 +184,6 @@ export function createChannelService(db: Db) {
     return channel.scopeType === "workspace" && channel.scopeRefId === channel.workspaceId;
   }
 
-  async function isAgentInWorkspaceLab(workspaceId: string, agentId: string) {
-    const rows = await db
-      .select({ id: agents.id })
-      .from(workspaces)
-      .innerJoin(agents, eq(workspaces.labId, agents.labId))
-      .where(
-        and(
-          eq(workspaces.id, workspaceId),
-          eq(agents.id, agentId),
-        ),
-      )
-      .limit(1);
-
-    return rows.length > 0;
-  }
-
   function isMissingChannelMembersTableError(error: unknown) {
     return (
       error instanceof Error &&
@@ -230,11 +215,6 @@ export function createChannelService(db: Db) {
     channel: typeof channels.$inferSelect,
   ) {
     if (isDefaultWorkspaceChannel(channel)) {
-      await workspaceMembershipService.ensureDefaultWorkspaceHumanMember(channel.workspaceId);
-      await workspaceMembershipService.syncDefaultWorkspaceChannelMembers(
-        channel.id,
-        channel.workspaceId,
-      );
       return;
     }
 
@@ -300,8 +280,8 @@ export function createChannelService(db: Db) {
       .values({
         workspaceId: input.workspaceId,
         scopeType: input.scopeType ?? "workspace",
-        scopeRefId: input.scopeRefId ?? input.workspaceId,
-        name: input.name ?? "general",
+        scopeRefId: input.scopeRefId ?? null,
+        name: input.name ?? "channel",
         title: input.title ?? null,
         type: input.type ?? "public",
         description: input.description ?? null,
@@ -310,7 +290,38 @@ export function createChannelService(db: Db) {
 
     await ensureScopedChannelSeedMembers(row);
 
+    if (Array.isArray(input.memberActorIds) && input.memberActorIds.length > 0) {
+      for (const actorId of input.memberActorIds) {
+        await addChannelMember(row.id, actorId, "agent");
+      }
+    }
+
     return row;
+  }
+
+  async function initializeDefaultWorkspaceChannelMembers(
+    channel: typeof channels.$inferSelect,
+  ) {
+    await workspaceMembershipService.ensureDefaultWorkspaceOwnerAccess(channel.workspaceId);
+    const accessAgents = await workspaceMembershipService.listWorkspaceAccessAgents(channel.workspaceId);
+    if (accessAgents.length === 0) {
+      return;
+    }
+
+    await Promise.all(
+      accessAgents.map((agent) =>
+        db
+          .insert(channelMembers)
+          .values({
+            channelId: channel.id,
+            actorId: agent.actorId,
+            actorType: "agent",
+          })
+          .onConflictDoNothing({
+            target: [channelMembers.channelId, channelMembers.actorId],
+          }),
+      ),
+    );
   }
 
   async function getChannelById(id: string) {
@@ -550,9 +561,14 @@ export function createChannelService(db: Db) {
       .limit(1);
 
     if (existing.length > 0) {
-      await ensureScopedChannelSeedMembers(existing[0]);
       return existing[0];
     }
+
+    const [workspace] = await db
+      .select({ name: workspaces.name })
+      .from(workspaces)
+      .where(eq(workspaces.id, workspaceId))
+      .limit(1);
 
     const [channel] = await db
       .insert(channels)
@@ -560,13 +576,14 @@ export function createChannelService(db: Db) {
         workspaceId,
         scopeType: "workspace",
         scopeRefId: workspaceId,
-        name: "general",
+        name: workspace?.name?.trim() || "workspace",
+        title: workspace?.name?.trim() || null,
         type: "public",
         description: "Default workspace channel",
       })
       .returning();
 
-    await ensureScopedChannelSeedMembers(channel);
+    await initializeDefaultWorkspaceChannelMembers(channel);
 
     return channel;
   }
@@ -702,22 +719,6 @@ export function createChannelService(db: Db) {
 
     await ensureScopedChannelSeedMembers(channel);
 
-    if (isDefaultWorkspaceChannel(channel)) {
-      const members = await workspaceMembershipService.listWorkspaceMembers(channel.workspaceId);
-      return members.map((member) => ({
-        channelId: channel.id,
-        actorId: member.actorId,
-        actorType: member.actorType,
-        runtimeState: null,
-        runtimeUpdatedAt: null,
-        joinedAt: member.joinedAt,
-        name: member.displayName,
-        icon: member.icon,
-        status: member.status,
-        role: member.role,
-      }));
-    }
-
     try {
       return await listStoredChannelMembers(channelId);
     } catch (error) {
@@ -732,28 +733,14 @@ export function createChannelService(db: Db) {
   async function addChannelMember(channelId: string, actorId: string, actorType = "agent") {
     const channel = await getRequiredChannel(channelId);
 
-    if (isDefaultWorkspaceChannel(channel)) {
-      await workspaceMembershipService.addWorkspaceMember({
-        workspaceId: channel.workspaceId,
-        actorId,
-        actorType,
-      });
-      await workspaceMembershipService.syncDefaultWorkspaceChannelMembers(
-        channel.id,
-        channel.workspaceId,
-      );
-      const members = await listChannelMembers(channelId);
-      const member = members.find((entry) => entry.actorId === actorId);
-      if (!member) {
-        throw new Error("Failed to add channel member");
-      }
-      return member;
-    }
-
     if (actorType === "agent") {
-      const agentInWorkspace = await isAgentInWorkspaceLab(channel.workspaceId, actorId);
-      if (!agentInWorkspace) {
-        throw new Error("Agent not found in workspace lab");
+      const workspaceAgentIds = new Set(
+        (await workspaceMembershipService.listWorkspaceAccessAgents(channel.workspaceId)).map(
+          (entry) => entry.actorId,
+        ),
+      );
+      if (!workspaceAgentIds.has(actorId)) {
+        throw new Error("Agent does not have workspace access");
       }
     }
 
@@ -792,19 +779,7 @@ export function createChannelService(db: Db) {
   }
 
   async function removeChannelMember(channelId: string, actorId: string) {
-    const channel = await getRequiredChannel(channelId);
-
-    if (isDefaultWorkspaceChannel(channel)) {
-      const removed = await workspaceMembershipService.removeWorkspaceMember(
-        channel.workspaceId,
-        actorId,
-      );
-      await workspaceMembershipService.syncDefaultWorkspaceChannelMembers(
-        channel.id,
-        channel.workspaceId,
-      );
-      return removed;
-    }
+    await getRequiredChannel(channelId);
 
     const [row] = await db
       .delete(channelMembers)
@@ -822,10 +797,6 @@ export function createChannelService(db: Db) {
   async function listChannelAgentMembers(channelId: string) {
     const channel = await getRequiredChannel(channelId);
     await ensureScopedChannelSeedMembers(channel);
-
-    if (isDefaultWorkspaceChannel(channel)) {
-      await workspaceMembershipService.syncDefaultWorkspaceChannelMembers(channel.id, channel.workspaceId);
-    }
 
     try {
       return await db
@@ -884,7 +855,7 @@ export function createChannelService(db: Db) {
   }
 
   async function listWorkspaceAgents(workspaceId: string) {
-    const members = await workspaceMembershipService.listWorkspaceAgentMembers(workspaceId);
+    const members = await workspaceMembershipService.listWorkspaceAccessAgents(workspaceId);
 
     return members.map((member) => ({
       id: member.actorId,

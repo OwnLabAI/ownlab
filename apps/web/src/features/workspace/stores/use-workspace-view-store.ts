@@ -8,9 +8,11 @@ type WorkspaceToolTab = 'file' | 'goal' | 'members' | 'tasks';
 type WorkspaceViewState = {
   selectedFilePath: string | null;
   selectedTaskId: string | null;
+  selectedChannelId: string | null;
   viewboardOpen: boolean;
   activeToolTab: WorkspaceToolTab;
   membersVersion: number;
+  channelsVersion: number;
 };
 
 type WorkspaceViewStore = {
@@ -18,18 +20,22 @@ type WorkspaceViewStore = {
   ensureWorkspaceView: (workspaceId: string) => WorkspaceViewState;
   setSelectedFilePath: (workspaceId: string, path: string | null) => void;
   setSelectedTaskId: (workspaceId: string, taskId: string | null) => void;
+  setSelectedChannelId: (workspaceId: string, channelId: string | null) => void;
   setViewboardOpen: (workspaceId: string, open: boolean) => void;
   setActiveToolTab: (workspaceId: string, tab: WorkspaceToolTab) => void;
   bumpMembersVersion: (workspaceId: string) => void;
+  bumpChannelsVersion: (workspaceId: string) => void;
   resetWorkspaceView: (workspaceId: string) => void;
 };
 
 const DEFAULT_WORKSPACE_VIEW: WorkspaceViewState = {
   selectedFilePath: null,
   selectedTaskId: null,
+  selectedChannelId: null,
   viewboardOpen: false,
   activeToolTab: 'file',
   membersVersion: 0,
+  channelsVersion: 0,
 };
 
 export const useWorkspaceViewStore = create<WorkspaceViewStore>()(
@@ -63,6 +69,18 @@ export const useWorkspaceViewStore = create<WorkspaceViewStore>()(
               selectedTaskId: taskId,
               selectedFilePath: taskId ? null : (state.views[workspaceId]?.selectedFilePath ?? null),
               viewboardOpen: taskId ? true : (state.views[workspaceId]?.viewboardOpen ?? false),
+            },
+          },
+        }));
+      },
+      setSelectedChannelId: (workspaceId, channelId) => {
+        if (!workspaceId) return;
+        set((state) => ({
+          views: {
+            ...state.views,
+            [workspaceId]: {
+              ...(state.views[workspaceId] ?? DEFAULT_WORKSPACE_VIEW),
+              selectedChannelId: channelId,
             },
           },
         }));
@@ -103,6 +121,18 @@ export const useWorkspaceViewStore = create<WorkspaceViewStore>()(
           },
         }));
       },
+      bumpChannelsVersion: (workspaceId) => {
+        if (!workspaceId) return;
+        set((state) => ({
+          views: {
+            ...state.views,
+            [workspaceId]: {
+              ...(state.views[workspaceId] ?? DEFAULT_WORKSPACE_VIEW),
+              channelsVersion: (state.views[workspaceId]?.channelsVersion ?? 0) + 1,
+            },
+          },
+        }));
+      },
       resetWorkspaceView: (workspaceId) => {
         if (!workspaceId) return;
         set((state) => ({
@@ -124,26 +154,32 @@ export const useWorkspaceViewStore = create<WorkspaceViewStore>()(
 export function useWorkspaceView(workspaceId: string): WorkspaceViewState & {
   setSelectedFilePath: (path: string | null) => void;
   setSelectedTaskId: (taskId: string | null) => void;
+  setSelectedChannelId: (channelId: string | null) => void;
   setViewboardOpen: (open: boolean) => void;
   setActiveToolTab: (tab: WorkspaceToolTab) => void;
   bumpMembersVersion: () => void;
+  bumpChannelsVersion: () => void;
   resetWorkspaceView: () => void;
 } {
   const view = useWorkspaceViewStore((state) => state.views[workspaceId] ?? DEFAULT_WORKSPACE_VIEW);
   const setSelectedFilePath = useWorkspaceViewStore((state) => state.setSelectedFilePath);
   const setSelectedTaskId = useWorkspaceViewStore((state) => state.setSelectedTaskId);
+  const setSelectedChannelId = useWorkspaceViewStore((state) => state.setSelectedChannelId);
   const setViewboardOpen = useWorkspaceViewStore((state) => state.setViewboardOpen);
   const setActiveToolTab = useWorkspaceViewStore((state) => state.setActiveToolTab);
   const bumpMembersVersion = useWorkspaceViewStore((state) => state.bumpMembersVersion);
+  const bumpChannelsVersion = useWorkspaceViewStore((state) => state.bumpChannelsVersion);
   const resetWorkspaceView = useWorkspaceViewStore((state) => state.resetWorkspaceView);
 
   return {
     ...view,
     setSelectedFilePath: (path) => setSelectedFilePath(workspaceId, path),
     setSelectedTaskId: (taskId) => setSelectedTaskId(workspaceId, taskId),
+    setSelectedChannelId: (channelId) => setSelectedChannelId(workspaceId, channelId),
     setViewboardOpen: (open) => setViewboardOpen(workspaceId, open),
     setActiveToolTab: (tab) => setActiveToolTab(workspaceId, tab),
     bumpMembersVersion: () => bumpMembersVersion(workspaceId),
+    bumpChannelsVersion: () => bumpChannelsVersion(workspaceId),
     resetWorkspaceView: () => resetWorkspaceView(workspaceId),
   };
 }
