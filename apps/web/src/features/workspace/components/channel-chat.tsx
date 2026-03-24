@@ -18,6 +18,7 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
@@ -43,6 +44,7 @@ export function ChannelChat({ workspaceId, workspaceName, workspaceRootPath }: C
   } = useWorkspaceView(workspaceId);
   const [channels, setChannels] = useState<Channel[]>([]);
   const [channelsOpen, setChannelsOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [channelMemberCount, setChannelMemberCount] = useState<number | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -98,6 +100,7 @@ export function ChannelChat({ workspaceId, workspaceName, workspaceRootPath }: C
     channels[0] ??
     null;
   const isDefaultWorkspaceChannel = !!channel && channel.scopeType === 'workspace' && channel.scopeRefId === workspaceId;
+  const channelDisplayName = channel?.title?.trim() || channel?.name || 'this channel';
 
   useEffect(() => {
     if (!channel) {
@@ -181,40 +184,7 @@ export function ChannelChat({ workspaceId, workspaceName, workspaceRootPath }: C
               variant="outline"
               size="sm"
               className="rounded-full border-red-200 px-3 text-red-600 hover:border-red-300 hover:bg-red-50 hover:text-red-700"
-              onClick={async () => {
-                if (!channel || deleting) {
-                  return;
-                }
-
-                const confirmed = window.confirm(`Delete channel "${channel.title?.trim() || channel.name}"?`);
-                if (!confirmed) {
-                  return;
-                }
-
-                setDeleting(true);
-                try {
-                  await deleteChannel(channel.id);
-                  const remainingChannels = channels.filter((entry) => entry.id !== channel.id);
-                  if (remainingChannels.length > 0) {
-                    const fallbackChannel =
-                      remainingChannels.find((entry) => entry.scopeRefId === workspaceId) ??
-                      remainingChannels[0] ??
-                      null;
-                    setChannels(remainingChannels);
-                    setSelectedChannelId(fallbackChannel?.id ?? null);
-                  } else {
-                    const defaultChannel = await ensureDefaultChannel(workspaceId);
-                    setChannels([defaultChannel]);
-                    setSelectedChannelId(defaultChannel.id);
-                  }
-                  toast.success('Channel deleted.');
-                } catch (err) {
-                  console.error('Failed to delete channel:', err);
-                  toast.error(err instanceof Error ? err.message : 'Failed to delete channel');
-                } finally {
-                  setDeleting(false);
-                }
-              }}
+              onClick={() => setDeleteDialogOpen(true)}
               disabled={deleting}
             >
               <Trash2 className="size-4" />
@@ -254,6 +224,61 @@ export function ChannelChat({ workspaceId, workspaceName, workspaceRootPath }: C
         onOpenChange={setChannelsOpen}
         channel={channel}
       />
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent className="flex flex-col p-0 sm:max-w-md">
+          <DialogHeader className="shrink-0 px-6 pt-6 pb-2">
+            <DialogTitle className="text-xl">Delete Channel</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete &ldquo;{channelDisplayName}&rdquo;? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="mx-0 mb-0 shrink-0 rounded-b-xl border-t px-6 py-4">
+            <Button
+              variant="outline"
+              onClick={() => setDeleteDialogOpen(false)}
+              disabled={deleting}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              disabled={deleting}
+              onClick={async () => {
+                if (!channel) {
+                  return;
+                }
+
+                setDeleting(true);
+                try {
+                  await deleteChannel(channel.id);
+                  const remainingChannels = channels.filter((entry) => entry.id !== channel.id);
+                  if (remainingChannels.length > 0) {
+                    const fallbackChannel =
+                      remainingChannels.find((entry) => entry.scopeRefId === workspaceId) ??
+                      remainingChannels[0] ??
+                      null;
+                    setChannels(remainingChannels);
+                    setSelectedChannelId(fallbackChannel?.id ?? null);
+                  } else {
+                    const defaultChannel = await ensureDefaultChannel(workspaceId);
+                    setChannels([defaultChannel]);
+                    setSelectedChannelId(defaultChannel.id);
+                  }
+                  setDeleteDialogOpen(false);
+                  toast.success('Channel deleted.');
+                } catch (err) {
+                  console.error('Failed to delete channel:', err);
+                  toast.error(err instanceof Error ? err.message : 'Failed to delete channel');
+                } finally {
+                  setDeleting(false);
+                }
+              }}
+            >
+              {deleting ? 'Deleting...' : 'Delete'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       <WorkspaceChannelChatView
         channel={channel}
         workspaceRootPath={workspaceRootPath ?? null}

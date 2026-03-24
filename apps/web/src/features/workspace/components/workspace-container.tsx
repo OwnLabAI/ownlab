@@ -28,13 +28,13 @@ const CARD_CLASS =
 function WorkspaceTopBar({
   toolPanelOpen,
   onToggleToolPanel,
-  viewboardOpen,
-  onToggleViewboard,
+  channelOpen,
+  onToggleChannel,
 }: {
   toolPanelOpen: boolean;
   onToggleToolPanel: () => void;
-  viewboardOpen: boolean;
-  onToggleViewboard: () => void;
+  channelOpen: boolean;
+  onToggleChannel: () => void;
 }) {
   return (
     <div className="flex h-12 shrink-0 items-center justify-between px-2 pt-2">
@@ -71,9 +71,9 @@ function WorkspaceTopBar({
           variant="ghost"
           size="icon"
           className="size-8 text-muted-foreground hover:bg-transparent hover:text-foreground"
-          onClick={onToggleViewboard}
-          aria-label={viewboardOpen ? 'Collapse viewboard panel' : 'Expand viewboard panel'}
-          title={viewboardOpen ? 'Collapse viewboard panel' : 'Expand viewboard panel'}
+          onClick={onToggleChannel}
+          aria-label={channelOpen ? 'Collapse channel panel' : 'Expand channel panel'}
+          title={channelOpen ? 'Collapse channel panel' : 'Expand channel panel'}
         >
           <PanelRight className="size-4" />
         </Button>
@@ -98,10 +98,12 @@ function WorkspacePanels({
     selectedTaskId,
     setSelectedFilePath,
     setSelectedTaskId,
-    viewboardOpen,
-    setViewboardOpen,
+    setActiveToolTab,
+    channelOpen,
+    setChannelOpen,
   } = useWorkspaceView(workspaceId);
   const [toolPanelOpen, setToolPanelOpen] = useState(true);
+  const workspace = workspaces.find((entry) => entry.id === workspaceId);
 
   function handleFileSelect(path: string | null) {
     setSelectedFilePath(path);
@@ -116,8 +118,8 @@ function WorkspacePanels({
       <WorkspaceTopBar
         toolPanelOpen={toolPanelOpen}
         onToggleToolPanel={() => setToolPanelOpen((current) => !current)}
-        viewboardOpen={viewboardOpen}
-        onToggleViewboard={() => setViewboardOpen(!viewboardOpen)}
+        channelOpen={channelOpen}
+        onToggleChannel={() => setChannelOpen(!channelOpen)}
       />
 
       <ResizablePanelGroup
@@ -130,7 +132,7 @@ function WorkspacePanels({
             <ResizablePanel
               id="workspace-panels-tools"
               order={1}
-              defaultSize={viewboardOpen ? 24 : 22}
+              defaultSize={22}
               minSize={18}
               maxSize={36}
               className="h-full min-h-0 min-w-0 overflow-hidden"
@@ -149,37 +151,42 @@ function WorkspacePanels({
           </>
         ) : null}
         <ResizablePanel
-          id="workspace-panels-channel"
+          id="workspace-panels-viewboard"
           order={toolPanelOpen ? 2 : 1}
-          defaultSize={viewboardOpen ? 38 : 78}
-          minSize={24}
+          defaultSize={channelOpen ? 54 : 78}
+          minSize={36}
           className="h-full min-h-0 min-w-0 overflow-hidden"
         >
           <div className={CARD_CLASS}>
-            <div className="flex min-h-0 flex-1 flex-col">{children}</div>
+            <Viewboard
+              workspaceId={workspaceId}
+              workspaceName={workspace?.name}
+              selectedFilePath={selectedFilePath}
+              selectedTaskId={selectedTaskId}
+              onCloseTask={() => setSelectedTaskId(null)}
+              onOpenFiles={() => setActiveToolTab('file')}
+              onOpenTasks={() => setActiveToolTab('tasks')}
+              onOpenGoal={() => setActiveToolTab('goal')}
+            />
           </div>
         </ResizablePanel>
 
-        {viewboardOpen ? (
+        {channelOpen ? (
           <>
             <ResizableHandle
-              id="workspace-panels-handle-viewboard"
+              id="workspace-panels-handle-channel"
               className="group w-1.5 shrink-0 cursor-col-resize rounded-full bg-transparent transition-colors hover:bg-white/20 data-[resize-handle-active]:bg-white/25"
             />
             <ResizablePanel
-              id="workspace-panels-viewboard"
+              id="workspace-panels-channel"
               order={toolPanelOpen ? 3 : 2}
-              defaultSize={38}
-              minSize={24}
+              defaultSize={24}
+              minSize={18}
+              maxSize={34}
               className="h-full min-h-0 min-w-0 overflow-hidden"
             >
               <div className={CARD_CLASS}>
-                <Viewboard
-                  workspaceId={workspaceId}
-                  selectedFilePath={selectedFilePath}
-                  selectedTaskId={selectedTaskId}
-                  onCloseTask={() => setSelectedTaskId(null)}
-                />
+                <div className="flex min-h-0 flex-1 flex-col">{children}</div>
               </div>
             </ResizablePanel>
           </>

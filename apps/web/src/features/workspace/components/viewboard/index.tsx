@@ -1,18 +1,23 @@
 'use client';
 
 import { useEffect, useEffectEvent, useRef, useState } from 'react';
-import { FileCode2, FileImage, FileText, FileWarning, RefreshCw } from 'lucide-react';
+import { FileImage, FileText, FileWarning, RefreshCw } from 'lucide-react';
 import { TaskDetailPanel } from '@/features/tasks';
 import { Loader } from '@/components/ai-elements/loader';
 import { fetchWorkspaceFileContent } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { dispatchWorkspaceTasksChanged } from '../tool-panel-tasks';
+import { WorkspaceDefaultView } from '../workspace-default-view';
 
 interface ViewboardProps {
   workspaceId: string;
+  workspaceName?: string;
   selectedFilePath: string | null;
   selectedTaskId: string | null;
   onCloseTask: () => void;
+  onOpenFiles?: () => void;
+  onOpenTasks?: () => void;
+  onOpenGoal?: () => void;
 }
 
 const UNSUPPORTED_PREVIEW_EXTENSIONS = new Set([
@@ -65,9 +70,13 @@ function getWorkspaceFilePreviewUrl(workspaceId: string, filePath: string): stri
 
 export function Viewboard({
   workspaceId,
+  workspaceName,
   selectedFilePath,
   selectedTaskId,
   onCloseTask,
+  onOpenFiles,
+  onOpenTasks,
+  onOpenGoal,
 }: ViewboardProps) {
   const [fileContents, setFileContents] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
@@ -151,17 +160,12 @@ export function Viewboard({
 
   if (!selectedFilePath) {
     return (
-      <div className="flex h-full min-h-0 flex-1 items-center justify-center overflow-hidden">
-        <div className="max-w-lg p-8 text-center">
-          <div className="mx-auto mb-4 flex size-14 items-center justify-center rounded-2xl bg-muted/60">
-            <FileCode2 className="size-6 text-muted-foreground" />
-          </div>
-          <h2 className="mb-2 text-lg font-medium text-foreground">Viewboard</h2>
-          <p className="text-sm text-muted-foreground">
-            Click a file in the Files panel and its content will open here.
-          </p>
-        </div>
-      </div>
+      <WorkspaceDefaultView
+        workspaceName={workspaceName}
+        onOpenFiles={onOpenFiles}
+        onOpenTasks={onOpenTasks}
+        onOpenGoal={onOpenGoal}
+      />
     );
   }
 
