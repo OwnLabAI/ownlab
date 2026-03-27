@@ -1,6 +1,6 @@
 'use client';
 
-import { forwardRef, useImperativeHandle, useMemo, useRef } from 'react';
+import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef } from 'react';
 import {
   CodeMirrorEditor,
   MDXEditor,
@@ -73,6 +73,7 @@ export const MdxEditorClient = forwardRef<MdxEditorClientRef, MdxEditorClientPro
   autoFocus = false,
 }: MdxEditorClientProps, forwardedRef) {
   const editorRef = useRef<MDXEditorMethods>(null);
+  const latestMarkdownRef = useRef(markdown);
 
   useImperativeHandle(
     forwardedRef,
@@ -103,6 +104,13 @@ export const MdxEditorClient = forwardRef<MdxEditorClientRef, MdxEditorClientPro
     [],
   );
 
+  useEffect(() => {
+    if (markdown !== latestMarkdownRef.current) {
+      editorRef.current?.setMarkdown(markdown);
+      latestMarkdownRef.current = markdown;
+    }
+  }, [markdown]);
+
   return (
     <div
       className={cn(
@@ -121,7 +129,10 @@ export const MdxEditorClient = forwardRef<MdxEditorClientRef, MdxEditorClientPro
       <MDXEditor
         ref={editorRef}
         markdown={markdown}
-        onChange={onChange}
+        onChange={(value) => {
+          latestMarkdownRef.current = value;
+          onChange(value);
+        }}
         placeholder={placeholder}
         autoFocus={autoFocus}
         onBlur={onBlur}

@@ -273,6 +273,21 @@ export async function readWorkspaceFileRaw(
   return readFileBuffer(targetPath);
 }
 
+export async function writeWorkspaceFile(
+  rootPath: string,
+  relativePath: string,
+  content: string
+): Promise<void> {
+  const targetPath = resolveWorkspacePath(rootPath, relativePath);
+  const info = await stat(targetPath);
+
+  if (!info.isFile()) {
+    throw new Error("Path is not a file");
+  }
+
+  await writeFile(targetPath, content, "utf8");
+}
+
 async function pickFolderOnMac(): Promise<string | null> {
   const script = [
     'try',

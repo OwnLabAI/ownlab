@@ -392,6 +392,96 @@ html body[data-scroll-locked] {
   margin-top: 0.8em;
 }
 
+.ownlab-workspace-markdown-content {
+  padding-inline: 0 !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  background: transparent !important;
+  font-size: 1.125rem;
+  line-height: 1.65;
+  color: var(--foreground);
+}
+
+.ownlab-workspace-markdown-content > :first-child {
+  margin-top: 0;
+}
+
+.ownlab-workspace-markdown-content > :last-child {
+  margin-bottom: 0;
+}
+
+.ownlab-workspace-markdown-content h1,
+.ownlab-workspace-markdown-content h2,
+.ownlab-workspace-markdown-content h3 {
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--foreground);
+}
+
+.ownlab-workspace-markdown-content h1 {
+  margin: 1.4em 0 0.9em;
+  font-size: 2rem;
+}
+
+.ownlab-workspace-markdown-content h2 {
+  margin: 1.3em 0 0.85em;
+  font-size: 1.5rem;
+}
+
+.ownlab-workspace-markdown-content h3 {
+  margin: 1.2em 0 0.8em;
+  font-size: 1.2rem;
+}
+
+.ownlab-workspace-markdown-content p {
+  margin: 0;
+  color: inherit;
+  line-height: inherit;
+}
+
+.ownlab-workspace-markdown-content p + p {
+  margin-top: 0.8em;
+}
+
+.ownlab-workspace-markdown-content ul,
+.ownlab-workspace-markdown-content ol {
+  margin: 1.1em 0;
+  padding-left: 1.6em;
+}
+
+.ownlab-workspace-markdown-content ul {
+  list-style: disc;
+}
+
+.ownlab-workspace-markdown-content ol {
+  list-style: decimal;
+}
+
+.ownlab-workspace-markdown-content li {
+  display: list-item;
+  margin: 0.3em 0;
+  line-height: inherit;
+}
+
+.ownlab-workspace-markdown-content blockquote {
+  margin: 1.2em 0;
+  border-left: 3px solid color-mix(in oklab, var(--border) 85%, transparent);
+  padding-left: 1rem;
+  color: var(--muted-foreground);
+}
+
+.ownlab-workspace-markdown-content code {
+  border-radius: 0.375rem;
+  background: color-mix(in oklab, var(--accent) 60%, transparent);
+  padding: 0.1rem 0.35rem;
+  font-size: 0.9em;
+}
+
+.ownlab-workspace-markdown-content pre {
+  margin: 1.2em 0;
+}
+
+
 .ownlab-mdxeditor [class*="_toolbarButton_"],
 .ownlab-mdxeditor [class*="_selectTrigger_"] {
   border-radius: 0.75rem;

@@ -26,6 +26,7 @@ import {
   readWorkspaceFileRaw,
   renameWorkspaceEntry,
   validateWorkspaceRoot,
+  writeWorkspaceFile,
 } from "./file-tree.js";
 
 function isValidationError(error: unknown): error is NodeJS.ErrnoException {
@@ -408,6 +409,45 @@ export function workspaceRoutes(db: Db): RouterType {
       }
       console.error("Failed to read file content:", error);
       res.status(500).json({ error: "Failed to read file" });
+    }
+  });
+
+  router.put("/:id/files/content", async (req, res) => {
+    try {
+      const { rootPath } = await getWorkspaceOrThrow(db, req.params.id);
+      const { path: relativePath, content } = req.body as {
+        path?: string;
+        content?: string;
+      };
+
+      if (typeof relativePath !== "string" || !relativePath) {
+        res.status(400).json({ error: "path is required" });
+        return;
+      }
+
+      if (typeof content !== "string") {
+        res.status(400).json({ error: "content must be a string" });
+        return;
+      }
+
+      await writeWorkspaceFile(rootPath, relativePath, content);
+      res.json({ ok: true });
+    } catch (error) {
+      if (error instanceof Error && error.message === "WORKSPACE_NOT_FOUND") {
+        res.status(404).json({ error: "Workspace not found" });
+        return;
+      }
+      if (error instanceof Error && error.message === "WORKSPACE_PATH_NOT_SET") {
+        res.status(409).json({ error: "Workspace has no local folder configured" });
+        return;
+      }
+      const pathError = getWorkspacePathErrorResponse(error);
+      if (pathError) {
+        res.status(pathError.status).json({ error: pathError.error });
+        return;
+      }
+      console.error("Failed to write file content:", error);
+      res.status(500).json({ error: "Failed to write file" });
     }
   });
 

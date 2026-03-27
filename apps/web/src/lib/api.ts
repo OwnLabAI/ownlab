@@ -666,6 +666,22 @@ export async function fetchWorkspaceFileContent(
   return res.text();
 }
 
+export async function updateWorkspaceFileContent(
+  workspaceId: string,
+  relativePath: string,
+  content: string,
+): Promise<void> {
+  const res = await fetch(`${API_BASE}/workspace/${workspaceId}/files/content`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ path: relativePath, content }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: 'Failed to update file content' }));
+    throw new Error(err.error || 'Failed to update file content');
+  }
+}
+
 // ── Channels ────────────────────────────────────────────────────────────────
 
 export interface Channel {
