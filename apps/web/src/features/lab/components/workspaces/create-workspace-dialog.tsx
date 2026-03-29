@@ -33,14 +33,14 @@ function BrowseFolderButton({
   onFolderSelected,
   disabled,
 }: {
-  onFolderSelected: (folderName: string, path: string) => void;
+  onFolderSelected: (path: string) => void;
   disabled?: boolean;
 }) {
   const handleClick = useCallback(() => {
     browseWorkspaceFolder()
       .then((result) => {
         if (!result?.path) return;
-        onFolderSelected(result.name, result.path);
+        onFolderSelected(result.path);
       })
       .catch((error) => {
         toast.error(error instanceof Error ? error.message : 'Failed to open folder picker');
@@ -62,10 +62,6 @@ function BrowseFolderButton({
 }
 
 const formSchema = z.object({
-  name: z
-    .string()
-    .min(2, { message: 'Workspace name must be at least 2 characters.' })
-    .max(50),
   worktreePath: z.string().min(1, { message: 'Please choose a local folder.' }).max(500),
 });
 
@@ -96,13 +92,13 @@ export function CreateWorkspaceDialog({
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
-    defaultValues: { name: '', worktreePath: '' },
+    defaultValues: { worktreePath: '' },
   });
 
   const selectedFolderPath = form.watch('worktreePath')?.trim() ?? '';
 
   const resetForm = useCallback(() => {
-    form.reset({ name: '', worktreePath: '' });
+    form.reset({ worktreePath: '' });
   }, [form]);
 
   const handleOpenChange = useCallback(
@@ -120,7 +116,6 @@ export function CreateWorkspaceDialog({
   const onSubmit = (values: FormData) => {
     startTransition(async () => {
       const result = await createWorkspace({
-        name: values.name,
         worktreePath: values.worktreePath?.trim() || null,
       });
       const data = result?.data;
@@ -150,28 +145,11 @@ export function CreateWorkspaceDialog({
         <DialogHeader>
           <DialogTitle>Create New Workspace</DialogTitle>
           <DialogDescription>
-            Choose a local folder and name for the workspace.
+            Choose a local folder for the workspace.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Workspace Name</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Workspace name"
-                      {...field}
-                      autoFocus
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
             <FormField
               control={form.control}
               name="worktreePath"
@@ -190,8 +168,7 @@ export function CreateWorkspaceDialog({
                       />
                       <BrowseFolderButton
                         disabled={isPending}
-                        onFolderSelected={(folderName, pathHint) => {
-                          form.setValue('name', folderName);
+                        onFolderSelected={(pathHint) => {
                           form.setValue('worktreePath', pathHint);
                         }}
                       />
@@ -202,9 +179,8 @@ export function CreateWorkspaceDialog({
                           size="icon"
                           title="Clear folder"
                           onClick={() => {
-                            form.setValue('name', '');
                             form.setValue('worktreePath', '');
-                            form.clearErrors(['name', 'worktreePath']);
+                            form.clearErrors(['worktreePath']);
                           }}
                         >
                           <X className="h-4 w-4" />

@@ -1,4 +1,5 @@
 import { Router, type Router as RouterType } from "express";
+import path from "node:path";
 import type { Db } from "@ownlab/db";
 import {
   channelMembers,
@@ -108,15 +109,11 @@ export function workspaceRoutes(db: Db): RouterType {
   // Create workspace – ensures there is at least one lab and attaches workspace to it.
   router.post("/", async (req, res) => {
     try {
-      const { name, description, worktreePath } = req.body as {
-        name: string;
+      const { description, worktreePath } = req.body as {
+        name?: string;
         description?: string | null;
         worktreePath?: string | null;
       };
-      if (!name || !name.trim()) {
-        res.status(400).json({ error: "name is required" });
-        return;
-      }
       if (!worktreePath || !worktreePath.trim()) {
         res.status(400).json({ error: "worktreePath is required" });
         return;
@@ -134,9 +131,13 @@ export function workspaceRoutes(db: Db): RouterType {
           .returning();
       }
 
-      const trimmedName = name.trim();
       const normalizedWorktreePath = await validateWorkspaceRoot(worktreePath);
-      const workspaceName = trimmedName;
+      const workspaceName = path.basename(normalizedWorktreePath).trim();
+
+      if (!workspaceName) {
+        res.status(422).json({ error: "Could not derive workspace name from folder path" });
+        return;
+      }
 
       const [workspace] = await db
         .insert(workspaces)

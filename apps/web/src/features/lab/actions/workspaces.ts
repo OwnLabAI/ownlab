@@ -8,12 +8,10 @@ import {
 } from '@/lib/api';
 
 export async function createWorkspace(input: {
-  name: string;
   worktreePath?: string | null;
 }) {
   try {
     const ws = await createWorkspaceApi({
-      name: input.name,
       worktreePath: input.worktreePath ?? null,
     });
     revalidatePath('/lab');

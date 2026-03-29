@@ -464,7 +464,6 @@ export async function fetchWorkspaces(opts?: { labId?: string }): Promise<Worksp
 }
 
 export async function createWorkspaceApi(data: {
-  name: string;
   description?: string | null;
   worktreePath?: string | null;
 }): Promise<Workspace> {
