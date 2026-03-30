@@ -44,6 +44,7 @@ Do not assume older docs reflect current behavior. Prefer the running code, rout
 
 - `apps/server/`: Express API, orchestration services, adapter registry, scheduling, runtime wiring
 - `apps/web/`: Next.js 16 app and feature UI for the lab surface
+- `apps/cli/`: command-line entry (`ownlab`) for diagnostics and future API automation; uses Commander + esbuild bundle
 - `packages/db/`: Drizzle schema, migrations, DB client, migration helpers, backups
 - `packages/shared/`: shared constants, exported types, and chat/channel contracts
 - `packages/adapter-utils/`: shared adapter helpers

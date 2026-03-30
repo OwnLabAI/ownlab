@@ -76,6 +76,15 @@ curl http://localhost:3100/api/agents
 curl http://localhost:3100/api/workspace
 ```
 
+CLI (from repo root, dev / no build):
+
+```bash
+pnpm ownlab --help
+pnpm ownlab health
+```
+
+After `pnpm --filter @ownlab/cli build`, you can run the bundled binary with `pnpm ownlab:run -- health` or `pnpm --filter @ownlab/cli exec node dist/index.js` from `apps/cli`.
+
 By default, OwnLab uses an embedded PostgreSQL instance in development when `DATABASE_URL` is not set.
 
 To use an external database instead:
@@ -112,7 +121,8 @@ GET /health
 ownlab/
 ├── apps/
 │   ├── server/        # Express API and orchestration services
-│   └── web/           # Next.js UI for labs, workspaces, tasks, and agents
+│   ├── web/           # Next.js UI for labs, workspaces, tasks, and agents
+│   └── cli/           # `ownlab` CLI (Commander + esbuild)
 ├── packages/
 │   ├── db/            # Drizzle schema, migrations, DB runtime
 │   ├── shared/        # Shared types, constants, validation helpers
@@ -137,10 +147,10 @@ pnpm typecheck
 pnpm test:run
 pnpm db:generate
 pnpm db:migrate
+pnpm ownlab --help
 ```
 ## Roadmap
 
-- ⚪ Add OwnLab CLI
 - ⚪ Support more agent runtimes
 - ⚪ More flexible team configuration
 - ⚪ Support auto mode in tasks, such as auto-research
