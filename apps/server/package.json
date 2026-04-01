@@ -24,6 +24,7 @@
     "@ownlab/adapter-pi-local": "workspace:*",
     "@ownlab/adapter-utils": "workspace:*",
     "@ownlab/db": "workspace:*",
+    "@ownlab/plugin-zotero": "workspace:*",
     "@ownlab/shared": "workspace:*",
     "ai": "^6.0.116",
     "cors": "^2.8.6",
