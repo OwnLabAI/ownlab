@@ -439,6 +439,91 @@ export interface WorkspaceGoalRecord {
   updatedAt: string | null;
 }
 
+export interface PluginConfigField {
+  key: string;
+  label: string;
+  type: 'text' | 'password';
+  placeholder?: string;
+  required?: boolean;
+  description?: string;
+}
+
+export interface PluginManifestRecord {
+  key: string;
+  displayName: string;
+  version: string;
+  description?: string | null;
+  icon?: string | null;
+  capabilities: string[];
+  configFields: PluginConfigField[];
+  jobs: Array<{
+    key: string;
+    label: string;
+    trigger: 'manual' | 'interval';
+  }>;
+  worker: {
+    runtime: 'node';
+    entry: string;
+  };
+  ui?: {
+    workspaceView?: string;
+  };
+}
+
+export interface PluginRecord {
+  id: string;
+  labId: string;
+  key: string;
+  displayName: string;
+  version: string;
+  status: string;
+  manifest: PluginManifestRecord;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface WorkspacePluginRecord {
+  id: string;
+  workspaceId: string;
+  pluginId: string;
+  enabled: boolean;
+  status: string;
+  config: Record<string, unknown>;
+  state: Record<string, unknown>;
+  lastSyncedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+  plugin: PluginRecord;
+}
+
+export interface WorkspacePluginViewRecord {
+  plugin: WorkspacePluginRecord;
+  data: {
+    connectionHealth?: string;
+    lastSyncStatus?: string;
+    syncedItemCount?: number;
+    items?: WorkspacePluginItem[];
+    contextItems?: WorkspacePluginItem[];
+    contextItemIds?: string[];
+    [key: string]: unknown;
+  };
+}
+
+export interface WorkspacePluginItem {
+  id: string;
+  key?: string;
+  title: string;
+  creators?: string[];
+  year?: string | null;
+  publication?: string;
+  abstract?: string;
+  tags?: string[];
+  noteCount?: number;
+  attachmentCount?: number;
+  zoteroUrl?: string | null;
+  citationText?: string;
+}
+
 export interface FileTreeNode {
   name: string;
   path: string;
@@ -545,6 +630,78 @@ export async function updateWorkspaceGoal(
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: 'Failed to update workspace goal' }));
     throw new Error(err.error || 'Failed to update workspace goal');
+  }
+  return res.json();
+}
+
+export async function fetchWorkspacePlugins(workspaceId: string): Promise<WorkspacePluginRecord[]> {
+  const res = await fetch(`${SERVER_BASE}/api/plugins/workspace/${encodeURIComponent(workspaceId)}`, {
+    cache: 'no-store',
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: 'Failed to fetch workspace plugins' }));
+    throw new Error(err.error || 'Failed to fetch workspace plugins');
+  }
+  return res.json();
+}
+
+export async function updateWorkspacePlugin(
+  workspaceId: string,
+  pluginId: string,
+  data: Partial<{
+    enabled: boolean;
+    config: Record<string, unknown>;
+  }>,
+): Promise<WorkspacePluginRecord> {
+  const res = await fetch(
+    `${SERVER_BASE}/api/plugins/workspace/${encodeURIComponent(workspaceId)}/${encodeURIComponent(pluginId)}`,
+    {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    },
+  );
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: 'Failed to update workspace plugin' }));
+    throw new Error(err.error || 'Failed to update workspace plugin');
+  }
+  return res.json();
+}
+
+export async function triggerWorkspacePluginAction(
+  workspaceId: string,
+  pluginId: string,
+  actionKey: string,
+  data?: Record<string, unknown>,
+): Promise<WorkspacePluginRecord> {
+  const res = await fetch(
+    `${SERVER_BASE}/api/plugins/workspace/${encodeURIComponent(workspaceId)}/${encodeURIComponent(pluginId)}/actions/${encodeURIComponent(actionKey)}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data ?? {}),
+    },
+  );
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: 'Failed to trigger workspace plugin action' }));
+    throw new Error(err.error || 'Failed to trigger workspace plugin action');
+  }
+  return res.json();
+}
+
+export async function fetchWorkspacePluginView(
+  workspaceId: string,
+  pluginId: string,
+): Promise<WorkspacePluginViewRecord> {
+  const res = await fetch(
+    `${SERVER_BASE}/api/plugins/workspace/${encodeURIComponent(workspaceId)}/${encodeURIComponent(pluginId)}/view`,
+    {
+      cache: 'no-store',
+    },
+  );
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: 'Failed to fetch workspace plugin view' }));
+    throw new Error(err.error || 'Failed to fetch workspace plugin view');
   }
   return res.json();
 }

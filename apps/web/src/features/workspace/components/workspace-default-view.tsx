@@ -1,16 +1,18 @@
 'use client';
 
-import { FileText, FolderOpen, ListTodo, MessagesSquare, Target } from 'lucide-react';
+import { FolderOpen, LibraryBig, ListTodo, MessagesSquare, Target } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export function WorkspaceDefaultView({
   workspaceName,
   onOpenFiles,
+  onOpenPlugins,
   onOpenTasks,
   onOpenGoal,
 }: {
   workspaceName?: string;
   onOpenFiles?: () => void;
+  onOpenPlugins?: () => void;
   onOpenTasks?: () => void;
   onOpenGoal?: () => void;
 }) {
@@ -41,6 +43,10 @@ export function WorkspaceDefaultView({
             <FolderOpen className="size-4" />
             Files
           </Button>
+          <Button type="button" variant="outline" className="rounded-full" onClick={onOpenPlugins}>
+            <LibraryBig className="size-4" />
+            Plugins
+          </Button>
           <Button type="button" variant="outline" className="rounded-full" onClick={onOpenTasks}>
             <ListTodo className="size-4" />
             Tasks
@@ -60,24 +66,24 @@ export function WorkspaceDefaultView({
             </p>
           </div>
           <div className="rounded-2xl border border-border/60 bg-card/80 px-4 py-4 text-left shadow-[0_8px_24px_rgba(15,23,42,0.04)] dark:shadow-[0_10px_24px_rgba(0,0,0,0.28)]">
+            <LibraryBig className="size-4 text-muted-foreground" />
+            <p className="mt-3 text-sm font-medium text-foreground">Plugins</p>
+            <p className="mt-1 text-xs leading-5 text-muted-foreground">
+              Mount Zotero and future tools in the same workspace shell.
+            </p>
+          </div>
+          <div className="rounded-2xl border border-border/60 bg-card/80 px-4 py-4 text-left shadow-[0_8px_24px_rgba(15,23,42,0.04)] dark:shadow-[0_10px_24px_rgba(0,0,0,0.28)]">
             <ListTodo className="size-4 text-muted-foreground" />
             <p className="mt-3 text-sm font-medium text-foreground">Tasks</p>
             <p className="mt-1 text-xs leading-5 text-muted-foreground">
               Review commitments here without leaving the workspace.
             </p>
           </div>
-          <div className="rounded-2xl border border-border/60 bg-card/80 px-4 py-4 text-left shadow-[0_8px_24px_rgba(15,23,42,0.04)] dark:shadow-[0_10px_24px_rgba(0,0,0,0.28)]">
-            <MessagesSquare className="size-4 text-muted-foreground" />
-            <p className="mt-3 text-sm font-medium text-foreground">Channel</p>
-            <p className="mt-1 text-xs leading-5 text-muted-foreground">
-              Expand the right panel when you want to coordinate with agents.
-            </p>
-          </div>
         </div>
 
         <div className="mt-6 flex items-center gap-2 text-xs text-muted-foreground">
-          <FileText className="size-4" />
-          <span>Start simple, then layer in discussion only when it helps.</span>
+          <MessagesSquare className="size-4" />
+          <span>Keep the shell simple, then layer in plugins and discussion only when they help.</span>
         </div>
       </div>
     </div>

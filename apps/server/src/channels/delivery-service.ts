@@ -24,6 +24,7 @@ import {
   ensureAgencyProfileMaterialized,
   type AgencyProfileMaterialization,
 } from "../agency/profile.js";
+import { createPluginService } from "../plugins/service.js";
 import { createSkillService } from "../skills/service.js";
 import { createAttachmentProcessingService } from "./attachment-processing-service.js";
 import { createChannelMessageService } from "./message-service.js";
@@ -94,6 +95,14 @@ function buildPromptFromMessages(
   agencyProfile: AgencyProfileMaterialization | null,
   channelMembers: ExecuteAgentDeliveriesInput["channelMembers"],
   activeSkillNames: string[],
+  workspaceContextEntries: Array<{
+    pluginName: string;
+    title: string;
+    citationText: string;
+    abstract: string;
+    tags: string[];
+    zoteroUrl: string | null;
+  }>,
 ): string {
   const lines: string[] = [];
 
@@ -123,6 +132,24 @@ function buildPromptFromMessages(
 
   if (activeSkillNames.length > 0) {
     lines.push(`Active skills: ${activeSkillNames.join(", ")}`);
+    lines.push("");
+  }
+
+  if (workspaceContextEntries.length > 0) {
+    lines.push("Workspace source context:");
+    for (const entry of workspaceContextEntries) {
+      lines.push(`- [${entry.pluginName}] ${entry.title}`);
+      lines.push(`  Citation: ${entry.citationText}`);
+      if (entry.abstract) {
+        lines.push(`  Abstract: ${entry.abstract}`);
+      }
+      if (entry.tags.length > 0) {
+        lines.push(`  Tags: ${entry.tags.join(", ")}`);
+      }
+      if (entry.zoteroUrl) {
+        lines.push(`  URL: ${entry.zoteroUrl}`);
+      }
+    }
     lines.push("");
   }
 
@@ -296,6 +323,7 @@ function createTemporaryAssistantMessage(input: {
 export function createChannelDeliveryService(db: Db) {
   const messageService = createChannelMessageService(db);
   const channelService = createChannelService(db);
+  const pluginService = createPluginService(db);
   const skillService = createSkillService(db);
   const conversationSessionService = createConversationSessionService(db);
 
@@ -350,6 +378,9 @@ export function createChannelDeliveryService(db: Db) {
         input.channel.id,
         agent.id,
       );
+      const workspaceContextEntries = await pluginService.listWorkspaceContextEntries(
+        input.channel.workspaceId,
+      );
       const hydratedHistory = await messageService.hydrateMessages(history);
       const prompt = buildPromptFromMessages(
         agent,
@@ -357,6 +388,7 @@ export function createChannelDeliveryService(db: Db) {
         agencyProfile,
         input.channelMembers,
         effectiveSkills.skills.map((skill) => skill.name),
+        workspaceContextEntries,
       );
 
       const adapterAgent: AdapterAgent = {
@@ -418,6 +450,7 @@ export function createChannelDeliveryService(db: Db) {
             localPath: skill.localPath,
             adapterCompat: skill.adapterCompat,
           })),
+          workspacePluginContext: workspaceContextEntries,
           agencyProfile: agencyProfile
             ? {
                 rootDir: agencyProfile.rootDir,

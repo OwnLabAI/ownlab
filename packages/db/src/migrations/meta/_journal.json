@@ -148,6 +148,13 @@
       "when": 1774080000000,
       "tag": "0020_conversation_runtime_sessions",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1775001600000,
+      "tag": "0022_plugin_host",
+      "breakpoints": true
     }
   ]
 }

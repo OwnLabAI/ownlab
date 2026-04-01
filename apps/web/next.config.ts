@@ -60,6 +60,10 @@ const nextConfig: NextConfig = {
         source: '/api/search/:path*',
         destination: `${SERVER_URL}/api/search/:path*`,
       },
+      {
+        source: '/api/plugins/:path*',
+        destination: `${SERVER_URL}/api/plugins/:path*`,
+      },
     ];
   },
 };

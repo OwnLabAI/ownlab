@@ -11,3 +11,4 @@ export { channelMessages } from "./channel_messages.js";
 export { heartbeatRuns } from "./heartbeat_runs.js";
 export { skills } from "./skills.js";
 export { agentSkills } from "./agent_skills.js";
+export { plugins, workspacePlugins } from "./plugins.js";

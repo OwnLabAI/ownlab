@@ -11,6 +11,7 @@ import { heartbeatRoutes } from "./heartbeat/routes.js";
 import { skillRoutes } from "./skills/routes.js";
 import { searchRoutes } from "./search/routes.js";
 import { teamRoutes } from "./teams/routes.js";
+import { pluginRoutes } from "./plugins/routes.js";
 
 export function createApp(db: Db): Express {
   const app = express();
@@ -34,6 +35,7 @@ export function createApp(db: Db): Express {
   app.use("/api/heartbeat", heartbeatRoutes(db));
   app.use("/api/skills", skillRoutes(db));
   app.use("/api/search", searchRoutes(db));
+  app.use("/api/plugins", pluginRoutes(db));
 
   app.use((error: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
     if (

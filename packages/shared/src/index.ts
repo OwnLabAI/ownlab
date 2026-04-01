@@ -37,4 +37,11 @@ export type {
   ChannelDisplayMessage,
   ChannelChatExecution,
   ChannelChatStreamEvent,
+  PluginCapability,
+  PluginConfigField,
+  PluginJobManifest,
+  PluginManifest,
+  PluginRecord,
+  WorkspacePluginRecord,
+  WorkspacePluginViewData,
 } from "./types/index.js";

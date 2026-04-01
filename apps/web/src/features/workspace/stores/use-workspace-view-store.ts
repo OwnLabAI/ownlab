@@ -3,11 +3,12 @@
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
-type WorkspaceToolTab = 'file' | 'goal' | 'members' | 'tasks';
+type WorkspaceToolTab = 'file' | 'goal' | 'members' | 'tasks' | 'plugins';
 
 type WorkspaceViewState = {
   selectedFilePath: string | null;
   selectedTaskId: string | null;
+  selectedPluginId: string | null;
   selectedChannelId: string | null;
   channelOpen: boolean;
   activeToolTab: WorkspaceToolTab;
@@ -20,6 +21,7 @@ type WorkspaceViewStore = {
   ensureWorkspaceView: (workspaceId: string) => WorkspaceViewState;
   setSelectedFilePath: (workspaceId: string, path: string | null) => void;
   setSelectedTaskId: (workspaceId: string, taskId: string | null) => void;
+  setSelectedPluginId: (workspaceId: string, pluginId: string | null) => void;
   setSelectedChannelId: (workspaceId: string, channelId: string | null) => void;
   setChannelOpen: (workspaceId: string, open: boolean) => void;
   setActiveToolTab: (workspaceId: string, tab: WorkspaceToolTab) => void;
@@ -31,6 +33,7 @@ type WorkspaceViewStore = {
 const DEFAULT_WORKSPACE_VIEW: WorkspaceViewState = {
   selectedFilePath: null,
   selectedTaskId: null,
+  selectedPluginId: null,
   selectedChannelId: null,
   channelOpen: false,
   activeToolTab: 'file',
@@ -54,6 +57,7 @@ export const useWorkspaceViewStore = create<WorkspaceViewStore>()(
               ...(state.views[workspaceId] ?? DEFAULT_WORKSPACE_VIEW),
               selectedFilePath: path,
               selectedTaskId: path ? null : (state.views[workspaceId]?.selectedTaskId ?? null),
+              selectedPluginId: path ? null : (state.views[workspaceId]?.selectedPluginId ?? null),
             },
           },
         }));
@@ -67,6 +71,21 @@ export const useWorkspaceViewStore = create<WorkspaceViewStore>()(
               ...(state.views[workspaceId] ?? DEFAULT_WORKSPACE_VIEW),
               selectedTaskId: taskId,
               selectedFilePath: taskId ? null : (state.views[workspaceId]?.selectedFilePath ?? null),
+              selectedPluginId: taskId ? null : (state.views[workspaceId]?.selectedPluginId ?? null),
+            },
+          },
+        }));
+      },
+      setSelectedPluginId: (workspaceId, pluginId) => {
+        if (!workspaceId) return;
+        set((state) => ({
+          views: {
+            ...state.views,
+            [workspaceId]: {
+              ...(state.views[workspaceId] ?? DEFAULT_WORKSPACE_VIEW),
+              selectedPluginId: pluginId,
+              selectedFilePath: pluginId ? null : (state.views[workspaceId]?.selectedFilePath ?? null),
+              selectedTaskId: pluginId ? null : (state.views[workspaceId]?.selectedTaskId ?? null),
             },
           },
         }));
@@ -152,6 +171,7 @@ export const useWorkspaceViewStore = create<WorkspaceViewStore>()(
 export function useWorkspaceView(workspaceId: string): WorkspaceViewState & {
   setSelectedFilePath: (path: string | null) => void;
   setSelectedTaskId: (taskId: string | null) => void;
+  setSelectedPluginId: (pluginId: string | null) => void;
   setSelectedChannelId: (channelId: string | null) => void;
   setChannelOpen: (open: boolean) => void;
   setActiveToolTab: (tab: WorkspaceToolTab) => void;
@@ -162,6 +182,7 @@ export function useWorkspaceView(workspaceId: string): WorkspaceViewState & {
   const view = useWorkspaceViewStore((state) => state.views[workspaceId] ?? DEFAULT_WORKSPACE_VIEW);
   const setSelectedFilePath = useWorkspaceViewStore((state) => state.setSelectedFilePath);
   const setSelectedTaskId = useWorkspaceViewStore((state) => state.setSelectedTaskId);
+  const setSelectedPluginId = useWorkspaceViewStore((state) => state.setSelectedPluginId);
   const setSelectedChannelId = useWorkspaceViewStore((state) => state.setSelectedChannelId);
   const setChannelOpen = useWorkspaceViewStore((state) => state.setChannelOpen);
   const setActiveToolTab = useWorkspaceViewStore((state) => state.setActiveToolTab);
@@ -173,6 +194,7 @@ export function useWorkspaceView(workspaceId: string): WorkspaceViewState & {
     ...view,
     setSelectedFilePath: (path) => setSelectedFilePath(workspaceId, path),
     setSelectedTaskId: (taskId) => setSelectedTaskId(workspaceId, taskId),
+    setSelectedPluginId: (pluginId) => setSelectedPluginId(workspaceId, pluginId),
     setSelectedChannelId: (channelId) => setSelectedChannelId(workspaceId, channelId),
     setChannelOpen: (open) => setChannelOpen(workspaceId, open),
     setActiveToolTab: (tab) => setActiveToolTab(workspaceId, tab),

@@ -36,6 +36,7 @@ import { cn } from '@/lib/utils';
 import {
   fetchChannelMessages,
   fetchChannelMembers,
+  fetchWorkspacePlugins,
   stopChannelRun,
   streamChannelChatMessageViaServer,
   type Channel,
@@ -43,6 +44,7 @@ import {
   type ChannelChatStreamEvent,
   type ChannelMention,
   type ChannelMessage,
+  type WorkspacePluginRecord,
   type WorkspaceAgent,
 } from '@/lib/api';
 import { PaperclipIcon } from 'lucide-react';
@@ -52,6 +54,13 @@ import { PromptInputDraftProvider } from '@/features/channels/components/prompt-
 import { MessageCopyButton } from '@/features/channels/components/message-copy-button';
 import { usePersistentChannelConversation } from '@/features/channels/hooks/use-persistent-channel-conversation';
 import { useWorkspaceView } from '@/features/workspace/stores/use-workspace-view-store';
+import { useChannelDraftStore } from '@/features/channels/stores/use-channel-draft-store';
+import {
+  WORKSPACE_PLUGIN_CONTEXT_CHANGED_EVENT,
+} from '../tool-panel-plugins';
+import {
+  WORKSPACE_PLUGIN_INSERT_DRAFT_EVENT,
+} from '../viewboard/workspace-plugin-view';
 
 interface WorkspaceChannelChatViewProps {
   channel: Channel;
@@ -94,6 +103,12 @@ export function WorkspaceChannelChatView({
   const [sendError, setSendError] = useState<string | null>(null);
   const [dragActive, setDragActive] = useState(false);
   const [workspaceAgents, setWorkspaceAgents] = useState<WorkspaceAgent[]>([]);
+  const [workspaceContextItems, setWorkspaceContextItems] = useState<Array<{
+    id: string;
+    title: string;
+    citationText: string;
+    pluginName: string;
+  }>>([]);
   const [selectedMentions, setSelectedMentions] = useState<ChannelMention[]>([]);
   const [mentionQuery, setMentionQuery] = useState<string | null>(null);
   const [mentionRange, setMentionRange] = useState<{ start: number; end: number } | null>(null);
@@ -101,6 +116,7 @@ export function WorkspaceChannelChatView({
   const dragDepthRef = useRef(0);
   const streamAbortRef = useRef<AbortController | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const setDraft = useChannelDraftStore((state) => state.setDraft);
   const runState = useChannelRun(runKey);
   const {
     active: runActive,
@@ -209,6 +225,84 @@ export function WorkspaceChannelChatView({
       cancelled = true;
     };
   }, [channel.id, membersVersion]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    function extractContextItems(plugins: WorkspacePluginRecord[]) {
+      return plugins.flatMap((plugin) => {
+        const state = plugin.state ?? {};
+        const items = Array.isArray(state.items) ? state.items : [];
+        const contextIds = new Set(
+          Array.isArray(state.contextItemIds)
+            ? state.contextItemIds.filter((entry): entry is string => typeof entry === 'string' && entry.trim().length > 0)
+            : [],
+        );
+
+        return items.flatMap((item) => {
+          if (!item || typeof item !== 'object') {
+            return [];
+          }
+          const id = typeof item.id === 'string' ? item.id : '';
+          if (!id || !contextIds.has(id)) {
+            return [];
+          }
+          return [{
+            id,
+            title: typeof item.title === 'string' ? item.title : 'Untitled source',
+            citationText:
+              typeof item.citationText === 'string' && item.citationText.trim()
+                ? item.citationText
+                : typeof item.title === 'string'
+                  ? item.title
+                  : 'Untitled source',
+            pluginName: plugin.plugin.displayName,
+          }];
+        });
+      });
+    }
+
+    async function loadWorkspaceContext() {
+      try {
+        const plugins = await fetchWorkspacePlugins(channel.workspaceId);
+        if (!cancelled) {
+          setWorkspaceContextItems(extractContextItems(plugins));
+        }
+      } catch {
+        if (!cancelled) {
+          setWorkspaceContextItems([]);
+        }
+      }
+    }
+
+    void loadWorkspaceContext();
+
+    function handlePluginContextChanged(event: Event) {
+      const detail = (event as CustomEvent<{ workspaceId?: string }>).detail;
+      if (detail?.workspaceId === channel.workspaceId) {
+        void loadWorkspaceContext();
+      }
+    }
+
+    function handleInsertDraft(event: Event) {
+      const detail = (event as CustomEvent<{ workspaceId?: string; text?: string }>).detail;
+      if (detail?.workspaceId !== channel.workspaceId || !detail.text?.trim()) {
+        return;
+      }
+      const currentDraft = useChannelDraftStore.getState().drafts[draftKey] ?? '';
+      const prefix = currentDraft.trim().length > 0 ? `${currentDraft}\n\n` : '';
+      setDraft(draftKey, `${prefix}${detail.text.trim()}`);
+      textareaRef.current?.focus();
+    }
+
+    window.addEventListener(WORKSPACE_PLUGIN_CONTEXT_CHANGED_EVENT, handlePluginContextChanged);
+    window.addEventListener(WORKSPACE_PLUGIN_INSERT_DRAFT_EVENT, handleInsertDraft);
+    return () => {
+      cancelled = true;
+      window.removeEventListener(WORKSPACE_PLUGIN_CONTEXT_CHANGED_EVENT, handlePluginContextChanged);
+      window.removeEventListener(WORKSPACE_PLUGIN_INSERT_DRAFT_EVENT, handleInsertDraft);
+    };
+  }, [channel.workspaceId, draftKey, setDraft]);
 
   useEffect(() => {
     if (!runActive || !hasCompletedAssistantReply(messages)) {
@@ -655,6 +749,27 @@ export function WorkspaceChannelChatView({
                   )}
                 </div>
               ) : null}
+            </div>
+          ) : null}
+
+          {workspaceContextItems.length > 0 ? (
+            <div className="mb-3 flex flex-wrap items-center gap-2 rounded-2xl border border-border/60 bg-background/70 px-3 py-2 text-xs text-muted-foreground">
+              <span className="font-medium text-foreground">Context</span>
+              {workspaceContextItems.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  className="rounded-full border border-border/60 bg-card/80 px-2.5 py-1 transition-colors hover:bg-accent/50"
+                  onClick={() => {
+                    const currentDraft = useChannelDraftStore.getState().drafts[draftKey] ?? '';
+                    const prefix = currentDraft.trim().length > 0 ? `${currentDraft}\n\n` : '';
+                    setDraft(draftKey, `${prefix}${item.citationText}`);
+                    textareaRef.current?.focus();
+                  }}
+                >
+                  {item.pluginName}: {item.title}
+                </button>
+              ))}
             </div>
           ) : null}
 

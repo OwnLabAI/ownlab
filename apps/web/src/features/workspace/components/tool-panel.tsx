@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useTransition } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { FolderOpen, ListTodo, MoreHorizontal, Target, Users } from 'lucide-react';
+import { FolderOpen, LibraryBig, ListTodo, MoreHorizontal, Target, Users } from 'lucide-react';
 import { toast } from 'sonner';
 import { useWorkspaceView } from '@/features/workspace/stores/use-workspace-view-store';
 import { Button } from '@/components/ui/button';
@@ -17,6 +17,7 @@ import { cn } from '@/lib/utils';
 import { ToolPanelChannels } from './tool-panel-channels';
 import { FileExplorer } from './file-explorer';
 import { ToolPanelGoal } from './tool-panel-goal';
+import { ToolPanelPlugins } from './tool-panel-plugins';
 import { ToolPanelTasks } from './tool-panel-tasks';
 import { browseWorkspaceFolder, updateWorkspaceApi } from '@/lib/api';
 import type { Item } from '@/features/workspace/data/items';
@@ -24,6 +25,7 @@ import type { WorkspaceForSwitcher } from '@/features/lab/data/workspaces';
 
 const TABS = [
   { id: 'file', label: 'Files', icon: FolderOpen },
+  { id: 'plugins', label: 'Plugins', icon: LibraryBig },
   { id: 'tasks', label: 'Tasks', icon: ListTodo },
   { id: 'goal', label: 'Goal', icon: Target },
   { id: 'members', label: 'Channels', icon: Users },
@@ -105,7 +107,9 @@ export function ToolPanel({
     setActiveToolTab,
     setSelectedFilePath,
     setSelectedTaskId,
+    setSelectedPluginId,
     selectedTaskId,
+    selectedPluginId,
   } = useWorkspaceView(workspaceId);
   const handleFileSelect = onFileSelect ?? setSelectedFilePath;
   const handleTaskSelect = onTaskSelect ?? setSelectedTaskId;
@@ -314,6 +318,14 @@ export function ToolPanel({
 
         {activeToolTab === 'members' && (
           <ToolPanelChannels />
+        )}
+
+        {activeToolTab === 'plugins' && (
+          <ToolPanelPlugins
+            workspaceId={workspaceId}
+            selectedPluginId={selectedPluginId}
+            onPluginSelect={setSelectedPluginId}
+          />
         )}
 
         {activeToolTab === 'tasks' && currentWorkspace && (

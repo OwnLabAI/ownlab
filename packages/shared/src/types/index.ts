@@ -15,3 +15,12 @@ export type {
   ChannelChatExecution,
   ChannelChatStreamEvent,
 } from "./channel-stream.js";
+export type {
+  PluginCapability,
+  PluginConfigField,
+  PluginJobManifest,
+  PluginManifest,
+  PluginRecord,
+  WorkspacePluginRecord,
+  WorkspacePluginViewData,
+} from "./plugin.js";

@@ -103,8 +103,10 @@ function WorkspacePanels({
   const {
     selectedFilePath,
     selectedTaskId,
+    selectedPluginId,
     setSelectedFilePath,
     setSelectedTaskId,
+    setSelectedPluginId,
     setActiveToolTab,
     channelOpen,
     setChannelOpen,
@@ -170,8 +172,10 @@ function WorkspacePanels({
               workspaceName={workspace?.name}
               selectedFilePath={selectedFilePath}
               selectedTaskId={selectedTaskId}
+              selectedPluginId={selectedPluginId}
               onCloseTask={() => setSelectedTaskId(null)}
               onOpenFiles={() => setActiveToolTab('file')}
+              onOpenPlugins={() => setActiveToolTab('plugins')}
               onOpenTasks={() => setActiveToolTab('tasks')}
               onOpenGoal={() => setActiveToolTab('goal')}
             />
