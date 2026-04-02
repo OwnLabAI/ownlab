@@ -24,3 +24,12 @@ export type {
   WorkspacePluginRecord,
   WorkspacePluginViewData,
 } from "./plugin.js";
+export type {
+  LatexCompileDiagnostic,
+  LatexCompileResult,
+  LatexCompileDiagnosticSeverity,
+  LatexEngine,
+  LatexEnvironmentInfo,
+  LatexEnvironmentStatus,
+  LatexWorkspaceFileList,
+} from "./latex.js";

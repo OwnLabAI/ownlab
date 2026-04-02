@@ -44,4 +44,11 @@ export type {
   PluginRecord,
   WorkspacePluginRecord,
   WorkspacePluginViewData,
+  LatexCompileDiagnostic,
+  LatexCompileResult,
+  LatexCompileDiagnosticSeverity,
+  LatexEngine,
+  LatexEnvironmentInfo,
+  LatexEnvironmentStatus,
+  LatexWorkspaceFileList,
 } from "./types/index.js";

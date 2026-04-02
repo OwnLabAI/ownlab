@@ -29,6 +29,11 @@ import {
   validateWorkspaceRoot,
   writeWorkspaceFile,
 } from "./file-tree.js";
+import {
+  compileLatexInWorkspace,
+  detectLatexEnvironment,
+  listWorkspaceLatexFiles,
+} from "./latex-service.js";
 
 function isValidationError(error: unknown): error is NodeJS.ErrnoException {
   return (
@@ -449,6 +454,148 @@ export function workspaceRoutes(db: Db): RouterType {
       }
       console.error("Failed to write file content:", error);
       res.status(500).json({ error: "Failed to write file" });
+    }
+  });
+
+  router.get("/:id/latex/environment", async (req, res) => {
+    try {
+      await getWorkspaceOrThrow(db, req.params.id);
+      const environment = await detectLatexEnvironment();
+      res.json(environment);
+    } catch (error) {
+      if (error instanceof Error && error.message === "WORKSPACE_NOT_FOUND") {
+        res.status(404).json({ error: "Workspace not found" });
+        return;
+      }
+      if (error instanceof Error && error.message === "WORKSPACE_PATH_NOT_SET") {
+        res.status(409).json({ error: "Workspace has no local folder configured" });
+        return;
+      }
+      const pathError = getWorkspacePathErrorResponse(error);
+      if (pathError) {
+        res.status(pathError.status).json({ error: pathError.error });
+        return;
+      }
+      console.error("Failed to detect LaTeX environment:", error);
+      res.status(500).json({ error: "Failed to detect LaTeX environment" });
+    }
+  });
+
+  router.get("/:id/latex/files", async (req, res) => {
+    try {
+      const { rootPath } = await getWorkspaceOrThrow(db, req.params.id);
+      const files = await listWorkspaceLatexFiles(rootPath);
+      res.json({ files });
+    } catch (error) {
+      if (error instanceof Error && error.message === "WORKSPACE_NOT_FOUND") {
+        res.status(404).json({ error: "Workspace not found" });
+        return;
+      }
+      if (error instanceof Error && error.message === "WORKSPACE_PATH_NOT_SET") {
+        res.status(409).json({ error: "Workspace has no local folder configured" });
+        return;
+      }
+      const pathError = getWorkspacePathErrorResponse(error);
+      if (pathError) {
+        res.status(pathError.status).json({ error: pathError.error });
+        return;
+      }
+      console.error("Failed to list LaTeX files:", error);
+      res.status(500).json({ error: "Failed to list LaTeX files" });
+    }
+  });
+
+  router.post("/:id/latex/compile", async (req, res) => {
+    try {
+      const { rootPath } = await getWorkspaceOrThrow(db, req.params.id);
+      const { mainFilePath, engine } = req.body as {
+        mainFilePath?: string;
+        engine?: "tectonic" | "latexmk" | "xelatex" | "pdflatex" | "lualatex";
+      };
+
+      if (typeof mainFilePath !== "string" || !mainFilePath.trim()) {
+        res.status(400).json({ error: "mainFilePath is required" });
+        return;
+      }
+
+      const { environment, result } = await compileLatexInWorkspace({
+        rootPath,
+        mainFilePath,
+        engine: engine ?? null,
+      });
+
+      res.json({
+        ...result,
+        environment,
+      });
+    } catch (error) {
+      if (error instanceof Error && error.message === "WORKSPACE_NOT_FOUND") {
+        res.status(404).json({ error: "Workspace not found" });
+        return;
+      }
+      if (error instanceof Error && error.message === "WORKSPACE_PATH_NOT_SET") {
+        res.status(409).json({ error: "Workspace has no local folder configured" });
+        return;
+      }
+      if (error instanceof Error && error.message === "LATEX_ENVIRONMENT_MISSING") {
+        const environment = await detectLatexEnvironment();
+        res.status(409).json({
+          error: "No local LaTeX compiler was detected. Install one and try again.",
+          environment,
+        });
+        return;
+      }
+      if (error instanceof Error && error.message === "LATEX_MAIN_FILE_INVALID") {
+        res.status(422).json({ error: "mainFilePath must point to a .tex file inside the workspace" });
+        return;
+      }
+      const pathError = getWorkspacePathErrorResponse(error);
+      if (pathError) {
+        res.status(pathError.status).json({ error: pathError.error });
+        return;
+      }
+      console.error("Failed to compile LaTeX file:", error);
+      res.status(500).json({ error: "Failed to compile LaTeX file" });
+    }
+  });
+
+  router.get("/:id/latex/output", async (req, res) => {
+    try {
+      const { rootPath } = await getWorkspaceOrThrow(db, req.params.id);
+      const relativePath = typeof req.query.path === "string" ? req.query.path : "";
+      if (!relativePath) {
+        res.status(400).json({ error: "path query is required" });
+        return;
+      }
+
+      const normalizedPath = relativePath.toLowerCase();
+      if (normalizedPath.endsWith(".pdf")) {
+        const content = await readWorkspaceFileRaw(rootPath, relativePath);
+        res.setHeader("Content-Type", "application/pdf");
+        res.setHeader("Content-Disposition", "inline");
+        res.send(content);
+        return;
+      }
+
+      const content = await readWorkspaceFile(rootPath, relativePath);
+      res.setHeader("Content-Type", "text/plain; charset=utf-8");
+      res.send(content);
+    } catch (error) {
+      if (error instanceof Error && error.message === "WORKSPACE_NOT_FOUND") {
+        res.status(404).json({ error: "Workspace not found" });
+        return;
+      }
+      if (error instanceof Error && error.message === "WORKSPACE_PATH_NOT_SET") {
+        res.status(409).json({ error: "Workspace has no local folder configured" });
+        return;
+      }
+      const pathError = getWorkspacePathErrorResponse(error);
+      if (pathError) {
+        res.status(pathError.status).json({ error: pathError.error });
+        return;
+      }
+      console.error("Failed to read LaTeX output:", error);
+      res.status(500).json({ error: "Failed to read LaTeX output" });
     }
   });
 

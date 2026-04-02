@@ -7,8 +7,9 @@ import {
   getFileExtension,
   getWorkspaceFilePreviewUrl,
   isMarkdownFile,
-  type PreviewKind,
+  type LatexPreviewKind,
 } from './use-workspace-file-preview';
+import { WorkspaceLatexFileView } from './workspace-latex-file-view';
 import { WorkspaceMarkdownFileView } from './workspace-markdown-file-view';
 
 interface WorkspaceFilePreviewProps {
@@ -17,7 +18,7 @@ interface WorkspaceFilePreviewProps {
   content?: string;
   error: string | null;
   loading: boolean;
-  previewKind: PreviewKind;
+  previewKind: LatexPreviewKind;
   previewVersion: number;
   onRefreshText: () => void;
   onRefreshBinary: () => void;
@@ -68,6 +69,17 @@ export function WorkspaceFilePreview({
   if (isMarkdownFile(filePath) && typeof content === 'string') {
     return (
       <WorkspaceMarkdownFileView
+        workspaceId={workspaceId}
+        filePath={filePath}
+        content={content}
+        onSaved={onMarkdownSaved}
+      />
+    );
+  }
+
+  if (previewKind === 'latex' && typeof content === 'string') {
+    return (
+      <WorkspaceLatexFileView
         workspaceId={workspaceId}
         filePath={filePath}
         content={content}

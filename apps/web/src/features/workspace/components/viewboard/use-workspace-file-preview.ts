@@ -15,6 +15,7 @@ const UNSUPPORTED_PREVIEW_EXTENSIONS = new Set([
 const MARKDOWN_EXTENSIONS = new Set(['.md', '.markdown', '.mdx', '.mdown', '.mkd']);
 
 export type PreviewKind = 'text' | 'pdf' | 'png' | 'unsupported';
+export type LatexPreviewKind = PreviewKind | 'latex';
 
 export function getFileExtension(filePath: string | null): string {
   if (!filePath) {
@@ -30,9 +31,17 @@ export function getFileExtension(filePath: string | null): string {
   return fileName.slice(dotIndex).toLowerCase();
 }
 
-export function getPreviewKind(filePath: string | null): PreviewKind {
+export function isLatexFile(filePath: string | null): boolean {
+  return getFileExtension(filePath) === '.tex';
+}
+
+export function getPreviewKind(filePath: string | null): LatexPreviewKind {
   const normalizedPath = filePath?.toLowerCase() ?? '';
   const extension = getFileExtension(filePath);
+
+  if (extension === '.tex') {
+    return 'latex';
+  }
 
   if (normalizedPath.endsWith('.pdf')) {
     return 'pdf';
@@ -68,7 +77,7 @@ export function useWorkspaceFilePreview(workspaceId: string, selectedFilePath: s
   const content = selectedFilePath ? fileContents[selectedFilePath] : undefined;
 
   const loadFile = useEffectEvent(async (options?: { force?: boolean }) => {
-    if (!selectedFilePath || !workspaceId || previewKind !== 'text') {
+    if (!selectedFilePath || !workspaceId || (previewKind !== 'text' && previewKind !== 'latex')) {
       setError(null);
       setLoading(false);
       return;

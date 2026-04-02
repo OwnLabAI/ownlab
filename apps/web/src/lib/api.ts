@@ -4,6 +4,50 @@ const SERVER_BASE =
     ? process.env.OWNLAB_SERVER_URL ?? 'http://localhost:3100'
     : process.env.NEXT_PUBLIC_OWNLAB_SERVER_URL ?? 'http://localhost:3100';
 
+export type LatexEngine = 'tectonic' | 'latexmk' | 'xelatex' | 'pdflatex' | 'lualatex';
+
+export type LatexEnvironmentStatus = 'checking' | 'ready' | 'missing' | 'error';
+
+export type LatexCompileDiagnosticSeverity = 'error' | 'warning';
+
+export interface LatexEnvironmentInfo {
+  status: LatexEnvironmentStatus;
+  available: boolean;
+  recommendedEngine: LatexEngine | null;
+  detectedEngines: LatexEngine[];
+  installHint: string | null;
+  platform: string;
+  checkedAt: string;
+}
+
+export interface LatexCompileDiagnostic {
+  severity: LatexCompileDiagnosticSeverity;
+  file: string | null;
+  line: number | null;
+  message: string;
+  raw: string;
+}
+
+export interface LatexCompileResult {
+  ok: boolean;
+  runId: string;
+  engine: LatexEngine;
+  mainFilePath: string;
+  outputPdfPath: string | null;
+  logPath: string | null;
+  statusCode: number | null;
+  log: string;
+  diagnostics: LatexCompileDiagnostic[];
+  startedAt: string;
+  finishedAt: string;
+  durationMs: number;
+  error?: string | null;
+}
+
+export interface LatexWorkspaceFileList {
+  files: string[];
+}
+
 // ── Agents ──────────────────────────────────────────────────────────────────
 
 export interface AgentRecord {
@@ -836,6 +880,56 @@ export async function updateWorkspaceFileContent(
     const err = await res.json().catch(() => ({ error: 'Failed to update file content' }));
     throw new Error(err.error || 'Failed to update file content');
   }
+}
+
+export async function fetchWorkspaceLatexEnvironment(
+  workspaceId: string,
+): Promise<LatexEnvironmentInfo> {
+  const res = await fetch(`${API_BASE}/workspace/${workspaceId}/latex/environment`);
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: 'Failed to check LaTeX environment' }));
+    throw new Error(err.error || 'Failed to check LaTeX environment');
+  }
+  return res.json();
+}
+
+export async function fetchWorkspaceLatexFiles(
+  workspaceId: string,
+): Promise<LatexWorkspaceFileList> {
+  const res = await fetch(`${API_BASE}/workspace/${workspaceId}/latex/files`);
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: 'Failed to fetch LaTeX files' }));
+    throw new Error(err.error || 'Failed to fetch LaTeX files');
+  }
+  return res.json();
+}
+
+export async function compileWorkspaceLatexFile(
+  workspaceId: string,
+  input: {
+    mainFilePath: string;
+    engine?: LatexEngine | null;
+  },
+): Promise<LatexCompileResult & { environment: LatexEnvironmentInfo }> {
+  const res = await fetch(`${API_BASE}/workspace/${workspaceId}/latex/compile`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(input),
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: 'Failed to compile LaTeX file' }));
+    const message = err.error || 'Failed to compile LaTeX file';
+    const nextError = new Error(message) as Error & {
+      environment?: LatexEnvironmentInfo;
+    };
+    if (err.environment) {
+      nextError.environment = err.environment as LatexEnvironmentInfo;
+    }
+    throw nextError;
+  }
+
+  return res.json();
 }
 
 // ── Channels ────────────────────────────────────────────────────────────────

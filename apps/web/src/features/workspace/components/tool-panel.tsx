@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useTransition } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { FolderOpen, LibraryBig, ListTodo, MoreHorizontal, Target, Users } from 'lucide-react';
+import { FolderOpen, ListTodo, MoreHorizontal, Target, Users } from 'lucide-react';
 import { toast } from 'sonner';
 import { useWorkspaceView } from '@/features/workspace/stores/use-workspace-view-store';
 import { Button } from '@/components/ui/button';
@@ -17,7 +17,6 @@ import { cn } from '@/lib/utils';
 import { ToolPanelChannels } from './tool-panel-channels';
 import { FileExplorer } from './file-explorer';
 import { ToolPanelGoal } from './tool-panel-goal';
-import { ToolPanelPlugins } from './tool-panel-plugins';
 import { ToolPanelTasks } from './tool-panel-tasks';
 import { browseWorkspaceFolder, updateWorkspaceApi } from '@/lib/api';
 import type { Item } from '@/features/workspace/data/items';
@@ -25,7 +24,6 @@ import type { WorkspaceForSwitcher } from '@/features/lab/data/workspaces';
 
 const TABS = [
   { id: 'file', label: 'Files', icon: FolderOpen },
-  { id: 'plugins', label: 'Plugins', icon: LibraryBig },
   { id: 'tasks', label: 'Tasks', icon: ListTodo },
   { id: 'goal', label: 'Goal', icon: Target },
   { id: 'members', label: 'Channels', icon: Users },
@@ -41,6 +39,14 @@ interface ToolPanelProps {
   workspaces: WorkspaceForSwitcher[];
   onFileSelect?: (path: string | null) => void;
   onTaskSelect?: (taskId: string | null) => void;
+}
+
+function PluginTestingNotice() {
+  return (
+    <div className="flex h-full flex-col items-center justify-center px-6 text-center">
+      <p className="text-sm text-muted-foreground">Plugins are still in testing.</p>
+    </div>
+  );
 }
 
 function WorkspaceFolderSetup({
@@ -174,8 +180,11 @@ export function ToolPanel({
       const leadingIds = TABS.slice(0, directCount).map((tab) => tab.id);
 
       let nextVisible = leadingIds;
-      if (!nextVisible.includes(activeToolTab)) {
-        nextVisible = [...leadingIds.slice(0, Math.max(0, directCount - 1)), activeToolTab];
+      const activeToolbarTab = (
+        TABS.some((tab) => tab.id === activeToolTab) ? activeToolTab : 'file'
+      ) as TabId;
+      if (!nextVisible.includes(activeToolbarTab)) {
+        nextVisible = [...leadingIds.slice(0, Math.max(0, directCount - 1)), activeToolbarTab];
       }
 
       nextVisible = TABS
@@ -210,6 +219,9 @@ export function ToolPanel({
   const visibleTabs = TABS.filter((tab) => layout.visibleTabIds.includes(tab.id));
   const hiddenTabs = TABS.filter((tab) => layout.hiddenTabIds.includes(tab.id));
   const useCompactToolbar = hiddenTabs.length > 0 && visibleTabs.length <= 2;
+  const activeToolbarTab = (
+    TABS.some((tab) => tab.id === activeToolTab) ? activeToolTab : 'file'
+  ) as TabId;
 
   return (
     <div className="relative flex h-full w-full min-h-0 flex-col bg-transparent px-2 py-2">
@@ -239,7 +251,7 @@ export function ToolPanel({
             className={cn(
               'flex min-w-0 items-center justify-center gap-1.5 rounded-full px-2.5 py-1.5 text-[13px] font-medium transition-all',
               useCompactToolbar && 'flex-none px-4',
-              activeToolTab === tab.id
+              activeToolbarTab === tab.id
                 ? 'bg-background text-foreground shadow-sm'
                 : 'text-muted-foreground hover:bg-background/70 hover:text-foreground',
             )}
@@ -273,7 +285,7 @@ export function ToolPanel({
                 >
                   <tab.icon className="size-4" />
                   <span className="flex-1">{tab.label}</span>
-                  {activeToolTab === tab.id ? (
+                  {activeToolbarTab === tab.id ? (
                     <span className="text-[11px] text-muted-foreground">Current</span>
                   ) : null}
                 </DropdownMenuItem>
@@ -320,13 +332,7 @@ export function ToolPanel({
           <ToolPanelChannels />
         )}
 
-        {activeToolTab === 'plugins' && (
-          <ToolPanelPlugins
-            workspaceId={workspaceId}
-            selectedPluginId={selectedPluginId}
-            onPluginSelect={setSelectedPluginId}
-          />
-        )}
+        {activeToolTab === 'plugins' && <PluginTestingNotice />}
 
         {activeToolTab === 'tasks' && currentWorkspace && (
           <ToolPanelTasks
