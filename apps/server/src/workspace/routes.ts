@@ -17,6 +17,7 @@ import {
   inArray,
 } from "@ownlab/db";
 import { createWorkspaceMembershipService } from "./membership-service.js";
+import { registerWorkspaceSourceRoutes } from "../sources/workspace-routes.js";
 import {
   copyWorkspaceEntry,
   createWorkspaceEntry,
@@ -98,6 +99,7 @@ async function getWorkspaceOrThrow(db: Db, workspaceId: string) {
 export function workspaceRoutes(db: Db): RouterType {
   const router = Router();
   const membershipService = createWorkspaceMembershipService(db);
+  registerWorkspaceSourceRoutes(router, db);
 
   // List workspaces (optionally by labId)
   router.get("/", async (req, res) => {
@@ -389,9 +391,22 @@ export function workspaceRoutes(db: Db): RouterType {
         return;
       }
 
-      if (normalizedPath.endsWith(".png")) {
+      if (
+        normalizedPath.endsWith(".png") ||
+        normalizedPath.endsWith(".jpg") ||
+        normalizedPath.endsWith(".jpeg") ||
+        normalizedPath.endsWith(".webp") ||
+        normalizedPath.endsWith(".gif")
+      ) {
         const content = await readWorkspaceFileRaw(rootPath, relativePath);
-        res.setHeader("Content-Type", "image/png");
+        const contentType = normalizedPath.endsWith(".png")
+          ? "image/png"
+          : normalizedPath.endsWith(".webp")
+            ? "image/webp"
+            : normalizedPath.endsWith(".gif")
+              ? "image/gif"
+              : "image/jpeg";
+        res.setHeader("Content-Type", contentType);
         res.setHeader("Content-Disposition", "inline");
         res.send(content);
         return;

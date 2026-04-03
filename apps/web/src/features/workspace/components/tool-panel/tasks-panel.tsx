@@ -31,7 +31,7 @@ export function dispatchWorkspaceTasksChanged(workspaceId: string) {
   window.dispatchEvent(new CustomEvent(WORKSPACE_TASKS_CHANGED_EVENT, { detail: { workspaceId } }));
 }
 
-export function ToolPanelTasks({
+export function TasksPanel({
   workspace,
   selectedTaskId,
   onTaskSelect,

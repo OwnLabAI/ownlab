@@ -570,7 +570,7 @@ export function createChannelService(db: Db) {
       .where(eq(workspaces.id, workspaceId))
       .limit(1);
 
-    const [channel] = await db
+    const inserted = await db
       .insert(channels)
       .values({
         workspaceId,
@@ -581,7 +581,29 @@ export function createChannelService(db: Db) {
         type: "public",
         description: "Default workspace channel",
       })
+      .onConflictDoNothing({
+        target: [channels.workspaceId, channels.scopeType, channels.scopeRefId],
+      })
       .returning();
+
+    const channel = inserted[0]
+      ?? (
+        await db
+          .select()
+          .from(channels)
+          .where(
+            and(
+              eq(channels.workspaceId, workspaceId),
+              eq(channels.scopeType, "workspace"),
+              eq(channels.scopeRefId, workspaceId),
+            ),
+          )
+          .limit(1)
+      )[0];
+
+    if (!channel) {
+      throw new Error("FAILED_TO_ENSURE_DEFAULT_WORKSPACE_CHANNEL");
+    }
 
     await initializeDefaultWorkspaceChannelMembers(channel);
 

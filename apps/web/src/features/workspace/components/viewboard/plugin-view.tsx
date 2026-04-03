@@ -11,7 +11,7 @@ import {
   type WorkspacePluginViewRecord,
 } from '@/lib/api';
 import { cn } from '@/lib/utils';
-import { dispatchWorkspacePluginContextChanged } from '../tool-panel-plugins';
+import { dispatchWorkspacePluginContextChanged } from '../tool-panel/plugins-panel';
 
 export const WORKSPACE_PLUGIN_INSERT_DRAFT_EVENT = 'workspace-plugin-insert-draft';
 

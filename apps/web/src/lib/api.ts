@@ -483,6 +483,24 @@ export interface WorkspaceGoalRecord {
   updatedAt: string | null;
 }
 
+export interface WorkspaceSourceRecord {
+  id: string;
+  workspaceId: string;
+  kind: 'native' | 'connector';
+  type: 'webpage' | 'image' | 'video' | 'obsidian' | 'zotero';
+  title: string;
+  status: 'ready' | 'processing' | 'syncing' | 'error' | 'stale' | 'needs_config' | string;
+  summary: string | null;
+  content: string | null;
+  filePath: string | null;
+  metadata: Record<string, unknown>;
+  connectorType: string | null;
+  connectorRefId: string | null;
+  lastSyncedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface PluginConfigField {
   key: string;
   label: string;
@@ -660,6 +678,70 @@ export async function fetchWorkspaceTasks(workspaceId: string): Promise<Task[]> 
     throw new Error(err.error || 'Failed to fetch workspace tasks');
   }
   return res.json();
+}
+
+export async function fetchWorkspaceSources(workspaceId: string): Promise<WorkspaceSourceRecord[]> {
+  const res = await fetch(`${API_BASE}/workspace/${encodeURIComponent(workspaceId)}/sources`, {
+    cache: 'no-store',
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: 'Failed to fetch workspace sources' }));
+    throw new Error(err.error || 'Failed to fetch workspace sources');
+  }
+  return res.json();
+}
+
+export async function createWorkspaceSource(
+  workspaceId: string,
+  data: {
+    type: 'webpage' | 'image' | 'video';
+    title?: string | null;
+    summary?: string | null;
+    content?: string | null;
+    metadata?: Record<string, unknown>;
+  },
+): Promise<WorkspaceSourceRecord> {
+  const res = await fetch(`${SERVER_BASE}/api/workspace/${encodeURIComponent(workspaceId)}/sources`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: 'Failed to create workspace source' }));
+    throw new Error(err.error || 'Failed to create workspace source');
+  }
+  return res.json();
+}
+
+export async function fetchWorkspaceSource(
+  workspaceId: string,
+  sourceId: string,
+): Promise<WorkspaceSourceRecord> {
+  const res = await fetch(
+    `${API_BASE}/workspace/${encodeURIComponent(workspaceId)}/sources/${encodeURIComponent(sourceId)}`,
+    { cache: 'no-store' },
+  );
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: 'Failed to fetch workspace source' }));
+    throw new Error(err.error || 'Failed to fetch workspace source');
+  }
+  return res.json();
+}
+
+export async function deleteWorkspaceSource(
+  workspaceId: string,
+  sourceId: string,
+): Promise<void> {
+  const res = await fetch(
+    `${SERVER_BASE}/api/workspace/${encodeURIComponent(workspaceId)}/sources/${encodeURIComponent(sourceId)}`,
+    {
+      method: 'DELETE',
+    },
+  );
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: 'Failed to delete workspace source' }));
+    throw new Error(err.error || 'Failed to delete workspace source');
+  }
 }
 
 export async function updateWorkspaceGoal(

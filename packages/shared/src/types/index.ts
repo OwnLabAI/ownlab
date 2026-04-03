@@ -8,6 +8,13 @@ export type {
 } from "./skill.js";
 export type { ChatThread, ChatMessage, SendChatInput } from "./chat.js";
 export type {
+  WorkspaceSource,
+  WorkspaceSourceKind,
+  WorkspaceSourceStatus,
+  WorkspaceSourceType,
+  CreateWorkspaceSourceInput,
+} from "./workspace-source.js";
+export type {
   ChannelAttachment,
   ChannelAttachmentTextExtractionKind,
   ChannelMention,

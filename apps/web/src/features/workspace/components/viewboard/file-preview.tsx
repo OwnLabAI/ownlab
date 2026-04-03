@@ -8,9 +8,9 @@ import {
   getWorkspaceFilePreviewUrl,
   isMarkdownFile,
   type LatexPreviewKind,
-} from './use-workspace-file-preview';
-import { WorkspaceLatexFileView } from './workspace-latex-file-view';
-import { WorkspaceMarkdownFileView } from './workspace-markdown-file-view';
+} from './use-file-preview';
+import { WorkspaceLatexFileView } from './latex-file-view';
+import { WorkspaceMarkdownFileView } from './markdown-file-view';
 
 interface WorkspaceFilePreviewProps {
   workspaceId: string;

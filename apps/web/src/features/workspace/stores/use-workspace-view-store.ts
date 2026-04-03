@@ -3,10 +3,11 @@
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
-type WorkspaceToolTab = 'file' | 'goal' | 'members' | 'tasks' | 'plugins';
+type WorkspaceToolTab = 'file' | 'sources' | 'goal' | 'members' | 'tasks' | 'plugins';
 
 type WorkspaceViewState = {
   selectedFilePath: string | null;
+  selectedSourceId: string | null;
   selectedTaskId: string | null;
   selectedPluginId: string | null;
   selectedChannelId: string | null;
@@ -20,6 +21,7 @@ type WorkspaceViewStore = {
   views: Record<string, WorkspaceViewState>;
   ensureWorkspaceView: (workspaceId: string) => WorkspaceViewState;
   setSelectedFilePath: (workspaceId: string, path: string | null) => void;
+  setSelectedSourceId: (workspaceId: string, sourceId: string | null) => void;
   setSelectedTaskId: (workspaceId: string, taskId: string | null) => void;
   setSelectedPluginId: (workspaceId: string, pluginId: string | null) => void;
   setSelectedChannelId: (workspaceId: string, channelId: string | null) => void;
@@ -32,6 +34,7 @@ type WorkspaceViewStore = {
 
 const DEFAULT_WORKSPACE_VIEW: WorkspaceViewState = {
   selectedFilePath: null,
+  selectedSourceId: null,
   selectedTaskId: null,
   selectedPluginId: null,
   selectedChannelId: null,
@@ -56,8 +59,24 @@ export const useWorkspaceViewStore = create<WorkspaceViewStore>()(
             [workspaceId]: {
               ...(state.views[workspaceId] ?? DEFAULT_WORKSPACE_VIEW),
               selectedFilePath: path,
+              selectedSourceId: path ? null : (state.views[workspaceId]?.selectedSourceId ?? null),
               selectedTaskId: path ? null : (state.views[workspaceId]?.selectedTaskId ?? null),
               selectedPluginId: path ? null : (state.views[workspaceId]?.selectedPluginId ?? null),
+            },
+          },
+        }));
+      },
+      setSelectedSourceId: (workspaceId, sourceId) => {
+        if (!workspaceId) return;
+        set((state) => ({
+          views: {
+            ...state.views,
+            [workspaceId]: {
+              ...(state.views[workspaceId] ?? DEFAULT_WORKSPACE_VIEW),
+              selectedSourceId: sourceId,
+              selectedFilePath: sourceId ? null : (state.views[workspaceId]?.selectedFilePath ?? null),
+              selectedTaskId: sourceId ? null : (state.views[workspaceId]?.selectedTaskId ?? null),
+              selectedPluginId: sourceId ? null : (state.views[workspaceId]?.selectedPluginId ?? null),
             },
           },
         }));
@@ -71,6 +90,7 @@ export const useWorkspaceViewStore = create<WorkspaceViewStore>()(
               ...(state.views[workspaceId] ?? DEFAULT_WORKSPACE_VIEW),
               selectedTaskId: taskId,
               selectedFilePath: taskId ? null : (state.views[workspaceId]?.selectedFilePath ?? null),
+              selectedSourceId: taskId ? null : (state.views[workspaceId]?.selectedSourceId ?? null),
               selectedPluginId: taskId ? null : (state.views[workspaceId]?.selectedPluginId ?? null),
             },
           },
@@ -85,6 +105,7 @@ export const useWorkspaceViewStore = create<WorkspaceViewStore>()(
               ...(state.views[workspaceId] ?? DEFAULT_WORKSPACE_VIEW),
               selectedPluginId: pluginId,
               selectedFilePath: pluginId ? null : (state.views[workspaceId]?.selectedFilePath ?? null),
+              selectedSourceId: pluginId ? null : (state.views[workspaceId]?.selectedSourceId ?? null),
               selectedTaskId: pluginId ? null : (state.views[workspaceId]?.selectedTaskId ?? null),
             },
           },
@@ -170,6 +191,7 @@ export const useWorkspaceViewStore = create<WorkspaceViewStore>()(
 
 export function useWorkspaceView(workspaceId: string): WorkspaceViewState & {
   setSelectedFilePath: (path: string | null) => void;
+  setSelectedSourceId: (sourceId: string | null) => void;
   setSelectedTaskId: (taskId: string | null) => void;
   setSelectedPluginId: (pluginId: string | null) => void;
   setSelectedChannelId: (channelId: string | null) => void;
@@ -181,6 +203,7 @@ export function useWorkspaceView(workspaceId: string): WorkspaceViewState & {
 } {
   const view = useWorkspaceViewStore((state) => state.views[workspaceId] ?? DEFAULT_WORKSPACE_VIEW);
   const setSelectedFilePath = useWorkspaceViewStore((state) => state.setSelectedFilePath);
+  const setSelectedSourceId = useWorkspaceViewStore((state) => state.setSelectedSourceId);
   const setSelectedTaskId = useWorkspaceViewStore((state) => state.setSelectedTaskId);
   const setSelectedPluginId = useWorkspaceViewStore((state) => state.setSelectedPluginId);
   const setSelectedChannelId = useWorkspaceViewStore((state) => state.setSelectedChannelId);
@@ -193,6 +216,7 @@ export function useWorkspaceView(workspaceId: string): WorkspaceViewState & {
   return {
     ...view,
     setSelectedFilePath: (path) => setSelectedFilePath(workspaceId, path),
+    setSelectedSourceId: (sourceId) => setSelectedSourceId(workspaceId, sourceId),
     setSelectedTaskId: (taskId) => setSelectedTaskId(workspaceId, taskId),
     setSelectedPluginId: (pluginId) => setSelectedPluginId(workspaceId, pluginId),
     setSelectedChannelId: (channelId) => setSelectedChannelId(workspaceId, channelId),

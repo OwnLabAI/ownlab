@@ -1,4 +1,4 @@
-import { existsSync, rmSync } from "node:fs";
+import { existsSync, readFileSync, rmSync } from "node:fs";
 import os from "node:os";
 import { resolve } from "node:path";
 import detectPort from "detect-port";
@@ -36,6 +36,29 @@ function resolveOwnLabHomeDir(): string {
 
 function resolveInstanceId(): string {
   return process.env.OWNLAB_INSTANCE_ID?.trim() || "default";
+}
+
+function readRunningPostmasterPid(postmasterPidFile: string): number | null {
+  if (!existsSync(postmasterPidFile)) return null;
+  try {
+    const pid = Number(readFileSync(postmasterPidFile, "utf8").split("\n")[0]?.trim());
+    if (!Number.isInteger(pid) || pid <= 0) return null;
+    process.kill(pid, 0);
+    return pid;
+  } catch {
+    return null;
+  }
+}
+
+function readPidFilePort(postmasterPidFile: string): number | null {
+  if (!existsSync(postmasterPidFile)) return null;
+  try {
+    const lines = readFileSync(postmasterPidFile, "utf8").split("\n");
+    const port = Number(lines[3]?.trim());
+    return Number.isInteger(port) && port > 0 ? port : null;
+  } catch {
+    return null;
+  }
 }
 
 async function ensureMigrations(connectionString: string): Promise<void> {
@@ -92,13 +115,29 @@ async function resolveDatabase(): Promise<{
     "db",
   );
   const configuredPort = Number(process.env.OWNLAB_EMBEDDED_PG_PORT) || 54329;
+  const clusterVersionFile = resolve(dataDir, "PG_VERSION");
+  const clusterAlreadyInitialized = existsSync(clusterVersionFile);
+  const postmasterPidFile = resolve(dataDir, "postmaster.pid");
+  const runningPid = readRunningPostmasterPid(postmasterPidFile);
+  const runningPort = readPidFilePort(postmasterPidFile);
+
+  if (runningPid) {
+    const reusedPort = runningPort ?? configuredPort;
+    console.log(`Reusing embedded PostgreSQL already running on port ${reusedPort}`);
+    const adminUrl = `postgres://ownlab:ownlab@127.0.0.1:${reusedPort}/postgres`;
+    const dbStatus = await ensurePostgresDatabase(adminUrl, "ownlab");
+    if (dbStatus === "created") {
+      console.log("Created database: ownlab");
+    }
+    const connectionString = `postgres://ownlab:ownlab@127.0.0.1:${reusedPort}/ownlab`;
+    await ensureMigrations(connectionString);
+    return { connectionString, embeddedPostgres: null };
+  }
+
   const port = await detectPort(configuredPort);
   if (port !== configuredPort) {
     console.log(`Port ${configuredPort} in use, using ${port} instead`);
   }
-
-  const clusterVersionFile = resolve(dataDir, "PG_VERSION");
-  const clusterAlreadyInitialized = existsSync(clusterVersionFile);
 
   const pg = new EmbeddedPostgres({
     databaseDir: dataDir,
@@ -126,7 +165,6 @@ async function resolveDatabase(): Promise<{
     console.log(`Embedded PostgreSQL cluster exists at ${dataDir}`);
   }
 
-  const postmasterPidFile = resolve(dataDir, "postmaster.pid");
   if (existsSync(postmasterPidFile)) {
     console.log("Removing stale postmaster.pid");
     rmSync(postmasterPidFile, { force: true });

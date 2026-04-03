@@ -34,7 +34,7 @@ function getConnectionLabel(plugin: WorkspacePluginRecord) {
   return 'Needs config';
 }
 
-export function ToolPanelPlugins({
+export function PluginsPanel({
   workspaceId,
   selectedPluginId,
   onPluginSelect,

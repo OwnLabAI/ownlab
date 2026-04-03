@@ -1,29 +1,27 @@
 'use client';
 
-import { useEffect, useRef, useState, useTransition } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import { FolderOpen, ListTodo, MoreHorizontal, Target, Users } from 'lucide-react';
-import { toast } from 'sonner';
+import { useEffect, useRef, useState } from 'react';
+import { useParams } from 'next/navigation';
+import { BookOpenText, FolderOpen, ListTodo, MoreHorizontal, Target, Users } from 'lucide-react';
 import { useWorkspaceView } from '@/features/workspace/stores/use-workspace-view-store';
-import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { SidebarContent } from '@/components/ui/sidebar';
 import { cn } from '@/lib/utils';
-import { ToolPanelChannels } from './tool-panel-channels';
-import { FileExplorer } from './file-explorer';
-import { ToolPanelGoal } from './tool-panel-goal';
-import { ToolPanelTasks } from './tool-panel-tasks';
-import { browseWorkspaceFolder, updateWorkspaceApi } from '@/lib/api';
+import { ChannelsPanel } from './channels-panel';
+import { FilesPanel } from './files-panel';
+import { GoalPanel } from './goal-panel';
+import { SourcesPanel } from './sources-panel';
+import { TasksPanel } from './tasks-panel';
 import type { Item } from '@/features/workspace/data/items';
 import type { WorkspaceForSwitcher } from '@/features/lab/data/workspaces';
 
 const TABS = [
   { id: 'file', label: 'Files', icon: FolderOpen },
+  { id: 'sources', label: 'Sources', icon: BookOpenText },
   { id: 'tasks', label: 'Tasks', icon: ListTodo },
   { id: 'goal', label: 'Goal', icon: Target },
   { id: 'members', label: 'Channels', icon: Users },
@@ -38,6 +36,7 @@ interface ToolPanelProps {
   items: Item[];
   workspaces: WorkspaceForSwitcher[];
   onFileSelect?: (path: string | null) => void;
+  onSourceSelect?: (sourceId: string | null) => void;
   onTaskSelect?: (taskId: string | null) => void;
 }
 
@@ -49,57 +48,11 @@ function PluginTestingNotice() {
   );
 }
 
-function WorkspaceFolderSetup({
-  workspaceId,
-}: {
-  workspaceId: string;
-}) {
-  const router = useRouter();
-  const [isPending, startTransition] = useTransition();
-
-  function handleSelectFolder() {
-    startTransition(async () => {
-      try {
-        const folder = await browseWorkspaceFolder();
-        if (!folder?.path) {
-          return;
-        }
-
-        await updateWorkspaceApi(workspaceId, { worktreePath: folder.path });
-        toast.success(`Linked folder "${folder.name}".`);
-        router.refresh();
-      } catch (error) {
-        toast.error(error instanceof Error ? error.message : 'Failed to link folder');
-      }
-    });
-  }
-
-  return (
-    <div className="flex h-full flex-col items-center justify-center px-6 text-center">
-      <div className="mb-4 rounded-2xl border border-border/50 bg-card/80 p-4 shadow-[0_6px_18px_rgba(15,23,42,0.05)] dark:shadow-[0_10px_24px_rgba(0,0,0,0.28)]">
-        <FolderOpen className="size-7 text-muted-foreground" />
-      </div>
-      <h3 className="text-base font-semibold text-foreground">Link a local folder</h3>
-      <p className="mt-2 max-w-xs text-sm leading-6 text-muted-foreground">
-        Choose the workspace folder on your machine and the File panel will mirror it like VS Code.
-      </p>
-      <Button
-        type="button"
-        variant="outline"
-        className="mt-5 rounded-full border-border/60 bg-background/90 px-5 shadow-[0_6px_18px_rgba(15,23,42,0.05)] hover:bg-accent/70 dark:bg-card/80 dark:shadow-[0_10px_24px_rgba(0,0,0,0.28)]"
-        disabled={isPending}
-        onClick={handleSelectFolder}
-      >
-        {isPending ? 'Opening…' : 'Select Folder'}
-      </Button>
-    </div>
-  );
-}
-
 export function ToolPanel({
   items: _initialItems,
   workspaces,
   onFileSelect,
+  onSourceSelect,
   onTaskSelect,
 }: ToolPanelProps) {
   const params = useParams();
@@ -112,12 +65,15 @@ export function ToolPanel({
     activeToolTab,
     setActiveToolTab,
     setSelectedFilePath,
+    setSelectedSourceId,
     setSelectedTaskId,
     setSelectedPluginId,
+    selectedSourceId,
     selectedTaskId,
     selectedPluginId,
   } = useWorkspaceView(workspaceId);
   const handleFileSelect = onFileSelect ?? setSelectedFilePath;
+  const handleSourceSelect = onSourceSelect ?? setSelectedSourceId;
   const handleTaskSelect = onTaskSelect ?? setSelectedTaskId;
   const tabsRef = useRef<HTMLDivElement | null>(null);
   const measureRefs = useRef<Partial<Record<TabId, HTMLButtonElement | null>>>({});
@@ -313,29 +269,30 @@ export function ToolPanel({
 
       <div className="min-h-0 flex-1 flex flex-col overflow-hidden">
         {activeToolTab === 'file' && (
-          <div className="flex flex-1 flex-col overflow-hidden">
-            <SidebarContent className="flex min-h-0 w-full flex-1 flex-col overflow-hidden bg-transparent">
-              {hasWorktreePath ? (
-                <FileExplorer
-                  workspaceId={workspaceId}
-                  workspaceName={currentWorkspace?.name ?? 'Files'}
-                  onFileSelect={handleFileSelect}
-                />
-              ) : isValid ? (
-                <WorkspaceFolderSetup workspaceId={workspaceId} />
-              ) : null}
-            </SidebarContent>
-          </div>
+          <FilesPanel
+            workspaceId={workspaceId}
+            workspaceName={currentWorkspace?.name ?? 'Files'}
+            hasWorktreePath={hasWorktreePath && isValid}
+            onFileSelect={handleFileSelect}
+          />
         )}
 
         {activeToolTab === 'members' && (
-          <ToolPanelChannels />
+          <ChannelsPanel />
+        )}
+
+        {activeToolTab === 'sources' && (
+          <SourcesPanel
+            workspaceId={workspaceId}
+            selectedSourceId={selectedSourceId}
+            onSourceSelect={handleSourceSelect}
+          />
         )}
 
         {activeToolTab === 'plugins' && <PluginTestingNotice />}
 
         {activeToolTab === 'tasks' && currentWorkspace && (
-          <ToolPanelTasks
+          <TasksPanel
             workspace={currentWorkspace}
             selectedTaskId={selectedTaskId}
             onTaskSelect={handleTaskSelect}
@@ -343,7 +300,7 @@ export function ToolPanel({
         )}
 
         {activeToolTab === 'goal' && (
-          <ToolPanelGoal workspaceId={workspaceId} />
+          <GoalPanel workspaceId={workspaceId} />
         )}
       </div>
     </div>

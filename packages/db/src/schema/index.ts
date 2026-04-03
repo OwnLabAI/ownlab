@@ -2,6 +2,7 @@ export { labs } from "./labs.js";
 export { agents } from "./agents.js";
 export { teams, teamMembers } from "./teams.js";
 export { workspaces } from "./workspaces.js";
+export { workspaceSources } from "./workspace_sources.js";
 export { workspaceAccessMembers } from "./workspace_access.js";
 export { taskboards } from "./taskboards.js";
 export { tasks } from "./tasks.js";

@@ -1,4 +1,4 @@
-import { ChannelChat } from '@/features/workspace/components/channel-chat';
+import { ChannelChat } from '@/features/workspace/components/channel';
 import { getWorkspaces } from '@/features/lab/data/workspaces';
 
 export default async function WorkspacePage({

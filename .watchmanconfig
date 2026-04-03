@@ -1,0 +1,10 @@
+{
+  "ignore_dirs": [
+    "ods",
+    "node_modules",
+    ".git",
+    ".next",
+    "dist",
+    "coverage"
+  ]
+}

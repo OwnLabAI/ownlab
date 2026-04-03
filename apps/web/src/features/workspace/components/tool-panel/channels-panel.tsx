@@ -39,7 +39,7 @@ function getChannelLabel(channel: Channel) {
   return channel.title?.trim() || channel.name;
 }
 
-export function ToolPanelChannels({
+export function ChannelsPanel({
   mode = 'full',
 }: {
   mode?: 'full' | 'members';

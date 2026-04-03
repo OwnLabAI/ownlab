@@ -4,4 +4,4 @@ export { WorkspaceSwitcher } from './workspace-switcher';
 export { WorkspaceNavItems } from './workspace-nav-items';
 export { NavNew } from './nav-new';
 export { WorkspaceDefaultView } from './workspace-default-view';
-export { ChannelChat } from './channel-chat';
+export { ChannelChat } from './channel';

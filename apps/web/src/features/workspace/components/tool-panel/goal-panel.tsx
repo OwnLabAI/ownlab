@@ -45,7 +45,7 @@ function composeGoalMarkdown(title: string, description: string) {
   return trimmedDescription;
 }
 
-export function ToolPanelGoal({ workspaceId }: { workspaceId: string }) {
+export function GoalPanel({ workspaceId }: { workspaceId: string }) {
   const [isLoading, setIsLoading] = useState(true);
   const [isPending, startTransition] = useTransition();
   const [title, setTitle] = useState('');

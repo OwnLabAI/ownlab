@@ -4,6 +4,7 @@ import {
   text,
   timestamp,
   index,
+  uniqueIndex,
   primaryKey,
   jsonb,
 } from "drizzle-orm/pg-core";
@@ -41,6 +42,11 @@ export const channels = pgTable(
   (table) => ({
     workspaceIdx: index("channels_workspace_idx").on(table.workspaceId),
     scopeIdx: index("channels_scope_idx").on(table.scopeType, table.scopeRefId),
+    workspaceScopeRefUniqueIdx: uniqueIndex("channels_workspace_scope_ref_unique_idx").on(
+      table.workspaceId,
+      table.scopeType,
+      table.scopeRefId,
+    ),
   }),
 );
 

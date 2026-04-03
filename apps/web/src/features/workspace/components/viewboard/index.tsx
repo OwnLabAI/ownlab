@@ -1,20 +1,24 @@
 'use client';
 
 import { TaskDetailPanel } from '@/features/tasks';
-import { dispatchWorkspaceTasksChanged } from '../tool-panel-tasks';
+import { dispatchWorkspaceTasksChanged } from '../tool-panel/tasks-panel';
+import { WorkspaceSourceView } from './source-view';
 import { WorkspaceDefaultView } from '../workspace-default-view';
-import { WorkspacePluginView } from './workspace-plugin-view';
-import { useWorkspaceFilePreview } from './use-workspace-file-preview';
-import { WorkspaceFilePreview } from './workspace-file-preview';
+import { WorkspacePluginView } from './plugin-view';
+import { useWorkspaceFilePreview } from './use-file-preview';
+import { WorkspaceFilePreview } from './file-preview';
 
 interface ViewboardProps {
   workspaceId: string;
   workspaceName?: string;
   selectedFilePath: string | null;
+  selectedSourceId: string | null;
   selectedTaskId: string | null;
   selectedPluginId: string | null;
+  onCloseSource: () => void;
   onCloseTask: () => void;
   onOpenFiles?: () => void;
+  onOpenSources?: () => void;
   onOpenTasks?: () => void;
   onOpenGoal?: () => void;
   onOpenPlugins?: () => void;
@@ -24,10 +28,13 @@ export function Viewboard({
   workspaceId,
   workspaceName,
   selectedFilePath,
+  selectedSourceId,
   selectedTaskId,
   selectedPluginId,
+  onCloseSource,
   onCloseTask,
   onOpenFiles,
+  onOpenSources,
   onOpenTasks,
   onOpenGoal,
   onOpenPlugins,
@@ -58,6 +65,16 @@ export function Viewboard({
     );
   }
 
+  if (selectedSourceId) {
+    return (
+      <WorkspaceSourceView
+        workspaceId={workspaceId}
+        sourceId={selectedSourceId}
+        onDeleted={onCloseSource}
+      />
+    );
+  }
+
   if (selectedPluginId) {
     return (
       <WorkspacePluginView
@@ -72,6 +89,7 @@ export function Viewboard({
       <WorkspaceDefaultView
         workspaceName={workspaceName}
         onOpenFiles={onOpenFiles}
+        onOpenSources={onOpenSources}
         onOpenTasks={onOpenTasks}
         onOpenGoal={onOpenGoal}
         onOpenPlugins={onOpenPlugins}

@@ -481,6 +481,94 @@ html body[data-scroll-locked] {
   margin: 1.2em 0;
 }
 
+.ownlab-source-article > :first-child {
+  margin-top: 0;
+}
+
+.ownlab-source-article > :last-child {
+  margin-bottom: 0;
+}
+
+.ownlab-source-article h1,
+.ownlab-source-article h2,
+.ownlab-source-article h3 {
+  color: white;
+  font-weight: 600;
+  line-height: 1.14;
+  letter-spacing: -0.03em;
+}
+
+.ownlab-source-article h1 {
+  margin: 1.6em 0 0.8em;
+  font-size: 2.15rem;
+}
+
+.ownlab-source-article h2 {
+  margin: 1.5em 0 0.8em;
+  font-size: 1.6rem;
+}
+
+.ownlab-source-article h3 {
+  margin: 1.35em 0 0.75em;
+  font-size: 1.25rem;
+}
+
+.ownlab-source-article p,
+.ownlab-source-article ul,
+.ownlab-source-article ol,
+.ownlab-source-article blockquote,
+.ownlab-source-article pre,
+.ownlab-source-article table {
+  margin: 1.3rem 0;
+}
+
+.ownlab-source-article p {
+  line-height: 1.9;
+}
+
+.ownlab-source-article p + p {
+  margin-top: 1.65rem;
+}
+
+.ownlab-source-article ul,
+.ownlab-source-article ol {
+  padding-left: 1.5rem;
+}
+
+.ownlab-source-article ul {
+  list-style: disc;
+}
+
+.ownlab-source-article ol {
+  list-style: decimal;
+}
+
+.ownlab-source-article li {
+  margin: 0.35rem 0;
+}
+
+.ownlab-source-article img {
+  display: block;
+  overflow: hidden;
+  border: 1px solid color-mix(in oklab, white 12%, transparent);
+  background: color-mix(in oklab, white 2%, transparent);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.18);
+}
+
+.ownlab-source-article blockquote {
+  border-left-width: 2px;
+  padding-left: 1rem;
+}
+
+.ownlab-source-article pre {
+  overflow-x: auto;
+}
+
+.ownlab-source-article pre code {
+  background: transparent;
+  padding: 0;
+}
+
 
 .ownlab-mdxeditor [class*="_toolbarButton_"],
 .ownlab-mdxeditor [class*="_selectTrigger_"] {
