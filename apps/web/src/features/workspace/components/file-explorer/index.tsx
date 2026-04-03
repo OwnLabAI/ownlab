@@ -1,6 +1,6 @@
 'use client';
 
-import { RefreshCw, FilePlus2, FolderPlus, ChevronDown, FolderOpen } from 'lucide-react';
+import { RefreshCw, FilePlus2, FolderPlus, ChevronDown, FolderOpen, Scissors, Copy, ClipboardPaste } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -17,9 +17,29 @@ interface FileExplorerProps {
   onFileSelect?: (path: string | null) => void;
 }
 
+type WorkspaceClipboard =
+  | {
+      mode: 'cut' | 'copy';
+      path: string;
+    }
+  | null;
+
+function remapPathInTreeState(currentPath: string, previousPath: string, nextPath: string): string {
+  if (currentPath === previousPath) {
+    return nextPath;
+  }
+
+  if (currentPath.startsWith(`${previousPath}/`)) {
+    return `${nextPath}/${currentPath.slice(previousPath.length + 1)}`;
+  }
+
+  return currentPath;
+}
+
 export function FileExplorer({ workspaceId, workspaceName, onFileSelect }: FileExplorerProps) {
   const {
     createEntry,
+    copyEntry,
     deleteEntry,
     error,
     isLoading,
@@ -37,6 +57,7 @@ export function FileExplorer({ workspaceId, workspaceName, onFileSelect }: FileE
   const [draggingPath, setDraggingPath] = useState<string | null>(null);
   const [dropTargetPath, setDropTargetPath] = useState<string | null>(null);
   const [renamingPath, setRenamingPath] = useState<string | null>(null);
+  const [clipboard, setClipboard] = useState<WorkspaceClipboard>(null);
 
   async function handleCreate(parentPath: string, name: string, type: 'file' | 'folder') {
     try {
@@ -57,6 +78,17 @@ export function FileExplorer({ workspaceId, workspaceName, onFileSelect }: FileE
       if (renamingPath === path) {
         setRenamingPath(null);
       }
+      setClipboard((current) => {
+        if (!current) {
+          return current;
+        }
+
+        if (current.path === path || current.path.startsWith(`${path}/`)) {
+          return null;
+        }
+
+        return current;
+      });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Failed to delete entry');
     }
@@ -74,6 +106,14 @@ export function FileExplorer({ workspaceId, workspaceName, onFileSelect }: FileE
         setActivePath(nextSelectedPath);
         onFileSelect?.(nextSelectedPath);
       }
+      setClipboard((current) =>
+        current
+          ? {
+              ...current,
+              path: remapPathInTreeState(current.path, path, renamed.path),
+            }
+          : current,
+      );
       setRenamingPath(null);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Failed to rename entry');
@@ -112,8 +152,53 @@ export function FileExplorer({ workspaceId, workspaceName, onFileSelect }: FileE
         setActivePath(nextSelectedPath);
         onFileSelect?.(nextSelectedPath);
       }
+      setClipboard((current) =>
+        current
+          ? {
+              ...current,
+              path: remapPathInTreeState(current.path, path, moved.path),
+            }
+          : current,
+      );
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Failed to move entry');
+    }
+  }
+
+  function handleCut(path: string) {
+    setClipboard({ mode: 'cut', path });
+  }
+
+  function handleCopy(path: string) {
+    setClipboard({ mode: 'copy', path });
+  }
+
+  async function handlePaste(destinationPath: string) {
+    if (!clipboard) {
+      return;
+    }
+
+    try {
+      if (clipboard.mode === 'cut') {
+        const moved = await moveEntry(clipboard.path, destinationPath);
+        if (activePath === clipboard.path) {
+          setActivePath(moved.path);
+          onFileSelect?.(moved.path);
+        } else if (activePath?.startsWith(`${clipboard.path}/`)) {
+          const nestedPath = activePath.slice(clipboard.path.length + 1);
+          const nextSelectedPath = `${moved.path}/${nestedPath}`;
+          setActivePath(nextSelectedPath);
+          onFileSelect?.(nextSelectedPath);
+        }
+        setClipboard(null);
+        toast.success('Moved');
+        return;
+      }
+
+      await copyEntry(clipboard.path, destinationPath);
+      toast.success('Copied');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to paste entry');
     }
   }
 
@@ -151,6 +236,45 @@ export function FileExplorer({ workspaceId, workspaceName, onFileSelect }: FileE
           </div>
         </div>
         <div className="flex items-center gap-1 text-muted-foreground">
+          {activePath ? (
+            <>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-8 rounded-full px-2 hover:bg-accent/70"
+                title="Cut Selected"
+                onClick={() => handleCut(activePath)}
+              >
+                <Scissors className="size-4" />
+                <span className="ml-1 text-xs">Cut</span>
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-8 rounded-full px-2 hover:bg-accent/70"
+                title="Copy Selected"
+                onClick={() => handleCopy(activePath)}
+              >
+                <Copy className="size-4" />
+                <span className="ml-1 text-xs">Copy</span>
+              </Button>
+            </>
+          ) : null}
+          {clipboard ? (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="h-8 rounded-full px-2 hover:bg-accent/70"
+              title="Paste Into Workspace Root"
+              onClick={() => void handlePaste('')}
+            >
+              <ClipboardPaste className="size-4" />
+              <span className="ml-1 text-xs">Paste</span>
+            </Button>
+          ) : null}
           <Button
             type="button"
             variant="ghost"
@@ -259,8 +383,15 @@ export function FileExplorer({ workspaceId, workspaceName, onFileSelect }: FileE
                 setActivePath(path);
                 onFileSelect?.(path);
               }}
+              onSelectItem={(path) => {
+                setActivePath(path);
+              }}
               onCopyPath={(path) => void handleCopyPath(path)}
               onCopyRelativePath={(path) => void handleCopyRelativePath(path)}
+              onCut={(path) => handleCut(path)}
+              onCopy={(path) => handleCopy(path)}
+              onPaste={(path) => void handlePaste(path)}
+              canPaste={clipboard !== null}
               onMove={(path, destinationPath) => void handleMove(path, destinationPath)}
               onSetDraggingPath={setDraggingPath}
               onSetDropTargetPath={setDropTargetPath}

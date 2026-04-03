@@ -1,7 +1,7 @@
 'use client';
 
-import { type ReactNode, useEffect, useState } from 'react';
-import { Hash, Trash2, Users, X } from 'lucide-react';
+import { type ReactNode, useEffect, useMemo, useState } from 'react';
+import { Check, ChevronDown, Hash, Trash2, Users, X } from 'lucide-react';
 import { Loader } from '@/components/ai-elements/loader';
 import {
   deleteChannel,
@@ -30,11 +30,21 @@ import {
 } from '@/components/ui/tooltip';
 import { ToolPanelChannels } from './tool-panel-channels';
 import { toast } from 'sonner';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 interface ChannelChatProps {
   workspaceId: string;
   workspaceName?: string;
   workspaceRootPath?: string | null;
+}
+
+function getChannelLabel(channel: Channel) {
+  return channel.title?.trim() || channel.name;
 }
 
 export function ChannelChat({ workspaceId, workspaceName, workspaceRootPath }: ChannelChatProps) {
@@ -101,6 +111,14 @@ export function ChannelChat({ workspaceId, workspaceName, workspaceRootPath }: C
     channels.find((entry) => entry.scopeRefId === workspaceId) ??
     channels[0] ??
     null;
+  const sortedChannels = useMemo(
+    () => [...channels].sort((left, right) => {
+      const leftDate = left.lastMessageAt ?? left.updatedAt ?? left.createdAt;
+      const rightDate = right.lastMessageAt ?? right.updatedAt ?? right.createdAt;
+      return rightDate.localeCompare(leftDate);
+    }),
+    [channels],
+  );
   const isDefaultWorkspaceChannel = !!channel && channel.scopeType === 'workspace' && channel.scopeRefId === workspaceId;
   const channelDisplayName = channel?.title?.trim() || channel?.name || 'this channel';
 
@@ -235,7 +253,13 @@ export function ChannelChat({ workspaceId, workspaceName, workspaceRootPath }: C
 
   return (
     <div className="flex h-full flex-col overflow-hidden">
-      <ChannelHeader title={channel.title?.trim() || channel.name || workspaceName || 'Workspace'} actions={channelsAction} />
+      <ChannelHeader
+        title={channel.title?.trim() || channel.name || workspaceName || 'Workspace'}
+        channels={sortedChannels}
+        selectedChannelId={channel.id}
+        onSelectChannel={setSelectedChannelId}
+        actions={channelsAction}
+      />
       <WorkspaceChannelsDialog
         open={channelsOpen}
         onOpenChange={setChannelsOpen}
@@ -282,14 +306,47 @@ export function ChannelChat({ workspaceId, workspaceName, workspaceRootPath }: C
 
 function ChannelHeader({
   title,
+  channels,
+  selectedChannelId,
+  onSelectChannel,
   actions,
 }: {
   title: string;
+  channels: Channel[];
+  selectedChannelId: string;
+  onSelectChannel: (channelId: string) => void;
   actions?: ReactNode;
 }) {
   return (
     <header className="flex h-16 shrink-0 items-start justify-between gap-3 px-4 pt-4">
-      <span className="font-medium text-sm">{title}</span>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            type="button"
+            variant="ghost"
+            className="h-auto max-w-[min(26rem,100%)] gap-1.5 rounded-full px-2.5 py-1.5 text-sm font-medium"
+          >
+            <span className="truncate">{title}</span>
+            <ChevronDown className="size-4 text-muted-foreground" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="max-h-80 w-72">
+          {channels.map((channel) => {
+            const active = channel.id === selectedChannelId;
+            return (
+              <DropdownMenuItem
+                key={channel.id}
+                onSelect={() => onSelectChannel(channel.id)}
+                className="gap-3"
+              >
+                <Hash className="size-4 text-muted-foreground" />
+                <span className="flex-1 truncate">{getChannelLabel(channel)}</span>
+                <Check className={`size-4 ${active ? 'opacity-100' : 'opacity-0'}`} />
+              </DropdownMenuItem>
+            );
+          })}
+        </DropdownMenuContent>
+      </DropdownMenu>
       {actions ? <div className="shrink-0">{actions}</div> : null}
     </header>
   );

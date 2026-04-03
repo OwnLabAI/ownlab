@@ -18,6 +18,7 @@ import {
 } from "@ownlab/db";
 import { createWorkspaceMembershipService } from "./membership-service.js";
 import {
+  copyWorkspaceEntry,
   createWorkspaceEntry,
   deleteWorkspaceEntry,
   listWorkspaceFolder,
@@ -731,6 +732,44 @@ export function workspaceRoutes(db: Db): RouterType {
       console.error("Failed to move file/folder:", error);
       res.status(500).json({
         error: error instanceof Error ? error.message : "Failed to move",
+      });
+    }
+  });
+
+  router.post("/:id/files/copy", async (req, res) => {
+    try {
+      const { rootPath } = await getWorkspaceOrThrow(db, req.params.id);
+      const { path: relativePath, destinationPath } = req.body as {
+        path?: string;
+        destinationPath?: string;
+      };
+      if (typeof relativePath !== "string" || !relativePath) {
+        res.status(400).json({ error: "path is required" });
+        return;
+      }
+      const result = await copyWorkspaceEntry(
+        rootPath,
+        relativePath,
+        typeof destinationPath === "string" ? destinationPath : ""
+      );
+      res.json({ ok: true, item: result });
+    } catch (error) {
+      if (error instanceof Error && error.message === "WORKSPACE_NOT_FOUND") {
+        res.status(404).json({ error: "Workspace not found" });
+        return;
+      }
+      if (error instanceof Error && error.message === "WORKSPACE_PATH_NOT_SET") {
+        res.status(409).json({ error: "Workspace has no local folder configured" });
+        return;
+      }
+      const pathError = getWorkspacePathErrorResponse(error);
+      if (pathError) {
+        res.status(pathError.status).json({ error: pathError.error });
+        return;
+      }
+      console.error("Failed to copy file/folder:", error);
+      res.status(500).json({
+        error: error instanceof Error ? error.message : "Failed to copy",
       });
     }
   });

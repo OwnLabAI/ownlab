@@ -25,12 +25,17 @@ export function TreeItemWrapper({
   onDragOver,
   onDragStart,
   onDrop,
+  onContextMenu,
   onRename,
   onDelete,
   onCreateFile,
   onCreateFolder,
   onCopyPath,
   onCopyRelativePath,
+  onCut,
+  onCopy,
+  onPaste,
+  canPaste,
 }: {
   item: FileTreeNode;
   children: React.ReactNode;
@@ -44,12 +49,17 @@ export function TreeItemWrapper({
   onDragOver?: (event: React.DragEvent<HTMLButtonElement>) => void;
   onDragStart?: (event: React.DragEvent<HTMLButtonElement>) => void;
   onDrop?: (event: React.DragEvent<HTMLButtonElement>) => void;
+  onContextMenu?: () => void;
   onRename?: () => void;
   onDelete?: () => void;
   onCreateFile?: () => void;
   onCreateFolder?: () => void;
   onCopyPath?: () => void;
   onCopyRelativePath?: () => void;
+  onCut?: () => void;
+  onCopy?: () => void;
+  onPaste?: () => void;
+  canPaste?: boolean;
 }) {
   return (
     <ContextMenu>
@@ -64,6 +74,7 @@ export function TreeItemWrapper({
           onDragOver={onDragOver}
           onDragStart={onDragStart}
           onDrop={onDrop}
+          onContextMenu={onContextMenu}
           onKeyDown={(e) => {
             if (e.key === 'Enter') {
               e.preventDefault();
@@ -99,6 +110,20 @@ export function TreeItemWrapper({
           Rename
           <ContextMenuShortcut>F2</ContextMenuShortcut>
         </ContextMenuItem>
+        <ContextMenuItem onClick={onCut} className="text-sm">
+          Cut
+        </ContextMenuItem>
+        <ContextMenuItem onClick={onCopy} className="text-sm">
+          Copy
+        </ContextMenuItem>
+        {item.type === 'folder' && canPaste ? (
+          <>
+            <ContextMenuItem onClick={onPaste} className="text-sm">
+              Paste
+            </ContextMenuItem>
+            <ContextMenuSeparator />
+          </>
+        ) : null}
         <ContextMenuItem onClick={onCopyPath} className="text-sm">
           Copy Path
         </ContextMenuItem>

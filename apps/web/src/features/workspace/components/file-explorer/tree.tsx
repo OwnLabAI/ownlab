@@ -19,8 +19,13 @@ interface TreeProps {
   onCreate: (parentPath: string, name: string, type: 'file' | 'folder') => void;
   onDelete: (path: string) => void;
   onFileSelect: (path: string) => void;
+  onSelectItem: (path: string) => void;
   onCopyPath: (path: string) => void;
   onCopyRelativePath: (path: string) => void;
+  onCut: (path: string) => void;
+  onCopy: (path: string) => void;
+  onPaste: (destinationPath: string) => void;
+  canPaste: boolean;
   onMove: (path: string, destinationPath: string) => void;
   onStartCreate: (parentPath: string, type: 'file' | 'folder') => void;
   onSetDraggingPath: (path: string | null) => void;
@@ -43,8 +48,13 @@ export function Tree({
   onCreate,
   onDelete,
   onFileSelect,
+  onSelectItem,
   onCopyPath,
   onCopyRelativePath,
+  onCut,
+  onCopy,
+  onPaste,
+  canPaste,
   onMove,
   onSetDraggingPath,
   onSetDropTargetPath,
@@ -88,9 +98,12 @@ export function Tree({
           event.dataTransfer.setData('text/plain', item.path);
           onSetDraggingPath(item.path);
         }}
+        onContextMenu={() => onSelectItem(item.path)}
         onRename={() => onStartRename(item.path)}
         onCopyPath={() => onCopyPath(item.path)}
         onCopyRelativePath={() => onCopyRelativePath(item.path)}
+        onCut={() => onCut(item.path)}
+        onCopy={() => onCopy(item.path)}
         onDelete={() => onDelete(item.path)}
       >
         <FileText className="size-4 shrink-0 text-muted-foreground" />
@@ -116,8 +129,11 @@ export function Tree({
         <TreeItemWrapper
           item={item}
           level={level}
-          isActive={isDropTarget}
-          onClick={() => onToggleFolder(item.path, !isOpen)}
+          isActive={activePath === item.path || isDropTarget}
+          onClick={() => {
+            onSelectItem(item.path);
+            onToggleFolder(item.path, !isOpen);
+          }}
           onDragEnd={() => {
             onSetDraggingPath(null);
             onSetDropTargetPath(null);
@@ -140,6 +156,7 @@ export function Tree({
             event.dataTransfer.setData('text/plain', item.path);
             onSetDraggingPath(item.path);
           }}
+          onContextMenu={() => onSelectItem(item.path)}
           onDrop={(event) => {
             event.preventDefault();
             const draggedPath = event.dataTransfer.getData('text/plain');
@@ -152,6 +169,10 @@ export function Tree({
           }}
           onToggle={() => onToggleFolder(item.path, !isOpen)}
           onRename={() => onStartRename(item.path)}
+          onCut={() => onCut(item.path)}
+          onCopy={() => onCopy(item.path)}
+          onPaste={() => onPaste(item.path)}
+          canPaste={canPaste}
           onCopyPath={() => onCopyPath(item.path)}
           onCopyRelativePath={() => onCopyRelativePath(item.path)}
           onDelete={() => onDelete(item.path)}
@@ -194,8 +215,13 @@ export function Tree({
               onCreate={onCreate}
               onDelete={onDelete}
               onFileSelect={onFileSelect}
+              onSelectItem={onSelectItem}
               onCopyPath={onCopyPath}
               onCopyRelativePath={onCopyRelativePath}
+              onCut={onCut}
+              onCopy={onCopy}
+              onPaste={onPaste}
+              canPaste={canPaste}
               onMove={onMove}
               onSetDraggingPath={onSetDraggingPath}
               onSetDropTargetPath={onSetDropTargetPath}

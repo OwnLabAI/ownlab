@@ -852,6 +852,25 @@ export async function moveWorkspaceFileOrFolder(
   return data.item;
 }
 
+export async function copyWorkspaceFileOrFolder(
+  workspaceId: string,
+  relativePath: string,
+  destinationPath = '',
+): Promise<{ path: string; name: string }> {
+  const res = await fetch(`${API_BASE}/workspace/${workspaceId}/files/copy`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ path: relativePath, destinationPath }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: 'Failed to copy' }));
+    throw new Error((err as { error?: string }).error || 'Failed to copy file or folder');
+  }
+
+  const data = await res.json();
+  return data.item;
+}
+
 export async function fetchWorkspaceFileContent(
   workspaceId: string,
   relativePath: string,

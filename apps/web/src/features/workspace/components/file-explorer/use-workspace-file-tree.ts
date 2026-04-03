@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react';
 import {
+  copyWorkspaceFileOrFolder,
   createWorkspaceFileOrFolder,
   deleteWorkspaceFileOrFolder,
   fetchWorkspaceFileTree,
@@ -251,6 +252,12 @@ export function useWorkspaceFileTree(workspaceId: string) {
     return result;
   }
 
+  async function copyEntry(path: string, destinationPath = '') {
+    const result = await copyWorkspaceFileOrFolder(workspaceId, path, destinationPath);
+    await refreshTree();
+    return result;
+  }
+
   function collapseAll() {
     expandedPathsRef.current = new Set();
     setExpandedPaths(new Set());
@@ -260,6 +267,7 @@ export function useWorkspaceFileTree(workspaceId: string) {
   return {
     collapseAll,
     createEntry,
+    copyEntry,
     deleteEntry,
     error,
     expandedPaths,

@@ -2,6 +2,7 @@ import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import {
   access,
+  cp,
   mkdir,
   readdir,
   readFile as readFileBuffer,
@@ -230,6 +231,69 @@ export async function moveWorkspaceEntry(
   }
 
   await rename(sourcePath, nextPath);
+
+  return {
+    name: path.basename(nextPath),
+    path: path.relative(resolvedRoot, nextPath),
+  };
+}
+
+async function ensurePathDoesNotExist(targetPath: string): Promise<void> {
+  try {
+    await access(targetPath);
+    throw new Error("Destination already exists");
+  } catch (error) {
+    const code = "code" in (error as NodeJS.ErrnoException)
+      ? (error as NodeJS.ErrnoException).code
+      : undefined;
+    if (code !== "ENOENT") {
+      throw error;
+    }
+  }
+}
+
+export async function copyWorkspaceEntry(
+  rootPath: string,
+  relativePath: string,
+  destinationRelativePath = ""
+): Promise<{ path: string; name: string }> {
+  const resolvedRoot = path.resolve(rootPath);
+  const sourcePath = resolveWorkspacePath(resolvedRoot, relativePath);
+  const destinationDirectory = resolveWorkspacePath(
+    resolvedRoot,
+    destinationRelativePath
+  );
+  const sourceStats = await stat(sourcePath);
+  const destinationStats = await stat(destinationDirectory);
+
+  if (!destinationStats.isDirectory()) {
+    throw new Error("Destination must be a folder");
+  }
+
+  if (
+    sourceStats.isDirectory() &&
+    (destinationDirectory === sourcePath ||
+      destinationDirectory.startsWith(`${sourcePath}${path.sep}`))
+  ) {
+    throw new Error("Cannot copy a folder into itself");
+  }
+
+  const nextPath = path.join(destinationDirectory, path.basename(sourcePath));
+
+  if (!isSafePath(nextPath, resolvedRoot)) {
+    throw new Error("New path is outside workspace root");
+  }
+
+  if (nextPath === sourcePath) {
+    throw new Error("Cannot copy an entry onto itself");
+  }
+
+  await ensurePathDoesNotExist(nextPath);
+  await cp(sourcePath, nextPath, {
+    errorOnExist: true,
+    force: false,
+    recursive: sourceStats.isDirectory(),
+  });
 
   return {
     name: path.basename(nextPath),
