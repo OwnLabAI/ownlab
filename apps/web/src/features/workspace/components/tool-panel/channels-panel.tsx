@@ -25,13 +25,16 @@ import {
   addChannelMember,
   createWorkspaceChannel,
   fetchChannelMembers,
-  fetchWorkspaceChannels,
   fetchWorkspaceAgents,
   removeChannelMember,
   type Channel,
   type ChannelMember,
   type WorkspaceAgent,
 } from '@/lib/api';
+import {
+  getPreferredWorkspaceChannel,
+  loadWorkspaceChannels,
+} from '@/features/workspace/data/channels';
 import { useWorkspaceView } from '@/features/workspace/stores/use-workspace-view-store';
 import { toast } from 'sonner';
 
@@ -64,25 +67,19 @@ export function ChannelsPanel({
   const [error, setError] = useState<string | null>(null);
 
   const currentChannel =
-    channels.find((channel) => channel.id === selectedChannelId) ??
-    channels.find((channel) => channel.scopeRefId === workspaceId) ??
-    channels[0] ??
-    null;
+    getPreferredWorkspaceChannel(channels, workspaceId, selectedChannelId);
 
   const loadChannels = async () => {
     if (!workspaceId) return;
     setLoading(true);
     setError(null);
     try {
-      const [channelsRes, agentsRes] = await Promise.all([
-        fetchWorkspaceChannels(workspaceId),
-        fetchWorkspaceAgents(workspaceId),
-      ]);
+      const channelsRes = await loadWorkspaceChannels(workspaceId);
+      const agentsRes = await fetchWorkspaceAgents(workspaceId);
       setChannels(channelsRes);
       setWorkspaceAgents(agentsRes);
-      if (!selectedChannelId || !channelsRes.some((channel) => channel.id === selectedChannelId)) {
-        const nextChannel =
-          channelsRes.find((channel) => channel.scopeRefId === workspaceId) ?? channelsRes[0] ?? null;
+      const nextChannel = getPreferredWorkspaceChannel(channelsRes, workspaceId, selectedChannelId);
+      if (nextChannel?.id !== selectedChannelId) {
         setSelectedChannelId(nextChannel?.id ?? null);
       }
     } catch (err) {

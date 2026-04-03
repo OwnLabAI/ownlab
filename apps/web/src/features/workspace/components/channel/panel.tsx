@@ -20,12 +20,14 @@ import {
 } from '@/components/ui/tooltip';
 import {
   deleteChannel,
-  ensureDefaultChannel,
   fetchChannelMembers,
-  fetchWorkspaceChannels,
   type Channel,
   type ChannelMember,
 } from '@/lib/api';
+import {
+  getPreferredWorkspaceChannel,
+  loadWorkspaceChannels,
+} from '@/features/workspace/data/channels';
 import { useWorkspaceView } from '@/features/workspace/stores/use-workspace-view-store';
 import { ChannelHeader } from './header';
 import { ChannelManageDialog } from './manage-dialog';
@@ -59,11 +61,7 @@ export function ChannelPanel({ workspaceId, workspaceName, workspaceRootPath }: 
       setLoading(true);
       setError(null);
       try {
-        let nextChannels = await fetchWorkspaceChannels(workspaceId);
-        if (nextChannels.length === 0) {
-          const defaultChannel = await ensureDefaultChannel(workspaceId);
-          nextChannels = [defaultChannel];
-        }
+        const nextChannels = await loadWorkspaceChannels(workspaceId);
 
         if (cancelled) {
           return;
@@ -71,11 +69,9 @@ export function ChannelPanel({ workspaceId, workspaceName, workspaceRootPath }: 
 
         setChannels(nextChannels);
 
-        const hasSelected = selectedChannelId && nextChannels.some((entry) => entry.id === selectedChannelId);
-        if (!hasSelected) {
-          const preferredDefault =
-            nextChannels.find((entry) => entry.scopeRefId === workspaceId) ?? nextChannels[0] ?? null;
-          setSelectedChannelId(preferredDefault?.id ?? null);
+        const preferredChannel = getPreferredWorkspaceChannel(nextChannels, workspaceId, selectedChannelId);
+        if (preferredChannel?.id !== selectedChannelId) {
+          setSelectedChannelId(preferredChannel?.id ?? null);
         }
       } catch (nextError) {
         console.error('Failed to load channels:', nextError);
@@ -152,16 +148,14 @@ export function ChannelPanel({ workspaceId, workspaceName, workspaceRootPath }: 
       await deleteChannel(channel.id);
       const remainingChannels = channels.filter((entry) => entry.id !== channel.id);
       if (remainingChannels.length > 0) {
-        const fallbackChannel =
-          remainingChannels.find((entry) => entry.scopeRefId === workspaceId) ??
-          remainingChannels[0] ??
-          null;
+        const fallbackChannel = getPreferredWorkspaceChannel(remainingChannels, workspaceId, null);
         setChannels(remainingChannels);
         setSelectedChannelId(fallbackChannel?.id ?? null);
       } else {
-        const defaultChannel = await ensureDefaultChannel(workspaceId);
-        setChannels([defaultChannel]);
-        setSelectedChannelId(defaultChannel.id);
+        const nextChannels = await loadWorkspaceChannels(workspaceId);
+        const defaultChannel = getPreferredWorkspaceChannel(nextChannels, workspaceId, null);
+        setChannels(nextChannels);
+        setSelectedChannelId(defaultChannel?.id ?? null);
       }
       bumpChannelsVersion();
       setDeleteDialogOpen(false);
@@ -198,10 +192,11 @@ export function ChannelPanel({ workspaceId, workspaceName, workspaceRootPath }: 
             onClick={() => {
               setLoading(true);
               setError(null);
-              ensureDefaultChannel(workspaceId)
-                .then((nextChannel) => {
-                  setChannels([nextChannel]);
-                  setSelectedChannelId(nextChannel.id);
+              loadWorkspaceChannels(workspaceId)
+                .then((nextChannels) => {
+                  const preferredChannel = getPreferredWorkspaceChannel(nextChannels, workspaceId, selectedChannelId);
+                  setChannels(nextChannels);
+                  setSelectedChannelId(preferredChannel?.id ?? null);
                 })
                 .catch((nextError) => {
                   console.error(nextError);
