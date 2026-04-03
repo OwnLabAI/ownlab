@@ -1,1 +1,3 @@
-export { WorkspaceChannelChatView } from './workspace-channel-chat-view';
+export { ChannelPanel as ChannelChat } from './panel';
+export { ChannelPanel } from './panel';
+export { ChannelChatView } from './chat-view';

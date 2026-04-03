@@ -1,17 +1,19 @@
 'use client';
 
-import { FolderOpen, ListTodo, MessagesSquare, Target } from 'lucide-react';
+import { BookOpenText, FolderOpen, ListTodo, MessagesSquare, Target } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export function WorkspaceDefaultView({
   workspaceName,
   onOpenFiles,
+  onOpenSources,
   onOpenTasks,
   onOpenGoal,
   onOpenPlugins: _onOpenPlugins,
 }: {
   workspaceName?: string;
   onOpenFiles?: () => void;
+  onOpenSources?: () => void;
   onOpenTasks?: () => void;
   onOpenGoal?: () => void;
   onOpenPlugins?: () => void;
@@ -43,6 +45,10 @@ export function WorkspaceDefaultView({
             <FolderOpen className="size-4" />
             Files
           </Button>
+          <Button type="button" variant="outline" className="rounded-full" onClick={onOpenSources}>
+            <BookOpenText className="size-4" />
+            Sources
+          </Button>
           <Button type="button" variant="outline" className="rounded-full" onClick={onOpenTasks}>
             <ListTodo className="size-4" />
             Tasks
@@ -62,10 +68,10 @@ export function WorkspaceDefaultView({
             </p>
           </div>
           <div className="rounded-2xl border border-border/60 bg-card/80 px-4 py-4 text-left shadow-[0_8px_24px_rgba(15,23,42,0.04)] dark:shadow-[0_10px_24px_rgba(0,0,0,0.28)]">
-            <MessagesSquare className="size-4 text-muted-foreground" />
-            <p className="mt-3 text-sm font-medium text-foreground">Testing Notice</p>
+            <BookOpenText className="size-4 text-muted-foreground" />
+            <p className="mt-3 text-sm font-medium text-foreground">Sources</p>
             <p className="mt-1 text-xs leading-5 text-muted-foreground">
-              Plugins are still in testing.
+              Keep research materials and connected libraries in one clean layer.
             </p>
           </div>
           <div className="rounded-2xl border border-border/60 bg-card/80 px-4 py-4 text-left shadow-[0_8px_24px_rgba(15,23,42,0.04)] dark:shadow-[0_10px_24px_rgba(0,0,0,0.28)]">
