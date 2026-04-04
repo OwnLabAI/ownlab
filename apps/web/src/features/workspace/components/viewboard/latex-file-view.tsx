@@ -18,6 +18,7 @@ import type {
   LatexEnvironmentInfo,
 } from '@/lib/api';
 import {
+  buildOwnlabApiUrl,
   compileWorkspaceLatexFile,
   fetchWorkspaceLatexEnvironment,
   fetchWorkspaceLatexFiles,
@@ -79,7 +80,9 @@ function countDiagnostics(
 }
 
 function getOutputPreviewUrl(workspaceId: string, outputPath: string, runId: string) {
-  return `/api/workspace/${encodeURIComponent(workspaceId)}/latex/output?path=${encodeURIComponent(outputPath)}&v=${encodeURIComponent(runId)}`;
+  return buildOwnlabApiUrl(
+    `/api/workspace/${encodeURIComponent(workspaceId)}/latex/output?path=${encodeURIComponent(outputPath)}&v=${encodeURIComponent(runId)}`,
+  );
 }
 
 interface WorkspaceLatexFileViewProps {

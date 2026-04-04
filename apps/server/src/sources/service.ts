@@ -9,6 +9,10 @@ import TurndownService from "turndown";
 import * as YoutubeTranscriptModule from "youtube-transcript/dist/youtube-transcript.esm.js";
 import { validateWorkspaceRoot } from "../workspace/file-tree.js";
 
+type TranscriptSegment = {
+  text?: string;
+};
+
 function sanitizeSegment(value: string) {
   const normalized = value
     .toLowerCase()
@@ -293,7 +297,7 @@ async function fetchYoutubeTranscript(url: string) {
 
     const transcript = await fetchTranscript(url);
     const text = transcript
-      .map((segment) => segment.text?.trim())
+      .map((segment: TranscriptSegment) => segment.text?.trim())
       .filter(Boolean)
       .join(" ")
       .replace(/[ ]{2,}/g, " ")

@@ -15,11 +15,8 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-import { cjk } from "@streamdown/cjk";
-import { code } from "@streamdown/code";
-import { math } from "@streamdown/math";
-import { mermaid } from "@streamdown/mermaid";
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
+import dynamic from "next/dynamic";
 import {
   createContext,
   memo,
@@ -29,7 +26,17 @@ import {
   useMemo,
   useState,
 } from "react";
-import { Streamdown } from "streamdown";
+
+const LazyStreamdownRenderer = dynamic(
+  () =>
+    import("./streamdown-renderer").then((mod) => ({
+      default: mod.StreamdownRenderer,
+    })),
+  {
+    loading: () => <div className="text-sm text-muted-foreground">Loading…</div>,
+    ssr: false,
+  }
+);
 
 export type MessageProps = HTMLAttributes<HTMLDivElement> & {
   from: UIMessage["role"];
@@ -320,18 +327,22 @@ export const MessageBranchPage = ({
   );
 };
 
-export type MessageResponseProps = ComponentProps<typeof Streamdown>;
-
-const streamdownPlugins = { cjk, code, math, mermaid };
+export type MessageResponseProps = {
+  children?: string;
+  className?: string;
+  components?: ComponentProps<
+    typeof import("./streamdown-renderer").StreamdownRenderer
+  >["components"];
+};
 
 export const MessageResponse = memo(
   ({ className, ...props }: MessageResponseProps) => (
-    <Streamdown
+    <LazyStreamdownRenderer
       className={cn(
         "size-full [&>*:first-child]:mt-0 [&>*:last-child]:mb-0",
         className
       )}
-      plugins={streamdownPlugins}
+      withPlugins
       {...props}
     />
   ),

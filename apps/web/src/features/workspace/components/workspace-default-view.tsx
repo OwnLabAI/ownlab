@@ -9,14 +9,12 @@ export function WorkspaceDefaultView({
   onOpenSources,
   onOpenTasks,
   onOpenGoal,
-  onOpenPlugins: _onOpenPlugins,
 }: {
   workspaceName?: string;
   onOpenFiles?: () => void;
   onOpenSources?: () => void;
   onOpenTasks?: () => void;
   onOpenGoal?: () => void;
-  onOpenPlugins?: () => void;
 }) {
   return (
     <div className="flex h-full flex-1 items-center justify-center">
@@ -85,7 +83,7 @@ export function WorkspaceDefaultView({
 
         <div className="mt-6 flex items-center gap-2 text-xs text-muted-foreground">
           <MessagesSquare className="size-4" />
-          <span>Keep the shell simple while plugins are still in testing.</span>
+          <span>Keep the shell simple while connectors settle into the workspace flow.</span>
         </div>
       </div>
     </div>

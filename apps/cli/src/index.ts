@@ -3,7 +3,10 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { Command } from "commander";
 import { ADAPTER_TYPE_LABELS } from "@ownlab/shared";
+import { doctor } from "./commands/doctor.js";
 import { runHealth } from "./commands/health.js";
+import { onboard } from "./commands/onboard.js";
+import { runCommand } from "./commands/run.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const pkg = JSON.parse(readFileSync(join(__dirname, "../package.json"), "utf8")) as {
@@ -39,4 +42,51 @@ program
     );
   });
 
-program.parse();
+program
+  .command("onboard")
+  .description("Create a local OwnLab instance config and default directories")
+  .option("-c, --config <path>", "Path to config file")
+  .option("-i, --instance <id>", "OwnLab instance id", "default")
+  .option("-y, --yes", "Accept defaults without prompts", false)
+  .option("--server-port <port>", "Server port", "3100")
+  .option("--web-port <port>", "Web port", "3000")
+  .action(async (opts: {
+    config?: string;
+    instance?: string;
+    yes?: boolean;
+    serverPort?: string;
+    webPort?: string;
+  }) => {
+    await onboard(opts);
+  });
+
+program
+  .command("doctor")
+  .description("Run local OwnLab runtime checks")
+  .option("-c, --config <path>", "Path to config file")
+  .option("-i, --instance <id>", "OwnLab instance id", "default")
+  .action(async (opts: { config?: string; instance?: string }) => {
+    const summary = await doctor(opts);
+    if (summary.failed > 0) {
+      process.exitCode = 1;
+    }
+  });
+
+program
+  .command("run")
+  .description("Ensure onboarding is complete and start the local OwnLab runtime")
+  .option("-c, --config <path>", "Path to config file")
+  .option("-i, --instance <id>", "OwnLab instance id", "default")
+  .option("--no-web", "Start only the server runtime")
+  .action(async (opts: { config?: string; instance?: string; web?: boolean }) => {
+    await runCommand({
+      config: opts.config,
+      instance: opts.instance,
+      noWeb: opts.web === false,
+    });
+  });
+
+program.parseAsync().catch((error) => {
+  process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`);
+  process.exit(1);
+});

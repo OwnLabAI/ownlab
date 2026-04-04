@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useEffectEvent, useRef, useState } from 'react';
-import { fetchWorkspaceFileContent } from '@/lib/api';
+import { buildOwnlabApiUrl, fetchWorkspaceFileContent } from '@/lib/api';
 
 const UNSUPPORTED_PREVIEW_EXTENSIONS = new Set([
   '.doc',
@@ -63,7 +63,9 @@ export function isMarkdownFile(filePath: string | null): boolean {
 }
 
 export function getWorkspaceFilePreviewUrl(workspaceId: string, filePath: string): string {
-  return `/api/workspace/${encodeURIComponent(workspaceId)}/files/content?path=${encodeURIComponent(filePath)}`;
+  return buildOwnlabApiUrl(
+    `/api/workspace/${encodeURIComponent(workspaceId)}/files/content?path=${encodeURIComponent(filePath)}`,
+  );
 }
 
 export function useWorkspaceFilePreview(workspaceId: string, selectedFilePath: string | null) {

@@ -21,6 +21,7 @@ import {
   CommandItem,
   CommandList,
 } from '@/components/ui/command';
+import { buildOwnlabApiUrl as buildApiUrl } from '@/lib/api';
 import {
   SidebarGroup,
   SidebarMenu,
@@ -85,7 +86,7 @@ async function searchLab(
 ): Promise<SearchResponse> {
   const params = new URLSearchParams({ q: query });
   if (opts?.limit) params.set('limit', String(opts.limit));
-  const res = await fetch(`/api/search?${params.toString()}`, {
+  const res = await fetch(buildApiUrl(`/api/search?${params.toString()}`), {
     signal: opts?.signal,
   });
   if (!res.ok) throw new Error('Failed to search');

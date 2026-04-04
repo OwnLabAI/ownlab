@@ -152,26 +152,33 @@
     {
       "idx": 21,
       "version": "7",
+      "when": 1774166400000,
+      "tag": "0021_workspace_goals",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
       "when": 1775001600000,
       "tag": "0022_plugin_host",
       "breakpoints": true
     },
     {
-      "idx": 22,
+      "idx": 23,
       "version": "7",
       "when": 1775203200000,
       "tag": "0023_workspace_sources",
       "breakpoints": true
     },
     {
-      "idx": 23,
+      "idx": 24,
       "version": "7",
       "when": 1775206800000,
       "tag": "0024_workspace_sources_file_path",
       "breakpoints": true
     },
     {
-      "idx": 24,
+      "idx": 25,
       "version": "7",
       "when": 1775260800000,
       "tag": "0025_channels_default_workspace_dedupe",

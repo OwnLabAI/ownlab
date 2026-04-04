@@ -1,19 +1,18 @@
 'use client';
 
 import { forwardRef } from 'react';
-import { MdxEditorClient, type MdxEditorClientRef } from './mdx-editor-client';
+import dynamic from 'next/dynamic';
+import type { MdxEditorClientProps, MdxEditorClientRef } from './mdx-editor-client';
 
-export interface MarkdownEditorProps {
-  markdown: string;
-  onChange: (value: string) => void;
-  placeholder?: string;
-  className?: string;
-  contentClassName?: string;
-  bordered?: boolean;
-  onBlur?: () => void;
-  onSubmit?: () => void;
-  autoFocus?: boolean;
-}
+const LazyMdxEditorClient = dynamic(
+  () => import('./mdx-editor-client').then((mod) => mod.MdxEditorClient),
+  {
+    loading: () => <div className="min-h-[12rem] rounded-2xl border bg-background/50" />,
+    ssr: false,
+  },
+);
+
+export type MarkdownEditorProps = MdxEditorClientProps;
 
 export type MarkdownEditorRef = MdxEditorClientRef;
 
@@ -21,5 +20,5 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
   props,
   ref,
 ) {
-  return <MdxEditorClient ref={ref} {...props} />;
+  return <LazyMdxEditorClient ref={ref} {...props} />;
 });

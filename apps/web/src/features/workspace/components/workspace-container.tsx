@@ -104,11 +104,9 @@ function WorkspacePanels({
     selectedFilePath,
     selectedSourceId,
     selectedTaskId,
-    selectedPluginId,
     setSelectedFilePath,
     setSelectedSourceId,
     setSelectedTaskId,
-    setSelectedPluginId,
     setActiveToolTab,
     channelOpen,
     setChannelOpen,
@@ -176,12 +174,10 @@ function WorkspacePanels({
               selectedFilePath={selectedFilePath}
               selectedSourceId={selectedSourceId}
               selectedTaskId={selectedTaskId}
-              selectedPluginId={selectedPluginId}
               onCloseSource={() => setSelectedSourceId(null)}
               onCloseTask={() => setSelectedTaskId(null)}
               onOpenFiles={() => setActiveToolTab('file')}
               onOpenSources={() => setActiveToolTab('sources')}
-              onOpenPlugins={() => setActiveToolTab('plugins')}
               onOpenTasks={() => setActiveToolTab('tasks')}
               onOpenGoal={() => setActiveToolTab('goal')}
             />

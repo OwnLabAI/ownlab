@@ -1,23 +1,22 @@
 {
-  "name": "@ownlab/cli",
-  "version": "0.0.1",
+  "name": "ownlab",
+  "version": "0.0.4",
   "description": "OwnLab CLI — operate and diagnose your local lab",
   "type": "module",
   "bin": {
     "ownlab": "./dist/index.js"
   },
-  "files": [
-    "dist"
-  ],
   "scripts": {
-    "dev": "tsx src/index.ts",
+    "dev": "node --import tsx src/index.ts",
     "build": "node --input-type=module -e \"import esbuild from 'esbuild'; import config from './esbuild.config.mjs'; await esbuild.build(config);\" && chmod +x dist/index.js",
     "start": "node dist/index.js",
     "clean": "rm -rf dist",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@ownlab/server": "workspace:*",
     "@ownlab/shared": "workspace:*",
+    "@ownlab/web": "workspace:*",
     "commander": "^13.1.0"
   },
   "devDependencies": {

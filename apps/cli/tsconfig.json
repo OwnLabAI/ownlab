@@ -5,5 +5,5 @@
     "rootDir": "src",
     "noEmit": true
   },
-  "include": ["src"]
+  "include": ["src", "../server/src/types/**/*.d.ts"]
 }

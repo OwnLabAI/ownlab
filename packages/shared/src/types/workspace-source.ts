@@ -4,8 +4,7 @@ export type WorkspaceSourceType =
   | "webpage"
   | "image"
   | "video"
-  | "obsidian"
-  | "zotero";
+  | "obsidian";
 
 export type WorkspaceSourceStatus =
   | "ready"

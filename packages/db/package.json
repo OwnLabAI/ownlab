@@ -1,12 +1,12 @@
 {
   "name": "@ownlab/db",
-  "version": "0.0.1",
+  "version": "0.0.4",
   "type": "module",
   "exports": {
     ".": "./src/index.ts"
   },
   "scripts": {
-    "build": "tsc && cp -r src/migrations dist/migrations 2>/dev/null || true",
+    "build": "tsc && rm -rf dist/migrations && cp -R src/migrations dist/migrations 2>/dev/null || true",
     "clean": "rm -rf dist",
     "typecheck": "tsc --noEmit",
     "test": "vitest",

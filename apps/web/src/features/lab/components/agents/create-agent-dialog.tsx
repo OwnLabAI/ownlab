@@ -26,6 +26,7 @@ import { EntityIcon } from '@/components/entity-icon';
 import { AGENT_AVATAR_PRESETS, createAvatarOptions } from '@/lib/dicebear';
 import { cn } from '@/lib/utils';
 import {
+  buildOwnlabApiUrl,
   createAgent,
   fetchAgents,
   updateAgent,
@@ -169,10 +170,7 @@ export function CreateAgentDialog({
   const [selectedManagerId, setSelectedManagerId] = useState('');
 
   const modelOptions = useMemo(() => getModelsForAdapter(adapterType), [adapterType]);
-  const avatarOptions = useMemo(
-    () => createAvatarOptions(`agent-${avatarSeedNonce}`, AGENT_AVATAR_PRESETS),
-    [avatarSeedNonce],
-  );
+  const [avatarOptions, setAvatarOptions] = useState<Array<(typeof AGENT_AVATAR_PRESETS)[number] & { uri: string }>>([]);
   const selectedAvatarIcon = useMemo(
     () => avatarOptions.find((option) => option.id === selectedAvatarPreset)?.uri ?? avatarOptions[0]?.uri ?? null,
     [avatarOptions, selectedAvatarPreset],
@@ -181,6 +179,26 @@ export function CreateAgentDialog({
     () => labAgents.filter((candidate) => candidate.id !== agent?.id),
     [agent?.id, labAgents],
   );
+
+  useEffect(() => {
+    let cancelled = false;
+
+    createAvatarOptions(`agent-${avatarSeedNonce}`, AGENT_AVATAR_PRESETS)
+      .then((options) => {
+        if (!cancelled) {
+          setAvatarOptions(options);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setAvatarOptions([]);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [avatarSeedNonce]);
 
   useEffect(() => {
     if (!open) return;
@@ -313,7 +331,7 @@ export function CreateAgentDialog({
     setEnvStatus('idle');
     setTestingEnv(true);
     try {
-      const res = await fetch(`/api/agents/adapters/${encodeURIComponent(adapterType)}/test-environment`, {
+      const res = await fetch(buildOwnlabApiUrl(`/api/agents/adapters/${encodeURIComponent(adapterType)}/test-environment`), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

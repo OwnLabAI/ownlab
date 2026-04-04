@@ -5,9 +5,8 @@ import { BookImage, BookOpenText, ExternalLink, FileVideo, Globe, ImageIcon, Tra
 import { toast } from 'sonner';
 import { MarkdownBody } from '@/components/markdown';
 import { Button } from '@/components/ui/button';
+import { buildOwnlabApiUrl, deleteWorkspaceSource, fetchWorkspaceSource, type WorkspaceSourceRecord } from '@/lib/api';
 import { cn } from '@/lib/utils';
-import { deleteWorkspaceSource, fetchWorkspaceSource, type WorkspaceSourceRecord } from '@/lib/api';
-import { WorkspacePluginView } from './plugin-view';
 import { dispatchWorkspaceSourcesChanged } from '../tool-panel/sources-panel';
 
 function formatTime(value: string | null) {
@@ -26,10 +25,6 @@ export function WorkspaceSourceView({
   sourceId: string;
   onDeleted: () => void;
 }) {
-  if (sourceId.startsWith('plugin:')) {
-    return <WorkspacePluginView workspaceId={workspaceId} pluginId={sourceId.slice('plugin:'.length)} />;
-  }
-
   return (
     <WorkspaceNativeSourceView
       workspaceId={workspaceId}
@@ -118,7 +113,7 @@ function WorkspaceNativeSourceView({
   const assetPath = typeof source.metadata?.assetPath === 'string' ? source.metadata.assetPath : null;
   const assetUrl =
     assetPath
-      ? `/api/workspace/${encodeURIComponent(workspaceId)}/files/content?path=${encodeURIComponent(assetPath)}`
+      ? buildOwnlabApiUrl(`/api/workspace/${encodeURIComponent(workspaceId)}/files/content?path=${encodeURIComponent(assetPath)}`)
       : null;
 
   if (source.type === 'webpage') {

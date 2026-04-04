@@ -81,7 +81,7 @@ pnpm ownlab --help
 pnpm ownlab health
 ```
 
-执行 `pnpm --filter @ownlab/cli build` 后，可用 `pnpm ownlab:run -- health` 或进入 `apps/cli` 运行 `node dist/index.js`。
+执行 `pnpm --filter ./apps/cli build` 后，可用 `pnpm ownlab:run -- health`，或进入 `apps/cli` 运行 `node dist/index.js`。
 
 默认情况下，如果没有设置 `DATABASE_URL`，OwnLab 在开发环境中会使用内嵌 PostgreSQL。
 

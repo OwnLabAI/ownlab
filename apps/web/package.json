@@ -1,7 +1,8 @@
 {
   "name": "@ownlab/web",
-  "version": "0.1.0",
-  "private": true,
+  "version": "0.0.4",
+  "description": "OwnLab web runtime",
+  "type": "module",
   "scripts": {
     "dev": "BASELINE_BROWSER_MAPPING_IGNORE_OLD_DATA=1 next dev",
     "build": "BASELINE_BROWSER_MAPPING_IGNORE_OLD_DATA=1 next build --webpack",
@@ -25,7 +26,6 @@
     "@dnd-kit/utilities": "^3.2.2",
     "@hookform/resolvers": "^5.2.1",
     "@mdxeditor/editor": "^3.52.5",
-    "@ownlab/plugin-zotero": "workspace:*",
     "@radix-ui/react-accordion": "^1.2.3",
     "@radix-ui/react-alert-dialog": "^1.1.6",
     "@radix-ui/react-aspect-ratio": "^1.1.2",

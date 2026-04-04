@@ -1,7 +1,9 @@
 import { existsSync, readFileSync, rmSync } from "node:fs";
+import type { Server as HttpServer } from "node:http";
+import net from "node:net";
 import os from "node:os";
 import { resolve } from "node:path";
-import detectPort from "detect-port";
+import { fileURLToPath } from "node:url";
 import {
   createDb,
   ensurePostgresDatabase,
@@ -28,13 +30,21 @@ type EmbeddedPostgresCtor = new (opts: {
   onError?: (message: unknown) => void;
 }) => EmbeddedPostgresInstance;
 
-function resolveOwnLabHomeDir(): string {
+export type StartedOwnlabServer = {
+  host: string;
+  port: number;
+  apiUrl: string;
+  connectionString: string;
+  stop(): Promise<void>;
+};
+
+export function resolveOwnLabHomeDir(): string {
   const envHome = process.env.OWNLAB_HOME?.trim();
   if (envHome) return resolve(envHome.replace(/^~/, os.homedir()));
   return resolve(os.homedir(), ".ownlab");
 }
 
-function resolveInstanceId(): string {
+export function resolveInstanceId(): string {
   return process.env.OWNLAB_INSTANCE_ID?.trim() || "default";
 }
 
@@ -59,6 +69,43 @@ function readPidFilePort(postmasterPidFile: string): number | null {
   } catch {
     return null;
   }
+}
+
+async function findAvailablePort(preferredPort: number, host: string): Promise<number> {
+  const canListen = (port: number) =>
+    new Promise<boolean>((resolvePromise) => {
+      const server = net.createServer();
+      server.once("error", () => resolvePromise(false));
+      server.listen(port, host, () => {
+        server.close(() => resolvePromise(true));
+      });
+    });
+
+  if (await canListen(preferredPort)) {
+    return preferredPort;
+  }
+
+  const ephemeral = await new Promise<number>((resolvePromise, reject) => {
+    const server = net.createServer();
+    server.once("error", reject);
+    server.listen(0, host, () => {
+      const address = server.address();
+      if (!address || typeof address === "string") {
+        server.close(() => reject(new Error("Could not resolve an ephemeral port")));
+        return;
+      }
+      const { port } = address;
+      server.close((error) => {
+        if (error) {
+          reject(error);
+          return;
+        }
+        resolvePromise(port);
+      });
+    });
+  });
+
+  return ephemeral;
 }
 
 async function ensureMigrations(connectionString: string): Promise<void> {
@@ -115,6 +162,7 @@ async function resolveDatabase(): Promise<{
     "db",
   );
   const configuredPort = Number(process.env.OWNLAB_EMBEDDED_PG_PORT) || 54329;
+  const configuredHost = process.env.OWNLAB_EMBEDDED_PG_HOST?.trim() || "127.0.0.1";
   const clusterVersionFile = resolve(dataDir, "PG_VERSION");
   const clusterAlreadyInitialized = existsSync(clusterVersionFile);
   const postmasterPidFile = resolve(dataDir, "postmaster.pid");
@@ -134,7 +182,7 @@ async function resolveDatabase(): Promise<{
     return { connectionString, embeddedPostgres: null };
   }
 
-  const port = await detectPort(configuredPort);
+  const port = await findAvailablePort(configuredPort, configuredHost);
   if (port !== configuredPort) {
     console.log(`Port ${configuredPort} in use, using ${port} instead`);
   }
@@ -190,39 +238,76 @@ async function resolveDatabase(): Promise<{
   return { connectionString, embeddedPostgres: pg };
 }
 
-async function main() {
+export async function startServer(opts?: {
+  host?: string;
+  port?: number;
+}): Promise<StartedOwnlabServer> {
   const { connectionString, embeddedPostgres } = await resolveDatabase();
   const db = createDb(connectionString);
 
-  const listenPort = Number(process.env.PORT) || 3100;
+  const listenPort = opts?.port ?? (Number(process.env.PORT) || 3100);
+  const listenHost = opts?.host ?? process.env.HOST?.trim() ?? "127.0.0.1";
 
   const app = createApp(db);
   const taskScheduler = createTaskScheduler(db);
-
-  app.listen(listenPort, () => {
-    console.log(`@ownlab/server listening on http://localhost:${listenPort}`);
+  const httpServer = await new Promise<HttpServer>((resolvePromise, reject) => {
+    const server = app.listen(listenPort, listenHost, () => {
+      server.off("error", reject);
+      resolvePromise(server);
+    });
+    server.once("error", reject);
   });
+
+  console.log(`@ownlab/server listening on http://${listenHost}:${listenPort}`);
   taskScheduler.start();
 
-  const shutdown = async () => {
+  const stop = async () => {
     taskScheduler.stop();
+    await new Promise<void>((resolvePromise, reject) => {
+      httpServer.close((error) => {
+        if (error) {
+          reject(error);
+          return;
+        }
+        resolvePromise();
+      });
+    }).catch(() => {});
+
     if (embeddedPostgres) {
       console.log("Stopping embedded PostgreSQL...");
       await embeddedPostgres.stop().catch(() => {});
     }
+  };
+
+  return {
+    host: listenHost,
+    port: listenPort,
+    apiUrl: `http://${listenHost}:${listenPort}`,
+    connectionString,
+    stop,
+  };
+}
+
+async function main() {
+  const started = await startServer();
+
+  const shutdown = async () => {
+    await started.stop();
     process.exit(0);
   };
   process.on("SIGINT", shutdown);
   process.on("SIGTERM", shutdown);
 }
 
-main().catch((err) => {
-  console.error("Server startup failed:");
-  if (err instanceof Error) {
-    console.error(err.message);
-    if (err.stack) console.error(err.stack);
-  } else {
-    console.error("Non-Error thrown:", JSON.stringify(err, null, 2) ?? String(err));
-  }
-  process.exit(1);
-});
+if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
+  main().catch((err) => {
+    console.error("Server startup failed:");
+    if (err instanceof Error) {
+      console.error(err.message);
+      if (err.stack) console.error(err.stack);
+    } else {
+      console.error("Non-Error thrown:", JSON.stringify(err, null, 2) ?? String(err));
+    }
+    process.exit(1);
+  });
+}

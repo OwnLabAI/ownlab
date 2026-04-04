@@ -67,14 +67,31 @@ export function ConfigTeamDialog({ open, onOpenChange, team, onSaved }: Props) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const avatarOptions = useMemo(
-    () => createAvatarOptions(`team-${avatarSeedNonce}`, TEAM_AVATAR_PRESETS),
-    [avatarSeedNonce],
-  );
+  const [avatarOptions, setAvatarOptions] = useState<Array<(typeof TEAM_AVATAR_PRESETS)[number] & { uri: string }>>([]);
   const selectedAvatarIcon = useMemo(
     () => avatarOptions.find((option) => option.id === selectedAvatarPreset)?.uri ?? avatarOptions[0]?.uri ?? null,
     [avatarOptions, selectedAvatarPreset],
   );
+
+  useEffect(() => {
+    let cancelled = false;
+
+    createAvatarOptions(`team-${avatarSeedNonce}`, TEAM_AVATAR_PRESETS)
+      .then((options) => {
+        if (!cancelled) {
+          setAvatarOptions(options);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setAvatarOptions([]);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [avatarSeedNonce]);
 
   useEffect(() => {
     if (!open) return;

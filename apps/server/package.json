@@ -1,6 +1,6 @@
 {
   "name": "@ownlab/server",
-  "version": "0.0.1",
+  "version": "0.0.4",
   "type": "module",
   "exports": {
     ".": "./src/index.ts"
@@ -25,7 +25,6 @@
     "@ownlab/adapter-pi-local": "workspace:*",
     "@ownlab/adapter-utils": "workspace:*",
     "@ownlab/db": "workspace:*",
-    "@ownlab/plugin-zotero": "workspace:*",
     "@ownlab/shared": "workspace:*",
     "@types/turndown": "^5.0.6",
     "ai": "^6.0.116",

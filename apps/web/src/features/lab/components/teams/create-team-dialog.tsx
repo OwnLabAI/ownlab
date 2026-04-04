@@ -29,6 +29,7 @@ import { Badge } from '@/components/ui/badge';
 import { Slider } from '@/components/ui/slider';
 import { EntityIcon } from '@/components/entity-icon';
 import {
+  buildOwnlabApiUrl,
   createTeam,
   fetchWorkspaces,
   type TeamRecord,
@@ -90,14 +91,31 @@ export function CreateTeamDialog({ open, onOpenChange, onCreated }: Props) {
   const [selectedWorkspaceId, setSelectedWorkspaceId] = useState('');
 
   const modelOptions = useMemo(() => getModelsForAdapter(adapterType), [adapterType]);
-  const avatarOptions = useMemo(
-    () => createAvatarOptions(`team-${avatarSeedNonce}`, TEAM_AVATAR_PRESETS),
-    [avatarSeedNonce],
-  );
+  const [avatarOptions, setAvatarOptions] = useState<Array<(typeof TEAM_AVATAR_PRESETS)[number] & { uri: string }>>([]);
   const selectedAvatarIcon = useMemo(
     () => avatarOptions.find((option) => option.id === selectedAvatarPreset)?.uri ?? avatarOptions[0]?.uri ?? null,
     [avatarOptions, selectedAvatarPreset],
   );
+
+  useEffect(() => {
+    let cancelled = false;
+
+    createAvatarOptions(`team-${avatarSeedNonce}`, TEAM_AVATAR_PRESETS)
+      .then((options) => {
+        if (!cancelled) {
+          setAvatarOptions(options);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setAvatarOptions([]);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [avatarSeedNonce]);
 
   useEffect(() => {
     if (!open) return;
@@ -150,7 +168,7 @@ export function CreateTeamDialog({ open, onOpenChange, onCreated }: Props) {
     setTestingEnv(true);
     setEnvStatus('idle');
     try {
-      const res = await fetch(`/api/agents/adapters/${encodeURIComponent(adapterType)}/test-environment`, {
+      const res = await fetch(buildOwnlabApiUrl(`/api/agents/adapters/${encodeURIComponent(adapterType)}/test-environment`), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

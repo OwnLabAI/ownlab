@@ -24,7 +24,6 @@ import {
   ensureAgencyProfileMaterialized,
   type AgencyProfileMaterialization,
 } from "../agency/profile.js";
-import { createPluginService } from "../plugins/service.js";
 import { createSkillService } from "../skills/service.js";
 import { createAttachmentProcessingService } from "./attachment-processing-service.js";
 import { createChannelMessageService } from "./message-service.js";
@@ -323,7 +322,6 @@ function createTemporaryAssistantMessage(input: {
 export function createChannelDeliveryService(db: Db) {
   const messageService = createChannelMessageService(db);
   const channelService = createChannelService(db);
-  const pluginService = createPluginService(db);
   const skillService = createSkillService(db);
   const conversationSessionService = createConversationSessionService(db);
 
@@ -378,9 +376,6 @@ export function createChannelDeliveryService(db: Db) {
         input.channel.id,
         agent.id,
       );
-      const workspaceContextEntries = await pluginService.listWorkspaceContextEntries(
-        input.channel.workspaceId,
-      );
       const hydratedHistory = await messageService.hydrateMessages(history);
       const prompt = buildPromptFromMessages(
         agent,
@@ -388,7 +383,7 @@ export function createChannelDeliveryService(db: Db) {
         agencyProfile,
         input.channelMembers,
         effectiveSkills.skills.map((skill) => skill.name),
-        workspaceContextEntries,
+        [],
       );
 
       const adapterAgent: AdapterAgent = {
@@ -450,7 +445,7 @@ export function createChannelDeliveryService(db: Db) {
             localPath: skill.localPath,
             adapterCompat: skill.adapterCompat,
           })),
-          workspacePluginContext: workspaceContextEntries,
+          workspacePluginContext: [],
           agencyProfile: agencyProfile
             ? {
                 rootDir: agencyProfile.rootDir,

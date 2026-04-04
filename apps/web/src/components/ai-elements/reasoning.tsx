@@ -9,11 +9,8 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
-import { cjk } from "@streamdown/cjk";
-import { code } from "@streamdown/code";
-import { math } from "@streamdown/math";
-import { mermaid } from "@streamdown/mermaid";
 import { BrainIcon, ChevronDownIcon } from "lucide-react";
+import dynamic from "next/dynamic";
 import {
   createContext,
   memo,
@@ -24,9 +21,19 @@ import {
   useRef,
   useState,
 } from "react";
-import { Streamdown } from "streamdown";
 
 import { Shimmer } from "./shimmer";
+
+const LazyStreamdownRenderer = dynamic(
+  () =>
+    import("./streamdown-renderer").then((mod) => ({
+      default: mod.StreamdownRenderer,
+    })),
+  {
+    loading: () => <div className="text-sm text-muted-foreground">Loading…</div>,
+    ssr: false,
+  }
+);
 
 interface ReasoningContextValue {
   isStreaming: boolean;
@@ -205,8 +212,6 @@ export type ReasoningContentProps = ComponentProps<
   children: string;
 };
 
-const streamdownPlugins = { cjk, code, math, mermaid };
-
 export const ReasoningContent = memo(
   ({ className, children, ...props }: ReasoningContentProps) => (
     <CollapsibleContent
@@ -217,9 +222,7 @@ export const ReasoningContent = memo(
       )}
       {...props}
     >
-      <Streamdown plugins={streamdownPlugins}>
-        {children}
-      </Streamdown>
+      <LazyStreamdownRenderer withPlugins>{children}</LazyStreamdownRenderer>
     </CollapsibleContent>
   )
 );

@@ -7,6 +7,10 @@ function getErrorStatus(error: unknown) {
     return 500;
   }
 
+  if (error.message === "PLUGINS_DISABLED") {
+    return 410;
+  }
+
   if (error.message === "WORKSPACE_NOT_FOUND" || error.message === "PLUGIN_NOT_FOUND") {
     return 404;
   }
@@ -28,6 +32,8 @@ function getErrorMessage(error: unknown, fallback: string) {
   }
 
   switch (error.message) {
+    case "PLUGINS_DISABLED":
+      return "Plugins are disabled in this release";
     case "WORKSPACE_NOT_FOUND":
       return "Workspace not found";
     case "PLUGIN_NOT_FOUND":

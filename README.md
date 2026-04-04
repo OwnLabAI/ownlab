@@ -83,7 +83,7 @@ pnpm ownlab --help
 pnpm ownlab health
 ```
 
-After `pnpm --filter @ownlab/cli build`, you can run the bundled binary with `pnpm ownlab:run -- health` or `pnpm --filter @ownlab/cli exec node dist/index.js` from `apps/cli`.
+After `pnpm --filter ./apps/cli build`, you can run the bundled binary with `pnpm ownlab:run -- health` or `pnpm --filter ./apps/cli exec node dist/index.js` from `apps/cli`.
 
 By default, OwnLab uses an embedded PostgreSQL instance in development when `DATABASE_URL` is not set.
 

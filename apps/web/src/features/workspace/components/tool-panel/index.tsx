@@ -39,15 +39,6 @@ interface ToolPanelProps {
   onSourceSelect?: (sourceId: string | null) => void;
   onTaskSelect?: (taskId: string | null) => void;
 }
-
-function PluginTestingNotice() {
-  return (
-    <div className="flex h-full flex-col items-center justify-center px-6 text-center">
-      <p className="text-sm text-muted-foreground">Plugins are still in testing.</p>
-    </div>
-  );
-}
-
 export function ToolPanel({
   items: _initialItems,
   workspaces,
@@ -67,10 +58,8 @@ export function ToolPanel({
     setSelectedFilePath,
     setSelectedSourceId,
     setSelectedTaskId,
-    setSelectedPluginId,
     selectedSourceId,
     selectedTaskId,
-    selectedPluginId,
   } = useWorkspaceView(workspaceId);
   const handleFileSelect = onFileSelect ?? setSelectedFilePath;
   const handleSourceSelect = onSourceSelect ?? setSelectedSourceId;
@@ -288,8 +277,6 @@ export function ToolPanel({
             onSourceSelect={handleSourceSelect}
           />
         )}
-
-        {activeToolTab === 'plugins' && <PluginTestingNotice />}
 
         {activeToolTab === 'tasks' && currentWorkspace && (
           <TasksPanel

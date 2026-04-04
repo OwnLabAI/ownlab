@@ -4,7 +4,6 @@ import { TaskDetailPanel } from '@/features/tasks';
 import { dispatchWorkspaceTasksChanged } from '../tool-panel/tasks-panel';
 import { WorkspaceSourceView } from './source-view';
 import { WorkspaceDefaultView } from '../workspace-default-view';
-import { WorkspacePluginView } from './plugin-view';
 import { useWorkspaceFilePreview } from './use-file-preview';
 import { WorkspaceFilePreview } from './file-preview';
 
@@ -14,14 +13,12 @@ interface ViewboardProps {
   selectedFilePath: string | null;
   selectedSourceId: string | null;
   selectedTaskId: string | null;
-  selectedPluginId: string | null;
   onCloseSource: () => void;
   onCloseTask: () => void;
   onOpenFiles?: () => void;
   onOpenSources?: () => void;
   onOpenTasks?: () => void;
   onOpenGoal?: () => void;
-  onOpenPlugins?: () => void;
 }
 
 export function Viewboard({
@@ -30,14 +27,12 @@ export function Viewboard({
   selectedFilePath,
   selectedSourceId,
   selectedTaskId,
-  selectedPluginId,
   onCloseSource,
   onCloseTask,
   onOpenFiles,
   onOpenSources,
   onOpenTasks,
   onOpenGoal,
-  onOpenPlugins,
 }: ViewboardProps) {
   const {
     content,
@@ -75,15 +70,6 @@ export function Viewboard({
     );
   }
 
-  if (selectedPluginId) {
-    return (
-      <WorkspacePluginView
-        workspaceId={workspaceId}
-        pluginId={selectedPluginId}
-      />
-    );
-  }
-
   if (!selectedFilePath) {
     return (
       <WorkspaceDefaultView
@@ -92,7 +78,6 @@ export function Viewboard({
         onOpenSources={onOpenSources}
         onOpenTasks={onOpenTasks}
         onOpenGoal={onOpenGoal}
-        onOpenPlugins={onOpenPlugins}
       />
     );
   }
