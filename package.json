@@ -3,9 +3,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "pnpm run dev:server & pnpm run dev:web",
+    "dev": "pnpm run dev:server & pnpm run dev:app",
     "dev:server": "pnpm --filter @ownlab/server dev",
-    "dev:web": "pnpm --filter @ownlab/web dev",
+    "dev:app": "pnpm --filter @ownlab/app dev",
     "build": "pnpm -r build",
     "typecheck": "pnpm -r typecheck",
     "test": "vitest",

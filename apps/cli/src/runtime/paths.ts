@@ -41,7 +41,7 @@ export function findRepoRoot(cliPackageRoot: string): string | null {
 
   for (const candidate of candidates) {
     const serverEntry = path.resolve(candidate, "apps/server/src/index.ts");
-    const webPackageJson = path.resolve(candidate, "apps/web/package.json");
+    const webPackageJson = path.resolve(candidate, "apps/app/package.json");
     if (fs.existsSync(serverEntry) && fs.existsSync(webPackageJson)) {
       return candidate;
     }
@@ -76,20 +76,20 @@ export function findInstalledServerPackageRoot(fromImportMetaUrl: string): strin
 export function findInstalledWebPackageRoot(fromImportMetaUrl: string): string | null {
   const cliPackageRoot = findCliPackageRoot(fromImportMetaUrl);
   const siblingCandidates = [
-    path.resolve(cliPackageRoot, "../@ownlab/web"),
-    path.resolve(cliPackageRoot, "../../@ownlab/web"),
+    path.resolve(cliPackageRoot, "../@ownlab/app"),
+    path.resolve(cliPackageRoot, "../../@ownlab/app"),
   ];
 
   for (const candidate of siblingCandidates) {
     const packageJsonPath = path.resolve(candidate, "package.json");
-    if (fs.existsSync(packageJsonPath) && readPackageName(packageJsonPath) === "@ownlab/web") {
+    if (fs.existsSync(packageJsonPath) && readPackageName(packageJsonPath) === "@ownlab/app") {
       return candidate;
     }
   }
 
   try {
     const require = createRequire(fromImportMetaUrl);
-    const webPackageJson = require.resolve("@ownlab/web/package.json");
+    const webPackageJson = require.resolve("@ownlab/app/package.json");
     return path.dirname(webPackageJson);
   } catch {
     return null;

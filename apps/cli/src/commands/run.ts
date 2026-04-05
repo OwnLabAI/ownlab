@@ -83,14 +83,14 @@ function spawnWeb(
   }
 
   if (!repoRoot) {
-    throw new Error("Could not find packaged or repo OwnLab web runtime.");
+    throw new Error("Could not find packaged or repo OwnLab app runtime.");
   }
 
   return spawn(
     "pnpm",
     [
       "--filter",
-      "@ownlab/web",
+      "@ownlab/app",
       "exec",
       "next",
       "dev",
@@ -184,14 +184,14 @@ export async function runCommand(opts: RunOptions): Promise<void> {
   process.stdout.write(`OwnLab API: ${startedServer.apiUrl}\n`);
 
   if (opts.noWeb) {
-    process.stdout.write("Web startup skipped (--no-web).\n");
+    process.stdout.write("App startup skipped (--no-web).\n");
     return;
   }
 
   webProcess = spawnWeb(webPackageRoot, repoRoot, env, config.web.port);
   webProcess.on("exit", (code) => {
     if (!stopping) {
-      process.stderr.write(`OwnLab web exited with code ${code ?? 0}\n`);
+      process.stderr.write(`OwnLab app exited with code ${code ?? 0}\n`);
       void stopAll().finally(() => process.exit(code ?? 1));
     }
   });
@@ -200,6 +200,6 @@ export async function runCommand(opts: RunOptions): Promise<void> {
   await waitForUrl(webUrl).catch((error) => {
     process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`);
   });
-  process.stdout.write(`OwnLab Web: ${webUrl}\n`);
+  process.stdout.write(`OwnLab App: ${webUrl}\n`);
   process.stdout.write("Press Ctrl+C to stop OwnLab.\n");
 }

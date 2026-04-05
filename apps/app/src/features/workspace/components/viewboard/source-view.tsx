@@ -118,11 +118,17 @@ function WorkspaceNativeSourceView({
 
   if (source.type === 'webpage') {
     return (
-      <div className="flex h-full min-h-0 flex-col bg-[#171717] text-white">
-        <div className="flex items-center justify-end border-b border-white/8 px-6 py-5">
+      <div className="flex h-full min-h-0 flex-col bg-background text-foreground">
+        <div className="flex items-center justify-end border-b border-border/60 px-6 py-5">
           <div className="flex items-center gap-2">
             {url ? (
-              <Button asChild type="button" variant="ghost" size="sm" className="rounded-full text-white/70 hover:bg-white/8 hover:text-white">
+              <Button
+                asChild
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="rounded-full text-muted-foreground hover:bg-accent hover:text-foreground"
+              >
                 <a href={url} target="_blank" rel="noreferrer">
                   <ExternalLink className="size-4" />
                   Open
@@ -133,7 +139,7 @@ function WorkspaceNativeSourceView({
               type="button"
               variant="outline"
               size="sm"
-              className="rounded-full border-white/14 bg-transparent text-white hover:bg-white/8 hover:text-white"
+              className="rounded-full"
               disabled={pending}
               onClick={() => void handleDelete()}
             >
@@ -146,20 +152,20 @@ function WorkspaceNativeSourceView({
         <div className="min-h-0 flex-1 overflow-y-auto">
           <article className="mx-auto flex w-full max-w-[920px] flex-col px-8 py-14 sm:px-12 sm:py-18">
             <header className="mx-auto w-full max-w-[780px]">
-              <div className="mb-7 flex items-center gap-3 text-white/70">
-                <div className="flex size-11 items-center justify-center rounded-full border border-white/10 bg-white text-black">
-                  <Globe className="size-5" />
+              <div className="mb-7 flex items-center gap-3 text-muted-foreground">
+                <div className="flex size-11 items-center justify-center rounded-full border border-border/70 bg-muted/30 text-foreground">
+                  <Globe className="size-5 text-muted-foreground" />
                 </div>
                 <div className="min-w-0">
-                  <div className="truncate text-base font-medium text-white/78">{siteName ?? 'Webpage'}</div>
-                  <div className="mt-0.5 text-sm text-white/42">
+                  <div className="truncate text-base font-medium text-foreground">{siteName ?? 'Webpage'}</div>
+                  <div className="mt-0.5 text-sm text-muted-foreground">
                     {byline ?? `Saved ${formatTime(source.updatedAt)}`}
                   </div>
                 </div>
               </div>
 
               <div className="flex items-start gap-3">
-                <h1 className="flex-1 text-balance text-[2.3rem] leading-[1.08] font-semibold tracking-[-0.04em] text-white sm:text-[3.1rem]">
+                <h1 className="flex-1 text-balance text-[2.3rem] leading-[1.08] font-semibold tracking-[-0.04em] text-foreground sm:text-[3.1rem]">
                   {source.title}
                 </h1>
                 {url ? (
@@ -167,7 +173,7 @@ function WorkspaceNativeSourceView({
                     href={url}
                     target="_blank"
                     rel="noreferrer"
-                    className="mt-2 inline-flex size-10 shrink-0 items-center justify-center rounded-full border border-white/10 text-white/60 transition hover:border-white/18 hover:text-white"
+                    className="mt-2 inline-flex size-10 shrink-0 items-center justify-center rounded-full border border-border/70 text-muted-foreground transition hover:bg-accent hover:text-foreground"
                     aria-label="Open original webpage"
                   >
                     <ExternalLink className="size-4" />
@@ -176,7 +182,7 @@ function WorkspaceNativeSourceView({
               </div>
 
               {description ? (
-                <p className="mt-8 max-w-[46rem] text-lg leading-8 text-white/62 italic">
+                <p className="mt-8 max-w-[46rem] text-lg leading-8 text-muted-foreground italic">
                   {description}
                 </p>
               ) : null}
@@ -187,19 +193,19 @@ function WorkspaceNativeSourceView({
                 <MarkdownBody
                   markdown={source.content}
                   className={cn(
-                    'ownlab-source-article text-[1.08rem] leading-[1.9] text-white/92',
-                    '[&_a]:text-white [&_a]:underline [&_a]:underline-offset-4',
+                    'ownlab-source-article text-[1.08rem] leading-[1.9] text-foreground',
+                    '[&_a]:text-foreground [&_a]:underline [&_a]:underline-offset-4',
                     '[&_img]:my-10 [&_img]:w-full [&_img]:rounded-[1.75rem]',
-                    '[&_p]:text-white/92',
-                    '[&_strong]:font-semibold [&_strong]:text-white',
-                    '[&_em]:text-white/88',
-                    '[&_blockquote]:border-white/12 [&_blockquote]:text-white/72',
-                    '[&_pre]:border [&_pre]:border-white/10 [&_pre]:bg-black/30 [&_pre]:text-white/88',
-                    '[&_code]:bg-white/8 [&_code]:text-white',
+                    '[&_p]:text-foreground',
+                    '[&_strong]:font-semibold [&_strong]:text-foreground',
+                    '[&_em]:text-foreground/85',
+                    '[&_blockquote]:border-border/70 [&_blockquote]:text-muted-foreground',
+                    '[&_pre]:border [&_pre]:border-border/70 [&_pre]:bg-muted/40 [&_pre]:text-foreground',
+                    '[&_code]:bg-muted/60 [&_code]:text-foreground',
                   )}
                 />
               ) : (
-                <div className="rounded-[2rem] border border-white/10 bg-white/3 px-6 py-8 text-base leading-8 text-white/55">
+                <div className="rounded-[2rem] border border-border/60 bg-card/70 px-6 py-8 text-base leading-8 text-muted-foreground">
                   This webpage was saved, but no readable article body is available yet.
                 </div>
               )}

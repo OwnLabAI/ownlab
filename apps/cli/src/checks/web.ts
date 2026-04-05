@@ -6,25 +6,25 @@ export function webCheck(options: {
   repoRoot: string | null;
 }): CheckResult {
   if (options.repoRoot) {
-    const webPackageJson = `${options.repoRoot}/apps/web/package.json`;
+    const webPackageJson = `${options.repoRoot}/apps/app/package.json`;
     return {
-      name: "Web runtime",
+      name: "App runtime",
       status: "pass",
-      message: `Found OwnLab web app at ${webPackageJson}`,
+      message: `Found OwnLab app at ${webPackageJson}`,
     };
   }
 
   if (hasInstalledWebPackage(options.webPackageRoot)) {
     return {
-      name: "Web runtime",
+      name: "App runtime",
       status: "pass",
-      message: `Found packaged OwnLab web runtime at ${options.webPackageRoot}`,
+      message: `Found packaged OwnLab app runtime at ${options.webPackageRoot}`,
     };
   }
 
   return {
-    name: "Web runtime",
+    name: "App runtime",
     status: "fail",
-    message: "Could not find repo or installed OwnLab web runtime.",
+    message: "Could not find repo or installed OwnLab app runtime.",
   };
 }

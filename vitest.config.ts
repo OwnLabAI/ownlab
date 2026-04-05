@@ -5,7 +5,7 @@ export default defineConfig({
     passWithNoTests: true,
     projects: [
       'apps/server',
-      'apps/web',
+      'apps/app',
       'packages/db',
       'packages/adapter-utils',
       'packages/shared',

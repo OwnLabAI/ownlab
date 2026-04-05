@@ -14,9 +14,9 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@ownlab/app": "workspace:*",
     "@ownlab/server": "workspace:*",
     "@ownlab/shared": "workspace:*",
-    "@ownlab/web": "workspace:*",
     "commander": "^13.1.0"
   },
   "devDependencies": {

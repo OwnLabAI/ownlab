@@ -1,5 +1,5 @@
 <p>
-  <img src="./apps/web/public/logo-name.svg" alt="OwnLab" width="180" />
+  <img src="./apps/app/public/logo-name.svg" alt="OwnLab" width="180" />
 </p>
 
 [简体中文](./README_CN.md)
@@ -121,7 +121,7 @@ GET /health
 ownlab/
 ├── apps/
 │   ├── server/        # Express API and orchestration services
-│   ├── web/           # Next.js UI for labs, workspaces, tasks, and agents
+│   ├── app/           # Next.js UI for labs, workspaces, tasks, and agents
 │   └── cli/           # `ownlab` CLI (Commander + esbuild)
 ├── packages/
 │   ├── db/            # Drizzle schema, migrations, DB runtime
@@ -141,7 +141,7 @@ Common commands:
 ```bash
 pnpm dev
 pnpm dev:server
-pnpm dev:web
+pnpm dev:app
 pnpm build
 pnpm typecheck
 pnpm test:run

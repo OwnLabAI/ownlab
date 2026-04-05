@@ -1,7 +1,7 @@
 {
-  "name": "@ownlab/web",
+  "name": "@ownlab/app",
   "version": "0.0.4",
-  "description": "OwnLab web runtime",
+  "description": "OwnLab app runtime",
   "type": "module",
   "scripts": {
     "dev": "BASELINE_BROWSER_MAPPING_IGNORE_OLD_DATA=1 next dev",

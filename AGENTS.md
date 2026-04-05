@@ -25,25 +25,25 @@ Recommended reading order:
 2. `package.json`
 3. `apps/server/src/app.ts`
 4. `apps/server/src/index.ts`
-5. `apps/web/src/app/`
+5. `apps/app/src/app/`
 6. `packages/db/src/schema/index.ts`
 7. `packages/shared/src/index.ts`
 
 Then follow the feature area you are changing:
 
-- agents: `apps/server/src/agents/*`, `apps/web/src/features/agents/*`
-- teams: `apps/server/src/teams/*`, `apps/web/src/features/teams/*`
-- channels/chat: `apps/server/src/channels/*`, `apps/web/src/features/channels/*`
-- tasks/taskboards: `apps/server/src/tasks/*`, `apps/web/src/features/tasks/*`
-- workspace/files: `apps/server/src/workspace/*`, `apps/web/src/features/workspace/*`
-- skills: `apps/server/src/skills/*`, `apps/web/src/features/skills/*`
+- agents: `apps/server/src/agents/*`, `apps/app/src/features/agents/*`
+- teams: `apps/server/src/teams/*`, `apps/app/src/features/teams/*`
+- channels/chat: `apps/server/src/channels/*`, `apps/app/src/features/channels/*`
+- tasks/taskboards: `apps/server/src/tasks/*`, `apps/app/src/features/tasks/*`
+- workspace/files: `apps/server/src/workspace/*`, `apps/app/src/features/workspace/*`
+- skills: `apps/server/src/skills/*`, `apps/app/src/features/skills/*`
 
 Do not assume older docs reflect current behavior. Prefer the running code, route definitions, schema, and UI entrypoints.
 
 ## 3. Repo Map
 
 - `apps/server/`: Express API, orchestration services, adapter registry, scheduling, runtime wiring
-- `apps/web/`: Next.js 16 app and feature UI for the lab surface
+- `apps/app/`: Next.js 16 app and feature UI for the lab surface
 - `apps/cli/`: command-line entry (`ownlab`) for diagnostics and future API automation; uses Commander + esbuild bundle
 - `packages/db/`: Drizzle schema, migrations, DB client, migration helpers, backups
 - `packages/shared/`: shared constants, exported types, and chat/channel contracts
@@ -123,7 +123,7 @@ pnpm dev
 - `packages/db`
 - `packages/shared`
 - `apps/server`
-- `apps/web`
+- `apps/app`
 
 2. Treat code as the source of truth.
 
@@ -266,7 +266,7 @@ Notes:
 - prefer shared contracts from `@ownlab/shared` when available
 - avoid inventing UI-only core entities when the server already models the concept
 - preserve the lab surface shape: workspaces, agents, teams, tasks, skills, and channels should feel like one system
-- when changing API responses, update `apps/web/src/lib/api.ts` and any affected feature components
+- when changing API responses, update `apps/app/src/lib/api.ts` and any affected feature components
 
 ## 13. Definition of Done
 

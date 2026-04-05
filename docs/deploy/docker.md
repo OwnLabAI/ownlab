@@ -80,7 +80,7 @@ The top-level `docker-compose.yml` spins up:
 
 - A `postgres:17-alpine` container named `db`
 - The OwnLab API server container pointing at that database via `DATABASE_URL`
-- The OwnLab web container pointing at the API server via `OWNLAB_SERVER_URL`
+- The OwnLab app container pointing at the API server via `OWNLAB_SERVER_URL`
 
 Start both:
 

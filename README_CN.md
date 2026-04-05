@@ -139,7 +139,7 @@ ownlab/
 ```bash
 pnpm dev
 pnpm dev:server
-pnpm dev:web
+pnpm dev:app
 pnpm build
 pnpm typecheck
 pnpm test:run

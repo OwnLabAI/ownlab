@@ -5,7 +5,7 @@ import { spawnSync } from "node:child_process";
 const serverRoot = process.cwd();
 const repoRoot = path.resolve(serverRoot, "../..");
 const runtimeRoot = path.resolve(serverRoot, "runtime");
-const webRoot = path.resolve(repoRoot, "apps/web");
+const webRoot = path.resolve(repoRoot, "apps/app");
 
 function run(command, args, cwd = repoRoot) {
   const result = spawnSync(command, args, {
@@ -28,10 +28,10 @@ function copyIfExists(from, to) {
 }
 
 function copyStandaloneAppNodeModules(fromStandaloneDir, toRuntimeDir) {
-  const sourceAppNodeModulesDir = path.resolve(fromStandaloneDir, "apps/web/node_modules");
+  const sourceAppNodeModulesDir = path.resolve(fromStandaloneDir, "apps/app/node_modules");
   if (!existsSync(sourceAppNodeModulesDir)) return;
 
-  const targetAppNodeModulesDir = path.resolve(toRuntimeDir, "apps/web/node_modules");
+  const targetAppNodeModulesDir = path.resolve(toRuntimeDir, "apps/app/node_modules");
   mkdirSync(targetAppNodeModulesDir, { recursive: true });
 
   for (const entry of readdirSync(sourceAppNodeModulesDir)) {
@@ -66,7 +66,7 @@ function pruneOptionalImageDependencies(runtimeWebDir) {
 rmSync(runtimeRoot, { recursive: true, force: true });
 mkdirSync(runtimeRoot, { recursive: true });
 
-run("pnpm", ["--filter", "@ownlab/web", "build"]);
+run("pnpm", ["--filter", "@ownlab/app", "build"]);
 
 const standaloneDir = path.resolve(webRoot, ".next/standalone");
 const staticDir = path.resolve(webRoot, ".next/static");

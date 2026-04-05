@@ -13,7 +13,7 @@ FROM base AS build
 COPY . .
 
 RUN pnpm install --frozen-lockfile
-RUN pnpm --filter @ownlab/web build
+RUN pnpm --filter @ownlab/app build
 RUN pnpm --filter @ownlab/server build
 RUN test -f apps/server/dist/index.js || (echo "ERROR: server build output missing" && exit 1)
 
@@ -48,4 +48,4 @@ EXPOSE 3000
 
 USER node
 
-CMD ["pnpm", "--filter", "@ownlab/web", "start"]
+CMD ["pnpm", "--filter", "@ownlab/app", "start"]
