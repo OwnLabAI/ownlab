@@ -3,6 +3,7 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import type * as React from 'react';
 
+import { authClient } from '@/lib/auth-client';
 import { NavLab } from './nav-lab';
 import { NavUser } from './nav-user';
 import { NavAgents } from './agents/nav-agents';
@@ -43,6 +44,16 @@ export function LabSidebar({
   user: UserData;
   workspaces?: WorkspaceNavItem[];
 }) {
+  const { data: session, isPending } = authClient.useSession();
+  const currentUser = session?.user;
+  const resolvedUser = currentUser
+    ? {
+        name: currentUser.name || currentUser.email || user.name,
+        email: currentUser.email || user.email,
+        avatar: currentUser.image || user.avatar,
+      }
+    : user;
+
   return (
     <Sidebar className="border-r border-border/60" {...props}>
       <SidebarHeader>
@@ -75,7 +86,11 @@ export function LabSidebar({
       </SidebarContent>
       <SidebarFooter>
         <ClientOnly>
-          <NavUser user={user} />
+          <NavUser
+            user={resolvedUser}
+            isLoading={isPending}
+            isAuthenticated={!!currentUser}
+          />
         </ClientOnly>
       </SidebarFooter>
       <SidebarRail />

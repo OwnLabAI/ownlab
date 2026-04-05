@@ -1,0 +1,1101 @@
+{
+  "Metadata": {
+    "name": "OwnLab",
+    "title": "OwnLab - 用 AI 构建你自己的实验室",
+    "description": "OwnLab 是面向 AI 实验室的本地优先编排系统"
+  },
+  "Common": {
+    "login": "登录",
+    "logout": "退出",
+    "signUp": "注册",
+    "language": "切换语言",
+    "mode": {
+      "label": "切换模式",
+      "light": "浅色模式",
+      "dark": "深色模式",
+      "system": "跟随系统"
+    },
+    "theme": {
+      "label": "切换主题",
+      "default": "默认",
+      "blue": "蓝色",
+      "green": "绿色",
+      "amber": "橙色",
+      "neutral": "中性"
+    },
+    "copy": "复制",
+    "save": "保存",
+    "saving": "保存中...",
+    "loading": "加载中...",
+    "cancel": "取消",
+    "logoutFailed": "退出失败",
+    "table": {
+      "totalRecords": "总共 {count} 条记录",
+      "noResults": "无结果",
+      "loading": "加载中...",
+      "columns": "列",
+      "rowsPerPage": "每页行数",
+      "page": "页",
+      "firstPage": "第一页",
+      "lastPage": "最后一页",
+      "nextPage": "下一页",
+      "previousPage": "上一页",
+      "ascending": "升序",
+      "descending": "降序",
+      "clearFilters": "清除筛选",
+      "hideColumn": "隐藏",
+      "toggleColumns": "切换列显示",
+      "noColumns": "未找到列",
+      "viewOptions": "视图",
+      "searchColumns": "搜索列...",
+      "resetSorting": "重置"
+    },
+    "premium": "付费文章"
+  },
+  "PricingPage": {
+    "title": "价格",
+    "description": "选择最适合您的付费计划",
+    "subtitle": "选择最适合您的付费计划",
+    "monthly": "月付",
+    "yearly": "年付",
+    "PricingCard": {
+      "freePrice": "$0",
+      "perMonth": "/月",
+      "perYear": "/年",
+      "popular": "热门",
+      "currentPlan": "当前方案",
+      "yourCurrentPlan": "您的当前方案",
+      "getStartedForFree": "开始免费使用",
+      "getLifetimeAccess": "开启终身会员",
+      "getStarted": "开始免费试用",
+      "notAvailable": "不可用",
+      "daysTrial": "{days} 天试用期"
+    },
+    "CheckoutButton": {
+      "loading": "加载中...",
+      "checkoutFailed": "打开结账页面失败"
+    }
+  },
+  "PricePlans": {
+    "free": {
+      "name": "免费版",
+      "description": "适用于个人使用的基本功能",
+      "features": {
+        "feature-1": "最多3个项目",
+        "feature-2": "1GB存储空间",
+        "feature-3": "基础分析功能",
+        "feature-4": "社区支持"
+      },
+      "limits": {
+        "limit-1": "不支持自定义域名",
+        "limit-2": "不支持自定义品牌",
+        "limit-3": "不支持终身更新"
+      }
+    },
+    "pro": {
+      "name": "专业版",
+      "description": "专业人士的高级功能",
+      "features": {
+        "feature-1": "无限项目",
+        "feature-2": "10GB存储空间",
+        "feature-3": "高级分析功能",
+        "feature-4": "优先支持",
+        "feature-5": "自定义域名"
+      },
+      "limits": {
+        "limit-1": "不支持自定义品牌",
+        "limit-2": "不支持终身更新"
+      }
+    },
+    "lifetime": {
+      "name": "终身版",
+      "description": "一次性付款获得所有高级功能",
+      "features": {
+        "feature-1": "所有专业版功能",
+        "feature-2": "100GB存储空间",
+        "feature-3": "专属支持",
+        "feature-4": "企业级安全",
+        "feature-5": "高级集成",
+        "feature-6": "自定义品牌",
+        "feature-7": "终身更新"
+      }
+    }
+  },
+  "CreditPackages": {
+    "basic": {
+      "name": "基础版",
+      "description": "基础版功能介绍放这里"
+    },
+    "standard": {
+      "name": "标准版",
+      "description": "标准版功能介绍放这里"
+    },
+    "premium": {
+      "name": "高级版",
+      "description": "高级版功能介绍放这里"
+    },
+    "enterprise": {
+      "name": "企业版",
+      "description": "企业版功能介绍放这里"
+    }
+  },
+  "NotFoundPage": {
+    "title": "404",
+    "message": "抱歉，您正在寻找的页面不存在",
+    "backToHome": "返回首页"
+  },
+  "ErrorPage": {
+    "title": "哎呀！出错了！",
+    "tryAgain": "重试",
+    "backToHome": "返回首页"
+  },
+  "AboutPage": {
+    "title": "关于我们",
+    "description": "MkSaaS 是一个使用最先进的技术栈构建的 AI SaaS 模板，它可以帮助你更快更好地构建你的 SaaS。如果你有任何问题，欢迎联系我。",
+    "authorName": "MkSaaS",
+    "authorBio": "最好的 AI SaaS 模板",
+    "introduction": "👋 你好，这里是 MkSaaS，一个使用最先进的技术栈构建的 AI SaaS 模板，它可以帮助你更快更好地构建你的 SaaS。如果你有任何问题，欢迎联系我。",
+    "talkWithMe": "联系我",
+    "followMe": "关注我"
+  },
+  "ChangelogPage": {
+    "title": "更新日志",
+    "description": "查看我们产品的最新动态",
+    "subtitle": "查看我们产品的最新动态"
+  },
+  "RoadmapPage": {
+    "title": "路线图",
+    "description": "探索我们的未来计划和即将推出的功能",
+    "subtitle": "探索我们的未来计划和即将推出的功能"
+  },
+  "ContactPage": {
+    "title": "联系我们",
+    "description": "我们帮助您找到合适的计划",
+    "subtitle": "我们帮助您找到合适的计划",
+    "form": {
+      "title": "联系我们",
+      "description": "如果您有任何问题或反馈，请随时联系我们的团队",
+      "name": "姓名",
+      "email": "邮箱",
+      "message": "消息",
+      "submit": "提交",
+      "submitting": "提交中...",
+      "success": "消息发送成功",
+      "fail": "消息发送失败",
+      "nameMinLength": "姓名必须至少包含 3 个字符",
+      "nameMaxLength": "姓名必须不超过 30 个字符",
+      "emailValidation": "请输入有效的邮箱地址",
+      "messageMinLength": "消息必须至少包含 10 个字符",
+      "messageMaxLength": "消息必须不超过 500 个字符"
+    }
+  },
+  "WaitlistPage": {
+    "title": "等待队列",
+    "description": "加入等待队列，及时获取最新消息和更新",
+    "subtitle": "加入等待队列，及时获取最新消息和更新",
+    "form": {
+      "title": "加入等待队列",
+      "description": "我们将在产品发布时及时通知您",
+      "email": "邮箱",
+      "subscribe": "加入等待队列",
+      "subscribing": "加入等待队列中...",
+      "success": "加入等待队列成功",
+      "fail": "加入等待队列失败",
+      "emailValidation": "请输入有效的邮箱地址"
+    }
+  },
+  "Newsletter": {
+    "title": "邮件列表",
+    "subtitle": "加入我们的社区",
+    "description": "订阅邮件列表，及时获取最新消息和更新",
+    "form": {
+      "email": "邮箱",
+      "subscribe": "订阅",
+      "subscribing": "订阅中...",
+      "success": "订阅成功",
+      "fail": "订阅失败",
+      "emailValidation": "请输入有效的邮箱地址"
+    }
+  },
+  "AuthPage": {
+    "login": {
+      "title": "登录",
+      "welcomeBack": "欢迎回来",
+      "email": "邮箱",
+      "password": "密码",
+      "signIn": "登录",
+      "signUpHint": "没有账号？注册",
+      "forgotPassword": "忘记密码？",
+      "signInWithGoogle": "使用 Google 登录",
+      "signInWithGitHub": "使用 GitHub 登录",
+      "showPassword": "显示密码",
+      "hidePassword": "隐藏密码",
+      "or": "或以社媒账号登录",
+      "emailRequired": "请输入邮箱",
+      "passwordRequired": "请输入密码",
+      "captchaInvalid": "验证码验证失败",
+      "captchaError": "验证码验证出错"
+    },
+    "register": {
+      "title": "注册",
+      "createAccount": "创建账号",
+      "name": "姓名",
+      "email": "邮箱",
+      "password": "密码",
+      "signUp": "注册",
+      "signInHint": "已经有账号？登录",
+      "checkEmail": "请检查您的邮箱",
+      "showPassword": "显示密码",
+      "hidePassword": "隐藏密码",
+      "nameRequired": "请输入姓名",
+      "emailRequired": "请输入邮箱",
+      "passwordRequired": "请输入密码",
+      "captchaInvalid": "验证码验证失败",
+      "captchaError": "验证码验证出错"
+    },
+    "forgotPassword": {
+      "title": "忘记密码",
+      "email": "邮箱",
+      "send": "发送重置密码链接",
+      "backToLogin": "返回登录",
+      "checkEmail": "请检查您的邮箱",
+      "emailRequired": "请输入邮箱"
+    },
+    "resetPassword": {
+      "title": "重置密码",
+      "password": "密码",
+      "reset": "重置密码",
+      "backToLogin": "返回登录",
+      "showPassword": "显示密码",
+      "hidePassword": "隐藏密码",
+      "minLength": "密码必须至少包含 8 个字符"
+    },
+    "error": {
+      "title": "哎呀！出错了！",
+      "tryAgain": "请重试",
+      "backToLogin": "返回登录",
+      "checkEmail": "请检查您的邮箱"
+    },
+    "common": {
+      "termsOfService": "服务条款",
+      "privacyPolicy": "隐私政策",
+      "byClickingContinue": "继续即表示您同意我们的 ",
+      "and": " 和 "
+    }
+  },
+  "BlogPage": {
+    "title": "博客",
+    "description": "来自我们的团队最新新闻和更新",
+    "subtitle": "来自我们的团队最新新闻和更新",
+    "author": "作者",
+    "categories": "分类",
+    "tableOfContents": "目录",
+    "readTime": "{minutes} 分钟阅读",
+    "all": "全部",
+    "noPostsFound": "没有找到文章",
+    "allPosts": "全部文章",
+    "morePosts": "更多文章"
+  },
+  "DocsPage": {
+    "toc": "目录",
+    "search": "搜索文档",
+    "lastUpdate": "最后更新于",
+    "searchNoResult": "没有结果",
+    "previousPage": "上一页",
+    "nextPage": "下一页",
+    "chooseLanguage": "选择语言",
+    "title": "MkSaaS文档",
+    "homepage": "首页",
+    "blog": "博客"
+  },
+  "PremiumContent": {
+    "title": "解锁付费内容",
+    "description": "订阅我们的付费计划，访问所有付费内容和独家内容。",
+    "upgradeCta": "立即升级",
+    "benefit1": "所有内容",
+    "benefit2": "独家内容",
+    "benefit3": "随时取消",
+    "signIn": "登录",
+    "loginRequired": "登录以继续阅读",
+    "loginDescription": "这是一篇付费内容，请登录您的账户以访问完整内容。",
+    "checkingAccess": "检查阅读权限...",
+    "loadingContent": "加载完整内容..."
+  },
+  "Marketing": {
+    "navbar": {
+      "features": {
+        "title": "功能"
+      },
+      "pricing": {
+        "title": "价格"
+      },
+      "blog": {
+        "title": "博客"
+      },
+      "docs": {
+        "title": "文档"
+      },
+      "ai": {
+        "title": "AI 工具",
+        "items": {
+          "text": {
+            "title": "AI 文本",
+            "description": "展示如何使用 AI 生成精彩文本"
+          },
+          "image": {
+            "title": "AI 图像",
+            "description": "展示如何使用 AI 生成精美图像"
+          },
+          "chat": {
+            "title": "AI 聊天",
+            "description": "展示如何使用 AI 与客户聊天"
+          },
+          "video": {
+            "title": "AI 视频",
+            "description": "展示如何使用 AI 生成惊人视频"
+          },
+          "audio": {
+            "title": "AI 音频",
+            "description": "展示如何使用 AI 生成动听音频"
+          }
+        }
+      },
+      "pages": {
+        "title": "内置页面",
+        "items": {
+          "about": {
+            "title": "关于我们",
+            "description": "了解更多关于我们的公司、使命和价值观"
+          },
+          "contact": {
+            "title": "联系我们",
+            "description": "与我们的团队联系，以获取支持或咨询"
+          },
+          "waitlist": {
+            "title": "邮件列表",
+            "description": "加入我们的邮件列表，获取最新消息和更新"
+          },
+          "changelog": {
+            "title": "更新日志",
+            "description": "查看我们产品的更新历史，查看最新动态"
+          },
+          "roadmap": {
+            "title": "路线图",
+            "description": "探索我们的未来计划和即将推出的功能"
+          },
+          "cookiePolicy": {
+            "title": "Cookie 政策",
+            "description": "关于我们如何在网站上使用 Cookie 的信息"
+          },
+          "privacyPolicy": {
+            "title": "隐私政策",
+            "description": "关于我们将如何保护和处理您在网站上的数据"
+          },
+          "termsOfService": {
+            "title": "服务条款",
+            "description": "关于您与我们公司之间的法律协议和条款"
+          }
+        }
+      },
+      "blocks": {
+        "title": "内置组件",
+        "items": {
+          "magicui": {
+            "title": "MagicUI 组件"
+          },
+          "hero-section": {
+            "title": "Hero 组件"
+          },
+          "logo-cloud": {
+            "title": "Logo Cloud 组件"
+          },
+          "features": {
+            "title": "Features 组件"
+          },
+          "integrations": {
+            "title": "Integrations 组件"
+          },
+          "content": {
+            "title": "Content 组件"
+          },
+          "stats": {
+            "title": "Stats 组件"
+          },
+          "team": {
+            "title": "Team 组件"
+          },
+          "testimonials": {
+            "title": "Testimonials 组件"
+          },
+          "callToAction": {
+            "title": "Call to Action 组件"
+          },
+          "footer": {
+            "title": "Footer 组件"
+          },
+          "pricing": {
+            "title": "Pricing 组件"
+          },
+          "comparator": {
+            "title": "Comparator 组件"
+          },
+          "faq": {
+            "title": "FAQ 组件"
+          },
+          "login": {
+            "title": "Login 组件"
+          },
+          "signup": {
+            "title": "Signup 组件"
+          },
+          "forgot-password": {
+            "title": "Forgot Password 组件"
+          },
+          "contact": {
+            "title": "Contact 组件"
+          }
+        }
+      }
+    },
+    "footer": {
+      "tagline": "围绕工作区、任务、团队和频道来组织本地优先的 AI 实验室",
+      "product": {
+        "title": "产品",
+        "items": {
+          "features": "功能",
+          "pricing": "价格",
+          "faq": "常见问题"
+        }
+      },
+      "resources": {
+        "title": "资源",
+        "items": {
+          "blog": "GitHub",
+          "docs": "README",
+          "changelog": "更新日志",
+          "roadmap": "路线图"
+        }
+      },
+      "company": {
+        "title": "公司",
+        "items": {
+          "about": "关于我们",
+          "contact": "联系我们",
+          "waitlist": "创建账号"
+        }
+      },
+      "legal": {
+        "title": "法律",
+        "items": {
+          "cookiePolicy": "Cookie政策",
+          "privacyPolicy": "隐私政策",
+          "termsOfService": "服务条款"
+        }
+      }
+    },
+    "avatar": {
+      "dashboard": "工作台",
+      "lab": "实验室",
+      "billing": "账单",
+      "credits": "积分",
+      "settings": "设置"
+    }
+  },
+  "Dashboard": {
+    "dashboard": {
+      "title": "仪表盘"
+    },
+    "admin": {
+      "title": "系统管理",
+      "users": {
+        "title": "用户管理",
+        "fakeData": "注：只为演示功能，数据为假数据，封禁功能不可用",
+        "error": "获取用户失败",
+        "search": "搜索用户...",
+        "columns": {
+          "columns": "显示列",
+          "name": "姓名",
+          "email": "邮箱",
+          "role": "角色",
+          "createdAt": "创建时间",
+          "customerId": "客户ID",
+          "status": "状态",
+          "banReason": "封禁原因",
+          "banExpires": "封禁到期时间"
+        },
+        "admin": "管理员",
+        "user": "用户",
+        "email": {
+          "verified": "邮箱已验证",
+          "unverified": "邮箱未验证"
+        },
+        "emailCopied": "邮箱已复制到剪贴板",
+        "banned": "账号被封禁",
+        "active": "账号正常",
+        "inactive": "账号未激活",
+        "clearSearch": "清除搜索",
+        "noResults": "无结果",
+        "joined": "加入时间",
+        "updated": "更新时间",
+        "ban": {
+          "reason": "封禁原因",
+          "reasonPlaceholder": "请输入封禁该用户的原因",
+          "defaultReason": "垃圾信息",
+          "never": "永不解禁",
+          "expires": "封禁到期时间",
+          "selectDate": "选择日期",
+          "button": "封禁用户",
+          "success": "用户已被封禁",
+          "error": "封禁用户失败"
+        },
+        "unban": {
+          "button": "解除封禁",
+          "success": "用户已被解除封禁",
+          "error": "解除封禁失败"
+        },
+        "close": "关闭"
+      }
+    },
+    "settings": {
+      "title": "设置",
+      "profile": {
+        "title": "账户",
+        "description": "管理您的账户信息",
+        "avatar": {
+          "title": "头像",
+          "description": "点击上传按钮上传自定义头像",
+          "recommendation": "头像是可选的，但强烈推荐设置",
+          "uploading": "上传中...",
+          "uploadAvatar": "上传头像",
+          "success": "头像更新成功",
+          "fail": "更新头像失败"
+        },
+        "name": {
+          "title": "名字",
+          "description": "请输入您的名字",
+          "placeholder": "名字",
+          "minLength": "请至少使用 3 个字符",
+          "maxLength": "请最多使用 30 个字符",
+          "hint": "请使用 3-30 个字符",
+          "success": "名字更新成功",
+          "fail": "更新名字失败",
+          "saving": "保存中...",
+          "save": "保存"
+        }
+      },
+      "billing": {
+        "title": "账单",
+        "description": "管理您的订阅和账单信息",
+        "status": {
+          "active": "已激活",
+          "trial": "试用中",
+          "free": "免费版",
+          "lifetime": "终身版"
+        },
+        "interval": {
+          "month": "月",
+          "year": "年",
+          "oneTime": "一次性"
+        },
+        "currentPlan": {
+          "title": "当前方案",
+          "description": "您当前的方案详情",
+          "noPlan": "您没有激活的方案"
+        },
+        "CustomerPortalButton": {
+          "loading": "加载中...",
+          "createCustomerPortalFailed": "打开Stripe客户界面失败"
+        },
+        "price": "价格：",
+        "periodStartDate": "周期开始日期：",
+        "periodEndDate": "周期结束日期：",
+        "nextBillingDate": "下次账单日期：",
+        "trialEnds": "试用结束日期：",
+        "freePlanMessage": "您当前使用的是功能有限的免费方案",
+        "lifetimeMessage": "您拥有所有高级功能的终身使用权限",
+        "manageSubscription": "管理订阅和账单",
+        "manageBilling": "管理账单",
+        "upgradePlan": "升级方案",
+        "retry": "重试",
+        "errorMessage": "获取数据失败",
+        "paymentSuccess": "支付成功"
+      },
+      "credits": {
+        "title": "积分",
+        "description": "管理您的积分交易",
+        "tabs": {
+          "balance": "积分余额",
+          "transactions": "交易记录"
+        },
+        "balance": {
+          "title": "积分余额",
+          "description": "您的积分余额",
+          "credits": "积分",
+          "creditsDescription": "您有 {credits} 积分",
+          "creditsExpired": "积分已过期",
+          "creditsAdded": "积分已添加到您的账户",
+          "viewTransactions": "查看积分记录",
+          "retry": "重试",
+          "expiringCredits": "{credits} 积分将在 {days} 天内过期"
+        },
+        "packages": {
+          "title": "积分套餐",
+          "description": "购买积分以使用我们的更多服务",
+          "purchase": "购买",
+          "processing": "处理中...",
+          "popular": "热门",
+          "completePurchase": "请支付订单",
+          "failedToFetchCredits": "获取积分失败",
+          "failedToCreatePaymentIntent": "创建付款意向失败",
+          "failedToInitiatePayment": "发起付款失败",
+          "cancel": "取消",
+          "purchaseFailed": "购买积分失败",
+          "checkoutFailed": "创建支付会话失败",
+          "loading": "加载中...",
+          "pay": "支付"
+        },
+        "transactions": {
+          "title": "积分记录",
+          "error": "获取积分交易记录失败",
+          "search": "搜索积分交易记录...",
+          "clearSearch": "清除搜索",
+          "noResults": "无结果",
+          "paymentIdCopied": "支付ID已复制到剪贴板",
+          "columns": {
+            "columns": "列",
+            "id": "ID",
+            "type": "类型",
+            "description": "描述",
+            "amount": "金额",
+            "remainingAmount": "剩余金额",
+            "paymentId": "支付编号",
+            "expirationDate": "过期日期",
+            "expirationDateProcessedAt": "过期处理时间",
+            "createdAt": "创建时间",
+            "updatedAt": "更新时间"
+          },
+          "types": {
+            "MONTHLY_REFRESH": "每月赠送",
+            "REGISTER_GIFT": "注册赠送",
+            "PURCHASE": "购买积分",
+            "USAGE": "使用积分",
+            "EXPIRE": "过期积分",
+            "SUBSCRIPTION_RENEWAL": "订阅月度积分",
+            "LIFETIME_MONTHLY": "终身月度积分"
+          },
+          "detailViewer": {
+            "title": "积分交易详情",
+            "close": "关闭"
+          },
+          "expired": "已过期",
+          "never": "永不过期"
+        }
+      },
+      "notification": {
+        "title": "通知",
+        "description": "管理您的通知设置",
+        "newsletter": {
+          "title": "订阅",
+          "description": "管理您的邮件列表订阅偏好",
+          "label": "订阅邮件列表",
+          "hint": "您可以随时更改订阅偏好",
+          "emailRequired": "订阅邮件列表需要邮箱",
+          "subscribeSuccess": "成功订阅邮件列表",
+          "subscribeFail": "订阅邮件列表失败",
+          "unsubscribeSuccess": "成功取消订阅邮件列表",
+          "unsubscribeFail": "取消订阅邮件列表失败",
+          "error": "更新订阅时发生错误"
+        }
+      },
+      "security": {
+        "title": "安全",
+        "description": "管理您的安全设置",
+        "updatePassword": {
+          "title": "修改密码",
+          "description": "输入您的当前密码和新密码",
+          "currentPassword": "当前密码",
+          "currentRequired": "当前密码是必填项",
+          "newPassword": "新密码",
+          "newMinLength": "密码必须至少包含 8 个字符",
+          "hint": "请至少使用 8 个字符作为密码",
+          "showPassword": "显示密码",
+          "hidePassword": "隐藏密码",
+          "success": "密码更新成功",
+          "fail": "更新密码失败",
+          "saving": "保存中...",
+          "save": "保存"
+        },
+        "resetPassword": {
+          "title": "重置密码",
+          "description": "重置密码以启用邮箱登录",
+          "info": "重置密码将允许您除了社交登录方式外，还可以使用邮箱和密码登录，您将收到一封包含重置密码链接的电子邮件",
+          "button": "重置密码"
+        },
+        "deleteAccount": {
+          "title": "删除账号",
+          "description": "永久删除您的账号和所有内容",
+          "warning": "此操作是不可逆的，请谨慎操作",
+          "button": "删除账号",
+          "confirmTitle": "删除账号",
+          "confirmDescription": "您确定要删除您的账号吗？此操作无法撤销",
+          "confirm": "删除",
+          "cancel": "取消",
+          "deleting": "删除中...",
+          "success": "账号删除成功",
+          "fail": "删除账号失败"
+        }
+      },
+      "payment": {
+        "processing": {
+          "title": "支付处理"
+        }
+      }
+    },
+    "upgrade": {
+      "title": "升级",
+      "description": "升级到Pro以获取所有功能",
+      "button": "升级"
+    }
+  },
+  "Mail": {
+    "common": {
+      "team": "{name} 团队",
+      "copyright": "©️ {year} 版权所有。"
+    },
+    "verifyEmail": {
+      "title": "你好，{name}。",
+      "body": "请点击下面的链接验证您的邮箱地址。",
+      "confirmEmail": "确认邮箱",
+      "subject": "验证您的邮箱"
+    },
+    "forgotPassword": {
+      "title": "你好，{name}。",
+      "body": "请点击下面的链接重置您的密码。",
+      "resetPassword": "重置密码",
+      "subject": "重置您的密码"
+    },
+    "subscribeNewsletter": {
+      "body": "感谢您订阅我们的邮件列表，我们将为您提供最新的新闻和更新。",
+      "subject": "感谢您的订阅"
+    },
+    "contactMessage": {
+      "name": "姓名: {name}",
+      "email": "邮箱: {email}",
+      "message": "消息: {message}",
+      "subject": "来自网站的联系消息"
+    }
+  },
+  "HomePage": {
+    "title": "OwnLab",
+    "description": "OwnLab 是面向 AI 实验室的本地优先编排系统",
+    "hero": {
+      "title": "用 AI 构建你自己的实验室",
+      "description": "围绕真实本地工作区运行智能体、团队、任务和频道，而不是停留在孤立的演示界面里。",
+      "introduction": "了解 OwnLab",
+      "primary": "创建账号",
+      "secondary": "查看 GitHub",
+      "follow": "关注",
+      "read": "阅读博客"
+    },
+    "logocloud": {
+      "title": "您最爱公司都是我们的合作伙伴"
+    },
+    "integration": {
+      "title": "集成",
+      "subtitle": "与您最喜欢的工具集成",
+      "description": "无缝连接流行的平台和服务，以增强您的工作流程。",
+      "learnMore": "了解更多",
+      "items": {
+        "item-1": {
+          "title": "Google Gemini",
+          "description": "这里是Google Gemini的描述，详细介绍Google Gemini的功能和优势。"
+        },
+        "item-2": {
+          "title": "Replit",
+          "description": "这里是Replit的描述，详细介绍Replit的功能和优势。"
+        },
+        "item-3": {
+          "title": "MagicUI",
+          "description": "这里是MagicUI的描述，详细介绍MagicUI的功能和优势。"
+        },
+        "item-4": {
+          "title": "VSCodium",
+          "description": "这里是VSCodium的描述，详细介绍VSCodium的功能和优势。"
+        },
+        "item-5": {
+          "title": "MediaWiki",
+          "description": "这里是MediaWiki的描述，详细介绍MediaWiki的功能和优势。"
+        },
+        "item-6": {
+          "title": "Google PaLM",
+          "description": "这里是Google PaLM的描述，详细介绍Google PaLM的功能和优势。"
+        }
+      }
+    },
+    "integration2": {
+      "title": "与您最喜欢的工具集成",
+      "description": "无缝连接流行的平台和服务，以增强您的工作流程。",
+      "primaryButton": "开始使用",
+      "secondaryButton": "查看演示"
+    },
+    "features": {
+      "title": "功能",
+      "subtitle": "为真实 AI 工作而设计的产品模型",
+      "description": "OwnLab 在整个系统里对齐执行上下文、协作流程与持久化历史，而不是只提供一层聊天壳。",
+      "items": {
+        "item-1": {
+          "title": "基于工作区的执行",
+          "description": "智能体围绕真实本地文件夹运行，路径校验和工作区边界检查是产品模型的一部分，而不是事后补丁。"
+        },
+        "item-2": {
+          "title": "以频道为中心的协作",
+          "description": "工作区聊天、团队讨论、任务线程和智能体私信都回到统一频道模型，方便追踪上下文与决策。"
+        },
+        "item-3": {
+          "title": "智能体与团队",
+          "description": "把单个智能体和团队编组都作为一等实体建模，明确分配关系、成员关系以及工作区绑定。"
+        },
+        "item-4": {
+          "title": "任务与心跳运行",
+          "description": "从任务板到直接执行，再到调度和 heartbeat 持久化记录，OwnLab 把计划与执行串成闭环。"
+        }
+      }
+    },
+    "features2": {
+      "title": "功能2",
+      "subtitle": "您的 SaaS 产品功能",
+      "description": "请在这里介绍您的 SaaS 产品的特色功能的信息",
+      "feature-1": "特色功能特点一",
+      "feature-2": "特色功能特点二",
+      "feature-3": "特色功能特点三",
+      "feature-4": "特色功能特点四"
+    },
+    "features3": {
+      "title": "功能3",
+      "subtitle": "您的 SaaS 产品功能",
+      "description": "请在这里介绍您的 SaaS 产品的特色功能的信息",
+      "items": {
+        "item-1": {
+          "title": "产品特色功能一",
+          "description": "请在这里详细描述您的产品特色功能一，尽可能详细，使其更吸引用户"
+        },
+        "item-2": {
+          "title": "产品特色功能二",
+          "description": "请在这里详细描述您的产品特色功能二，尽可能详细，使其更吸引用户"
+        },
+        "item-3": {
+          "title": "产品特色功能三",
+          "description": "请在这里详细描述您的产品特色功能三，尽可能详细，使其更吸引用户"
+        },
+        "item-4": {
+          "title": "产品特色功能四",
+          "description": "请在这里详细描述您的产品特色功能四，尽可能详细，使其更吸引用户"
+        },
+        "item-5": {
+          "title": "产品特色功能五",
+          "description": "请在这里详细描述您的产品特色功能五，尽可能详细，使其更吸引用户"
+        },
+        "item-6": {
+          "title": "产品特色功能六",
+          "description": "请在这里详细描述您的产品特色功能六，尽可能详细，使其更吸引用户"
+        }
+      }
+    },
+    "pricing": {
+      "title": "价格",
+      "subtitle": "价格",
+      "description": "选择最适合您的付费计划"
+    },
+    "faqs": {
+      "title": "常见问题",
+      "subtitle": "关于当前 OwnLab 产品形态的核心说明",
+      "items": {
+        "item-1": {
+          "question": "OwnLab 现在是什么？",
+          "answer": "OwnLab 当前提供 Express API 服务、Next.js Web 界面、基于 Drizzle 的 PostgreSQL 数据层，以及本地和网关智能体适配器。"
+        },
+        "item-2": {
+          "question": "OwnLab 是基于工作区还是只是聊天界面？",
+          "answer": "工作区是核心能力。工作区会绑定真实本地文件夹，文件操作也会被限制在已配置的根目录内。"
+        },
+        "item-3": {
+          "question": "对话上下文是怎么持久化的？",
+          "answer": "OwnLab 采用频道优先模型。工作区聊天、团队聊天、任务讨论和智能体私信都应该映射到 channels，而不是另起一套聊天存储。"
+        },
+        "item-4": {
+          "question": "任务能分配和调度吗？",
+          "answer": "可以。任务可以分配给智能体或团队，可以直接运行，也可以通过 heartbeat 服务参与调度执行。"
+        },
+        "item-5": {
+          "question": "找不到您想问的问题？",
+          "answer": "如果还有问题，请通过 support@ownlab.app 联系 OwnLab 团队。"
+        }
+      }
+    },
+    "testimonials": {
+      "title": "客户评价",
+      "subtitle": "我们的客户对我们的评价",
+      "items": {
+        "item-1": {
+          "name": "Jonathan Yombo",
+          "role": "软件工程师",
+          "image": "https://randomuser.me/api/portraits/men/1.jpg",
+          "quote": "MkSaaS 非常出色且实用，无需费心，一个真正的金矿。"
+        },
+        "item-2": {
+          "name": "Yves Kalume",
+          "role": "Android GDE",
+          "image": "https://randomuser.me/api/portraits/men/6.jpg",
+          "quote": "没有网页设计经验，我只需几分钟就可以用 Tailwindcss 重新设计我的整个网站，感谢 MkSaaS。"
+        },
+        "item-3": {
+          "name": "Yucel Faruksahan",
+          "role": "Tailkits 创建者",
+          "image": "https://randomuser.me/api/portraits/men/7.jpg",
+          "quote": "MkSaaS 模板做得很好，这是我见过最好的 SaaS 模板，没有之一 :)"
+        },
+        "item-4": {
+          "name": "Anonymous author",
+          "role": "产品经理",
+          "image": "https://randomuser.me/api/portraits/men/8.jpg",
+          "quote": "我不熟悉 Tailwind，我想自己做一些页面，我在网上搜索了很多英雄页面和区块。然而，大多数都没有给我一个清晰的想法，或者需要一些 HTML/CSS 编码背景来从原始文件中做一些更改，或者太贵了。我下载了其中一个 MkSaaS 模板，它非常容易理解，你可以在开始时修改代码/区块以完美地适应你的页面目的。"
+        },
+        "item-5": {
+          "name": "Shekinah Tshiokufila",
+          "role": "高级软件工程师",
+          "image": "https://randomuser.me/api/portraits/men/4.jpg",
+          "quote": "MkSaaS 正在重新定义网页设计标准，这些区块为那些喜欢美丽但可能缺乏时间实现它的人提供了简单且高效的方式。我只能推荐这个不可思议的奇迹。"
+        },
+        "item-6": {
+          "name": "Oketa Fred",
+          "role": "全栈开发工程师",
+          "image": "https://randomuser.me/api/portraits/men/2.jpg",
+          "quote": "我绝对喜欢 MkSaaS！这些组件区块设计精美且易于使用，使创建一个出色的网站变得轻而易举。"
+        },
+        "item-7": {
+          "name": "Zeki",
+          "role": "ChatExtend 创始人",
+          "image": "https://randomuser.me/api/portraits/men/5.jpg",
+          "quote": "使用 MkSaaS 就像解锁了一个秘密的设计超能力。它是简单性和多功能性的完美融合，使我们能够创建既令人惊叹又用户友好的界面。"
+        },
+        "item-8": {
+          "name": "Joseph Kitheka",
+          "role": "全栈开发工程师",
+          "image": "https://randomuser.me/api/portraits/men/9.jpg",
+          "quote": "MkSaaS 改变了我的网页开发方式。他们的 UI 组件、区块和模板极大地加速了我的工作流程。定制每个方面的灵活性使我能够创建独特的用户体验。MkSaaS 是现代网页开发的游戏规则改变者！"
+        },
+        "item-9": {
+          "name": "Khatab Wedaa",
+          "role": "MerakiUI 创建者",
+          "image": "https://randomuser.me/api/portraits/men/10.jpg",
+          "quote": "MkSaaS 是一个优雅、干净且响应式的 SaaS 模板，它非常有助于快速开始您的项目。"
+        },
+        "item-10": {
+          "name": "Rodrigo Aguilar",
+          "role": "TailwindAwesome 创建者",
+          "image": "https://randomuser.me/api/portraits/men/11.jpg",
+          "quote": "我爱 MkSaaS ❤️。这些组件区块结构良好，易于使用，设计精美。它使创建一个出色的网站变得非常容易。"
+        },
+        "item-11": {
+          "name": "Eric Ampire",
+          "role": "Google 开发者专家",
+          "image": "https://randomuser.me/api/portraits/men/12.jpg",
+          "quote": "MkSaaS 模板是任何想要创建一个美丽且功能齐全的网站但没有网页设计经验的人的完美解决方案。这些模板易于使用，可定制，并且响应迅速。我强烈推荐 MkSaaS 模板给任何想要创建网站的人。"
+        },
+        "item-12": {
+          "name": "Roland Tubonge",
+          "role": "软件工程师",
+          "image": "https://randomuser.me/api/portraits/men/13.jpg",
+          "quote": "MkSaaS 设计得如此出色，即使没有网页设计经验，您也可以创造奇迹。让自己被吸引！"
+        }
+      }
+    },
+    "stats": {
+      "title": "统计",
+      "subtitle": "MkSaaS 相关的数字",
+      "description": "MkSaaS 可让您在几天内轻松构建您的 AI SaaS",
+      "items": {
+        "item-1": {
+          "title": "GitHub 上的星星"
+        },
+        "item-2": {
+          "title": "使用 MkSaaS 的活跃用户"
+        },
+        "item-3": {
+          "title": "使用 MkSaaS 启动的应用"
+        }
+      }
+    },
+    "calltoaction": {
+      "title": "开始构建",
+      "description": "MkSaaS 可让您在几天内轻松构建您的 AI SaaS",
+      "primaryButton": "开始使用",
+      "secondaryButton": "查看演示"
+    }
+  },
+  "AITextPage": {
+    "title": "AI 文本",
+    "description": "使用 AI 分析网页内容，提取关键信息、功能和见解",
+    "content": "网页内容分析器",
+    "subtitle": "输入网站 URL，使用 AI 分析其内容",
+    "analyzer": {
+      "title": "网页内容分析器",
+      "description": "使用 AI 分析任何网站的内容，提取结构化信息",
+      "placeholder": "输入网站 URL（例如：https://example.com）",
+      "button": "分析网站",
+      "loading": {
+        "scraping": "正在抓取网站内容...",
+        "analyzing": "正在使用 AI 分析内容..."
+      },
+      "results": {
+        "title": "分析结果",
+        "newAnalysis": "分析其他网站",
+        "sections": {
+          "title": "标题",
+          "description": "描述",
+          "introduction": "介绍",
+          "features": "功能",
+          "pricing": "定价",
+          "useCases": "使用场景",
+          "screenshot": "网站截图"
+        }
+      },
+      "errors": {
+        "invalidUrl": "请输入以 http:// 或 https:// 开头的有效 URL",
+        "analysisError": "分析网站失败，请重试。",
+        "networkError": "网络错误，请检查您的连接并重试。",
+        "insufficientCredits": "积分不足，请购买更多积分以继续。"
+      }
+    },
+    "features": {
+      "scraping": {
+        "title": "智能网页抓取",
+        "description": "先进的网页抓取技术从任何网站提取干净、结构化的内容"
+      },
+      "analysis": {
+        "title": "AI 驱动分析",
+        "description": "智能 AI 分析提取关键见解、功能和结构化信息"
+      },
+      "results": {
+        "title": "结构化结果",
+        "description": "获得有组织、易于阅读的结果，包含清晰的部分和可操作的见解"
+      }
+    }
+  },
+  "AIImagePage": {
+    "title": "AI 图片",
+    "description": "MkSaaS 让您在几天内轻松构建您的 AI SaaS，简单且毫不费力"
+  },
+  "AIChatPage": {
+    "title": "AI 聊天",
+    "description": "MkSaaS 让您在几天内轻松构建您的 AI SaaS，简单且毫不费力"
+  },
+  "AIVideoPage": {
+    "title": "AI 视频",
+    "description": "MkSaaS 让您在几天内轻松构建您的 AI SaaS，简单且毫不费力"
+  },
+  "AIAudioPage": {
+    "title": "AI 音频",
+    "description": "MkSaaS 让您在几天内轻松构建您的 AI SaaS，简单且毫不费力"
+  }
+}

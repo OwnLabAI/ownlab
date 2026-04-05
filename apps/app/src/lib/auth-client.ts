@@ -1,8 +1,8 @@
-export const authClient = {
-  async signOut(): Promise<void> {
-    // Stub implementation for local, auth-free version.
-    // Kept only to preserve the original NavUser UI API.
-    return Promise.resolve();
-  },
-};
+import { createAuthClient } from 'better-auth/react';
+import { getWwwBaseUrl } from './urls';
 
+export const authClient = createAuthClient({
+  baseURL: getWwwBaseUrl(),
+});
+
+export const useSession = authClient.useSession;

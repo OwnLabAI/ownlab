@@ -1,8 +1,12 @@
 'use client';
 
+import { authClient } from '@/lib/auth-client';
+import { getWwwUrl } from '@/lib/urls';
 import {
   ChevronsUpDown,
+  Home,
   LaptopIcon,
+  LogOut,
   MoonIcon,
   Settings,
   SunIcon,
@@ -28,14 +32,23 @@ import { ThemeSwitcher } from './theme-switcher';
 
 export function NavUser({
   user,
+  isLoading = false,
+  isAuthenticated = false,
 }: {
   user: {
     name: string;
     email: string;
     avatar: string;
   };
+  isLoading?: boolean;
+  isAuthenticated?: boolean;
 }) {
   const { isMobile } = useSidebar();
+
+  const handleSignOut = async () => {
+    await authClient.signOut();
+    window.location.assign(getWwwUrl('/'));
+  };
 
   return (
     <SidebarMenu>
@@ -49,12 +62,18 @@ export function NavUser({
               <Avatar className="h-8 w-8 rounded-lg">
                 <AvatarImage src={user.avatar} alt={user.name} />
                 <AvatarFallback className="rounded-lg">
-                  {user.name?.charAt(0).toUpperCase() || 'U'}
+                  {(isLoading ? '...' : user.name)?.charAt(0).toUpperCase() || 'U'}
                 </AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-semibold">{user.name}</span>
-                <span className="truncate text-xs">{user.email}</span>
+                <span className="truncate font-semibold">
+                  {isLoading ? 'Loading session...' : user.name}
+                </span>
+                <span className="truncate text-xs">
+                  {isLoading
+                    ? 'Checking hosted account'
+                    : user.email || (isAuthenticated ? '' : 'Not signed in')}
+                </span>
               </div>
               <ChevronsUpDown className="ml-auto size-4" />
             </SidebarMenuButton>
@@ -70,12 +89,18 @@ export function NavUser({
                 <Avatar className="h-8 w-8 rounded-lg">
                   <AvatarImage src={user.avatar} alt={user.name} />
                   <AvatarFallback className="rounded-lg">
-                    {user.name?.charAt(0).toUpperCase() || 'U'}
+                    {(isLoading ? '...' : user.name)?.charAt(0).toUpperCase() || 'U'}
                   </AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold">{user.name}</span>
-                  <span className="truncate text-xs">{user.email}</span>
+                  <span className="truncate font-semibold">
+                    {isLoading ? 'Loading session...' : user.name}
+                  </span>
+                  <span className="truncate text-xs">
+                    {isLoading
+                      ? 'Checking hosted account'
+                      : user.email || (isAuthenticated ? '' : 'Not signed in')}
+                  </span>
                 </div>
               </div>
             </DropdownMenuLabel>
@@ -91,10 +116,27 @@ export function NavUser({
                 <ThemeSwitcher />
               </div>
               <DropdownMenuSeparator />
+              <DropdownMenuItem asChild>
+                <a href={getWwwUrl('/')}>
+                  <Home />
+                  Homepage
+                </a>
+              </DropdownMenuItem>
               <DropdownMenuItem>
                 <Settings />
                 Settings
               </DropdownMenuItem>
+              {isAuthenticated && (
+                <DropdownMenuItem
+                  onSelect={(event) => event.preventDefault()}
+                  onClick={() => {
+                    void handleSignOut();
+                  }}
+                >
+                  <LogOut />
+                  Log out
+                </DropdownMenuItem>
+              )}
             </DropdownMenuGroup>
           </DropdownMenuContent>
         </DropdownMenu>
