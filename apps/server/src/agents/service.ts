@@ -1,6 +1,18 @@
 import fs from "node:fs/promises";
 import type { Db } from "@ownlab/db";
-import { agents, labs, tasks, workspaces, heartbeatRuns, desc, eq, teamMembers, teams } from "@ownlab/db";
+import {
+  agents,
+  and,
+  labs,
+  tasks,
+  workspaces,
+  heartbeatRuns,
+  desc,
+  eq,
+  teamMembers,
+  teams,
+  workspaceAccessMembers,
+} from "@ownlab/db";
 import type {
   AdapterEnvironmentTestResult,
   AdapterModel,
@@ -36,6 +48,8 @@ export interface UpdateAgentInput {
   runtimeConfig?: Record<string, unknown> | null;
 }
 
+type AgentWorkspaceDb = Pick<Db, "select" | "insert" | "delete">;
+
 export function createAgentService(db: Db) {
   function buildDefaultAdapterConfig(input: {
     adapterType: string;
@@ -48,6 +62,96 @@ export function createAgentService(db: Db) {
         ? { dangerouslyBypassApprovalsAndSandbox: false }
         : {}),
     };
+  }
+
+  function readWorkspaceId(runtimeConfig: Record<string, unknown> | null | undefined): string | null {
+    const workspaceId = runtimeConfig?.workspaceId;
+    if (typeof workspaceId !== "string") {
+      return null;
+    }
+
+    const trimmed = workspaceId.trim();
+    return trimmed.length > 0 ? trimmed : null;
+  }
+
+  async function getWorkspaceInLab(workspaceId: string, labId: string, database: AgentWorkspaceDb = db) {
+    const rows = await database
+      .select({ id: workspaces.id })
+      .from(workspaces)
+      .where(and(eq(workspaces.id, workspaceId), eq(workspaces.labId, labId)))
+      .limit(1);
+
+    return rows[0] ?? null;
+  }
+
+  async function isTeamManagedAgent(agentId: string, database: AgentWorkspaceDb = db) {
+    const rows = await database
+      .select({ teamId: teamMembers.teamId })
+      .from(teamMembers)
+      .where(eq(teamMembers.agentId, agentId))
+      .limit(1);
+
+    return rows.length > 0;
+  }
+
+  async function syncAgentWorkspaceAccess(input: {
+    agentId: string;
+    labId: string;
+    previousRuntimeConfig?: Record<string, unknown> | null;
+    nextRuntimeConfig?: Record<string, unknown> | null;
+    database?: AgentWorkspaceDb;
+  }) {
+    const database = input.database ?? db;
+    const previousWorkspaceId = readWorkspaceId(input.previousRuntimeConfig);
+    const nextWorkspaceId = readWorkspaceId(input.nextRuntimeConfig);
+
+    if (previousWorkspaceId === nextWorkspaceId) {
+      return;
+    }
+
+    if (nextWorkspaceId) {
+      const workspace = await getWorkspaceInLab(nextWorkspaceId, input.labId, database);
+      if (!workspace) {
+        throw new Error("Workspace not found in the current lab");
+      }
+    }
+
+    if (await isTeamManagedAgent(input.agentId, database)) {
+      throw new Error("Team-managed agent workspace must be changed from the team configuration");
+    }
+
+    if (previousWorkspaceId) {
+      await database
+        .delete(workspaceAccessMembers)
+        .where(
+          and(
+            eq(workspaceAccessMembers.workspaceId, previousWorkspaceId),
+            eq(workspaceAccessMembers.actorId, input.agentId),
+          ),
+        );
+    }
+
+    if (nextWorkspaceId) {
+      await database
+        .insert(workspaceAccessMembers)
+        .values({
+          workspaceId: nextWorkspaceId,
+          actorId: input.agentId,
+          actorType: "agent",
+          role: "member",
+          displayName: null,
+          icon: null,
+        })
+        .onConflictDoUpdate({
+          target: [workspaceAccessMembers.workspaceId, workspaceAccessMembers.actorId],
+          set: {
+            actorType: "agent",
+            role: "member",
+            displayName: null,
+            icon: null,
+          },
+        });
+    }
   }
 
   async function listModels(adapterType: string): Promise<AdapterModel[]> {
@@ -128,6 +232,7 @@ export function createAgentService(db: Db) {
       style: input.style ?? null,
       ...(input.runtimeConfig ?? {}),
     };
+    const workspaceId = readWorkspaceId(runtimeConfig);
 
     const normalizedRole =
       typeof input.role === "string" && input.role.trim().length > 0
@@ -150,20 +255,39 @@ export function createAgentService(db: Db) {
       normalizedReportsTo = manager.id;
     }
 
-    const [created] = await db
-      .insert(agents)
-      .values({
-        name: input.name,
+    if (workspaceId) {
+      const workspace = await getWorkspaceInLab(workspaceId, lab.id);
+      if (!workspace) {
+        throw new Error("Workspace not found in the current lab");
+      }
+    }
+
+    const created = await db.transaction(async (tx) => {
+      const [nextAgent] = await tx
+        .insert(agents)
+        .values({
+          name: input.name,
+          labId: lab.id,
+          adapterType,
+          role: normalizedRole,
+          reportsTo: normalizedReportsTo,
+          icon: input.icon ?? null,
+          status: "idle",
+          adapterConfig,
+          runtimeConfig,
+        })
+        .returning();
+
+      await syncAgentWorkspaceAccess({
+        agentId: nextAgent.id,
         labId: lab.id,
-        adapterType,
-        role: normalizedRole,
-        reportsTo: normalizedReportsTo,
-        icon: input.icon ?? null,
-        status: "idle",
-        adapterConfig,
-        runtimeConfig,
-      })
-      .returning();
+        previousRuntimeConfig: null,
+        nextRuntimeConfig: runtimeConfig,
+        database: tx,
+      });
+
+      return nextAgent;
+    });
 
     await initializeAgentRuntimeFilesystem({
       agentId: created.id,
@@ -190,6 +314,8 @@ export function createAgentService(db: Db) {
     if (patch.icon !== undefined) updates.icon = patch.icon;
     if (patch.status !== undefined) updates.status = patch.status;
     if (patch.adapterConfig !== undefined) updates.adapterConfig = patch.adapterConfig;
+    const nextRuntimeConfig =
+      patch.runtimeConfig !== undefined ? patch.runtimeConfig : current.runtimeConfig;
     if (patch.runtimeConfig !== undefined) updates.runtimeConfig = patch.runtimeConfig;
     if (patch.reportsTo !== undefined) {
       const nextReportsTo = patch.reportsTo?.trim() || null;
@@ -208,11 +334,21 @@ export function createAgentService(db: Db) {
       updates.reportsTo = nextReportsTo;
     }
 
-    const rows = await db
-      .update(agents)
-      .set(updates)
-      .where(eq(agents.id, id))
-      .returning();
+    const rows = await db.transaction(async (tx) => {
+      await syncAgentWorkspaceAccess({
+        agentId: id,
+        labId: current.labId,
+        previousRuntimeConfig: current.runtimeConfig,
+        nextRuntimeConfig,
+        database: tx,
+      });
+
+      return tx
+        .update(agents)
+        .set(updates)
+        .where(eq(agents.id, id))
+        .returning();
+    });
 
     return rows[0] ?? null;
   }

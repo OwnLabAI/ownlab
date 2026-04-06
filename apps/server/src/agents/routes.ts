@@ -144,6 +144,14 @@ export function agentRoutes(db: Db): RouterType {
       res.status(201).json(created);
     } catch (error) {
       console.error("Failed to create agent:", error);
+      if (
+        error instanceof Error &&
+        (error.message === "Workspace not found in the current lab" ||
+          error.message === "Team-managed agent workspace must be changed from the team configuration")
+      ) {
+        res.status(422).json({ error: error.message });
+        return;
+      }
       res.status(400).json({
         error: error instanceof Error ? error.message : "Failed to create agent",
       });
@@ -172,6 +180,14 @@ export function agentRoutes(db: Db): RouterType {
       res.json(updated);
     } catch (error) {
       console.error("Failed to update agent:", error);
+      if (
+        error instanceof Error &&
+        (error.message === "Workspace not found in the current lab" ||
+          error.message === "Team-managed agent workspace must be changed from the team configuration")
+      ) {
+        res.status(422).json({ error: error.message });
+        return;
+      }
       res.status(400).json({
         error: error instanceof Error ? error.message : "Failed to update agent",
       });
