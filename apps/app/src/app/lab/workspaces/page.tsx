@@ -19,7 +19,7 @@ export default async function LabWorkspacesPage() {
 
   return (
     <>
-      <header className="desktop-macos-lab-header flex h-14 shrink-0 items-center gap-2">
+      <header className="desktop-macos-lab-header desktop-window-drag flex h-14 shrink-0 items-center gap-2">
         <div className="flex flex-1 items-center gap-2 px-3">
           <Breadcrumb>
             <BreadcrumbList>
@@ -30,7 +30,7 @@ export default async function LabWorkspacesPage() {
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
-          <div className="ml-auto">
+          <div className="desktop-window-no-drag ml-auto">
             <CreateWorkspaceDialog />
           </div>
         </div>

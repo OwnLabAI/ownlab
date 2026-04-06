@@ -50,14 +50,14 @@ export function TaskBoardHeader({
 
   return (
     <>
-      <header className="desktop-macos-lab-header flex h-14 shrink-0 items-center gap-2">
+      <header className="desktop-macos-lab-header desktop-window-drag flex h-14 shrink-0 items-center gap-2">
         <div className="flex flex-1 items-center gap-2 px-3">
           <Breadcrumb>
             <BreadcrumbList>
               <BreadcrumbItem>
                 <BreadcrumbPage className="line-clamp-1">
                   {editing ? (
-                    <div className="flex items-center gap-1">
+                    <div className="desktop-window-no-drag flex items-center gap-1">
                       <Input
                         value={editName}
                         onChange={(e) => setEditName(e.target.value)}
@@ -91,7 +91,7 @@ export function TaskBoardHeader({
                         setEditName(board.name);
                         setEditing(true);
                       }}
-                      className="flex items-center gap-1.5 hover:text-foreground"
+                      className="desktop-window-no-drag flex items-center gap-1.5 hover:text-foreground"
                     >
                       <span>{board.name}</span>
                       <Pencil className="size-3 opacity-0 group-hover:opacity-100" />
@@ -102,7 +102,7 @@ export function TaskBoardHeader({
             </BreadcrumbList>
           </Breadcrumb>
         </div>
-        <div className="flex items-center gap-2 pr-3">
+        <div className="desktop-window-no-drag flex items-center gap-2 pr-3">
           <Button size="sm" onClick={onAddTask}>
             <Plus className="mr-1 size-4" />
             New Task

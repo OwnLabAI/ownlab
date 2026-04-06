@@ -104,7 +104,7 @@ export function AgentHeader({
 
   return (
     <>
-      <header className="desktop-macos-lab-header flex min-h-12 shrink-0 items-center justify-between px-4 py-2">
+      <header className="desktop-macos-lab-header desktop-window-drag flex min-h-12 shrink-0 items-center justify-between px-4 py-2">
         <div className="flex items-center gap-2">
           <EntityIcon icon={agent.icon} name={agent.name} fallback="AI" className="size-8 rounded-lg" />
           <div className="space-y-1">
@@ -123,7 +123,7 @@ export function AgentHeader({
             </div>
           </div>
         </div>
-        <div className="flex items-center gap-1">
+        <div className="desktop-window-no-drag flex items-center gap-1">
           <Button
             variant="ghost"
             size="sm"

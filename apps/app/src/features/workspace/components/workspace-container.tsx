@@ -37,11 +37,11 @@ function WorkspaceTopBar({
   onToggleChannel: () => void;
 }) {
   return (
-    <div className="desktop-macos-workspace-topbar flex h-10 min-h-10 shrink-0 items-center justify-between px-2">
+    <div className="desktop-macos-workspace-topbar desktop-window-drag flex h-10 min-h-10 shrink-0 items-center justify-between px-2">
       <div className="flex items-center gap-2">
         <Link
           href="/lab/workspaces"
-          className="flex size-8 items-center justify-center rounded-lg text-foreground transition-colors hover:bg-accent/40 hover:text-foreground"
+          className="desktop-window-no-drag flex size-8 items-center justify-center rounded-lg text-foreground transition-colors hover:bg-accent/40 hover:text-foreground"
           aria-label="Back to workspaces"
           title="Back to workspaces"
         >
@@ -63,7 +63,7 @@ function WorkspaceTopBar({
           type="button"
           variant="ghost"
           size="icon"
-          className="size-8 rounded-lg text-muted-foreground hover:bg-accent/40 hover:text-foreground"
+          className="desktop-window-no-drag size-8 rounded-lg text-muted-foreground hover:bg-accent/40 hover:text-foreground"
           onClick={onToggleToolPanel}
           aria-label={toolPanelOpen ? 'Collapse tool panel' : 'Expand tool panel'}
           title={toolPanelOpen ? 'Collapse tool panel' : 'Expand tool panel'}
@@ -77,7 +77,7 @@ function WorkspaceTopBar({
           type="button"
           variant="ghost"
           size="icon"
-          className="size-8 rounded-lg text-muted-foreground hover:bg-accent/40 hover:text-foreground"
+          className="desktop-window-no-drag size-8 rounded-lg text-muted-foreground hover:bg-accent/40 hover:text-foreground"
           onClick={onToggleChannel}
           aria-label={channelOpen ? 'Collapse channel panel' : 'Expand channel panel'}
           title={channelOpen ? 'Collapse channel panel' : 'Expand channel panel'}

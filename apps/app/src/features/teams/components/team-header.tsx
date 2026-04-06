@@ -69,7 +69,7 @@ export function TeamHeader({
   const workerCount = members.filter((member) => member.teamRole === 'worker').length;
 
   return (
-    <header className="flex min-h-12 shrink-0 flex-wrap items-start justify-between gap-2 px-4 py-2">
+    <header className="desktop-macos-lab-header desktop-window-drag flex min-h-12 shrink-0 flex-wrap items-start justify-between gap-2 px-4 py-2">
       <div className="flex min-w-0 flex-1 items-center gap-2">
         <EntityIcon icon={team.icon} name={team.name} fallback="TM" className="size-8 rounded-lg" />
         <div className="flex min-w-0 flex-wrap items-center gap-1.5 text-sm leading-tight">
@@ -105,7 +105,7 @@ export function TeamHeader({
           ) : null}
         </div>
       </div>
-      <div className="flex shrink-0 flex-wrap items-center justify-end gap-1">
+      <div className="desktop-window-no-drag flex shrink-0 flex-wrap items-center justify-end gap-1">
         <Button variant="ghost" size="sm" className="gap-1.5 text-xs" onClick={onOpenConfig}>
           <Settings2 className="size-3.5" />
           Config
