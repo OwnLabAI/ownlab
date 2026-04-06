@@ -4,7 +4,7 @@
 
 [简体中文](./README_CN.md)
 
-OwnLab is an open-source platform for humans-agents collaboration.
+OwnLab is an open-source desktop-first platform for humans-agents collaboration.
 
 ## What OwnLab Is For
 
@@ -54,16 +54,29 @@ Requirements:
 - Node.js `20+`
 - pnpm `9.15+`
 
-Install and start the full stack:
+Install dependencies:
 
 ```bash
 git clone https://github.com/OwnLabAI/ownlab.git
 cd ownlab
 pnpm install
+```
+
+Run OwnLab Desktop in development:
+
+```bash
+pnpm dev:desktop
+```
+
+This is the recommended way to use OwnLab locally. The desktop app hosts the full product experience and manages the local runtime for you.
+
+If you are working on the web and server separately, you can still start the browser-based dev stack:
+
+```bash
 pnpm dev
 ```
 
-This starts:
+That starts:
 
 - Web UI: `http://localhost:3000`
 - API server: `http://localhost:3100`
@@ -121,7 +134,8 @@ GET /health
 ownlab/
 ├── apps/
 │   ├── server/        # Express API and orchestration services
-│   ├── app/           # Next.js UI for labs, workspaces, tasks, and agents
+│   ├── app/           # Next.js app runtime used by OwnLab Desktop
+│   ├── desktop/       # Electron desktop shell (recommended user experience)
 │   └── cli/           # `ownlab` CLI (Commander + esbuild)
 ├── packages/
 │   ├── db/            # Drizzle schema, migrations, DB runtime
@@ -139,9 +153,12 @@ ownlab/
 Common commands:
 
 ```bash
+pnpm dev:desktop
 pnpm dev
 pnpm dev:server
 pnpm dev:app
+pnpm build:desktop
+pnpm dist:desktop
 pnpm build
 pnpm typecheck
 pnpm test:run

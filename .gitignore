@@ -79,6 +79,5 @@ yarn-error.log*
 ods/
 
 #
-apps/www
 apps/app
-apps/desktop
+apps/server

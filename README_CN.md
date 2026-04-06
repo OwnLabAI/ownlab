@@ -2,7 +2,7 @@
 
 [English README](./README.md)
 
-OwnLab 是一个用于 humans-agents 协作的开源平台。
+OwnLab 是一个以 desktop 为主的 humans-agents 协作开源平台。
 
 ## OwnLab 是做什么的
 
@@ -52,12 +52,25 @@ OwnLab 是一个用于 humans-agents 协作的开源平台。
 - Node.js `20+`
 - pnpm `9.15+`
 
-安装并启动完整开发环境：
+先安装依赖：
 
 ```bash
 git clone https://github.com/OwnLabAI/ownlab.git
 cd ownlab
 pnpm install
+```
+
+使用 OwnLab Desktop（推荐）：
+
+```bash
+pnpm dev:desktop
+```
+
+这是本地使用 OwnLab 的推荐方式。Desktop 应用会承载完整产品体验，并负责本地运行时。
+
+如果你是在开发 Web 和 Server，也可以继续启动浏览器开发环境：
+
+```bash
 pnpm dev
 ```
 
@@ -119,7 +132,8 @@ GET /health
 ownlab/
 ├── apps/
 │   ├── server/        # Express API 与 orchestration services
-│   ├── web/           # 面向 labs、workspaces、tasks、agents 的 Next.js UI
+│   ├── app/           # OwnLab Desktop 使用的 Next.js app runtime
+│   ├── desktop/       # Electron desktop shell（推荐的用户使用方式）
 │   └── cli/           # `ownlab` CLI（Commander + esbuild）
 ├── packages/
 │   ├── db/            # Drizzle schema、migrations、DB runtime
@@ -137,9 +151,12 @@ ownlab/
 常用命令：
 
 ```bash
+pnpm dev:desktop
 pnpm dev
 pnpm dev:server
 pnpm dev:app
+pnpm build:desktop
+pnpm dist:desktop
 pnpm build
 pnpm typecheck
 pnpm test:run
