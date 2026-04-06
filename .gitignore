@@ -77,3 +77,8 @@ yarn-error.log*
 
 # Prompt / reference material not shipped with the product
 ods/
+
+#
+apps/www
+apps/app
+apps/desktop
