@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { EntityIcon } from '@/components/entity-icon';
 import { Button } from '@/components/ui/button';
-import { SidebarTrigger } from '@/components/ui/sidebar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Dialog,
@@ -105,9 +104,8 @@ export function AgentHeader({
 
   return (
     <>
-      <header className="flex min-h-12 shrink-0 items-center justify-between border-b px-4 py-2">
+      <header className="desktop-macos-lab-header flex min-h-12 shrink-0 items-center justify-between px-4 py-2">
         <div className="flex items-center gap-2">
-          <SidebarTrigger className="-ml-1" />
           <EntityIcon icon={agent.icon} name={agent.name} fallback="AI" className="size-8 rounded-lg" />
           <div className="space-y-1">
             <div className="flex items-center gap-2 text-sm leading-tight">

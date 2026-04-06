@@ -1,0 +1,29 @@
+{
+  "name": "@ownlab/desktop",
+  "version": "0.0.1",
+  "description": "OwnLab desktop host",
+  "author": "OwnLab",
+  "private": true,
+  "type": "module",
+  "main": "./out/main/index.js",
+  "scripts": {
+    "dev": "electron-vite dev",
+    "build": "electron-vite build",
+    "test": "pnpm exec vitest run --config ./vitest.config.ts",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "prepare:runtime": "node ./scripts/prepare-runtime.mjs",
+    "verify:mac:dir": "node ./scripts/verify-macos-release.mjs ./dist",
+    "dist": "pnpm run dist:mac",
+    "dist:mac": "pnpm --filter @ownlab/shared build && pnpm --filter @ownlab/db build && pnpm --filter @ownlab/adapter-utils build && pnpm --filter @ownlab/adapter-claude-local build && pnpm --filter @ownlab/adapter-codex-local build && pnpm --filter @ownlab/adapter-cursor-local build && pnpm --filter @ownlab/adapter-gemini-local build && pnpm --filter @ownlab/adapter-opencode-local build && pnpm --filter @ownlab/adapter-pi-local build && pnpm --filter @ownlab/server build && pnpm --filter @ownlab/app build && pnpm run prepare:runtime && pnpm run build && electron-builder --config electron-builder.config.cjs --mac dmg zip",
+    "dist:dir": "pnpm --filter @ownlab/shared build && pnpm --filter @ownlab/db build && pnpm --filter @ownlab/adapter-utils build && pnpm --filter @ownlab/adapter-claude-local build && pnpm --filter @ownlab/adapter-codex-local build && pnpm --filter @ownlab/adapter-cursor-local build && pnpm --filter @ownlab/adapter-gemini-local build && pnpm --filter @ownlab/adapter-opencode-local build && pnpm --filter @ownlab/adapter-pi-local build && pnpm --filter @ownlab/server build && pnpm --filter @ownlab/app build && pnpm run prepare:runtime && pnpm run build && electron-builder --config electron-builder.config.cjs --dir",
+    "postinstall": "electron-builder install-app-deps"
+  },
+  "devDependencies": {
+    "@types/node": "^24.6.0",
+    "electron": "^37.2.6",
+    "electron-builder": "^26.0.12",
+    "electron-vite": "^3.1.0",
+    "typescript": "^5.8.3",
+    "vite": "^6.4.1"
+  }
+}

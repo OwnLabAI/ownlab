@@ -89,6 +89,8 @@
 }
 
 :root {
+  --desktop-titlebar-height: 0px;
+  --desktop-titlebar-offset: 0px;
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
@@ -220,6 +222,89 @@
 
 body {
   @apply overscroll-none;
+}
+
+.desktop-window-drag {
+  -webkit-app-region: drag;
+}
+
+.desktop-window-no-drag {
+  -webkit-app-region: no-drag;
+}
+
+.desktop-macos-only {
+  display: none;
+}
+
+body[data-desktop='true'][data-platform='darwin'] {
+  /* Horizontal clearance for traffic lights (Electron `trafficLightPosition` + cluster width). */
+  --desktop-macos-traffic-inset: 78px;
+  /*
+   * One shared titlebar band height so sidebar toggle, main header, and workspace toolbar
+   * share the same baseline. Tuned to Electron `trafficLightPosition.y` (~14) + ~12px control
+   * diameter → vertical center ~20px within this band.
+   */
+  --desktop-macos-chrome-band: 40px;
+}
+
+body[data-desktop='true'][data-platform='darwin'] .desktop-macos-only {
+  display: block;
+}
+
+/* Lab sidebar: fold control to the right of traffic lights, vertically centered in the band. */
+body[data-desktop='true'][data-platform='darwin'] .desktop-macos-chrome-row {
+  box-sizing: border-box;
+  height: var(--desktop-macos-chrome-band);
+  min-height: var(--desktop-macos-chrome-band);
+  padding-left: var(--desktop-macos-traffic-inset);
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+/*
+ * Collapsed icon: keep default shadcn geometry (no extra left gap / no “white bar”).
+ * — Hide the sidebar divider so the strip blends with the page.
+ * — Nudge main content right when collapsed (see padding rules below; macOS desktop uses more).
+ * — Do not change .desktop-macos-chrome-row padding when collapsed: fold button stays aligned
+ *   with the expanded state (same traffic inset on macOS desktop).
+ */
+[data-slot='sidebar'][data-state='collapsed'][data-collapsible='icon'] [data-slot='sidebar-container'] {
+  border-right: none !important;
+}
+
+/* Collapsed: extra inset so “Lab / …” clears the fold control (it can sit past the icon strip). */
+[data-slot='sidebar'][data-state='collapsed'][data-collapsible='icon'] ~ .desktop-lab-main {
+  padding-left: 0.75rem;
+}
+
+body[data-desktop='true'][data-platform='darwin']
+  [data-slot='sidebar'][data-state='collapsed'][data-collapsible='icon']
+  ~ .desktop-lab-main {
+  padding-left: 3rem;
+}
+
+/* Workspace: first row shares the same band height and left inset. */
+body[data-desktop='true'][data-platform='darwin'] .desktop-macos-workspace-topbar {
+  box-sizing: border-box;
+  height: var(--desktop-macos-chrome-band);
+  min-height: var(--desktop-macos-chrome-band);
+  padding-left: var(--desktop-macos-traffic-inset);
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+/* Lab main column headers (breadcrumbs, etc.): same row height as sidebar chrome row. */
+body[data-desktop='true'][data-platform='darwin'] .desktop-macos-lab-header {
+  box-sizing: border-box;
+  height: var(--desktop-macos-chrome-band);
+  min-height: var(--desktop-macos-chrome-band);
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+/* Lab top headers: no bottom border (workspaces / agents / tasks / tasks board). */
+.desktop-macos-lab-header {
+  border-bottom: none !important;
 }
 
 html body[data-scroll-locked] {

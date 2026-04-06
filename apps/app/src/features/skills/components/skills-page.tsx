@@ -212,7 +212,7 @@ export function SkillsPage() {
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-auto bg-background">
       <div className="flex w-full flex-1 flex-col px-5 py-4">
-        <div className="mb-5 flex flex-wrap items-center justify-between gap-4 border-b border-border/50 pb-4">
+        <div className="mb-5 flex flex-wrap items-center justify-between gap-4 pb-4">
           <div className="flex flex-wrap items-center gap-1">
             {SECTION_TABS.map((tab) => (
               <button

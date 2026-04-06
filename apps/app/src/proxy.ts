@@ -1,4 +1,5 @@
 import { type NextRequest, NextResponse } from 'next/server';
+import { buildLoginRedirectUrl, DESKTOP_SESSION_HEADER, parseDesktopSessionHeader } from './lib/desktop-auth';
 import { getWwwBaseUrl, getWwwInternalUrl } from './lib/urls';
 
 function isProtectedRoute(pathname: string): boolean {
@@ -16,6 +17,13 @@ type HostedSession = {
 } | null;
 
 async function getHostedSession(req: NextRequest): Promise<HostedSession> {
+  const desktopSession = parseDesktopSessionHeader(
+    req.headers.get(DESKTOP_SESSION_HEADER),
+  ) as HostedSession;
+  if (desktopSession?.user) {
+    return desktopSession;
+  }
+
   try {
     const response = await fetch(getWwwInternalUrl('/api/auth/get-session'), {
       headers: {
@@ -48,11 +56,13 @@ export default async function proxy(req: NextRequest) {
     return NextResponse.next();
   }
 
-  const loginUrl = new URL('/auth/login', getWwwBaseUrl());
   const callbackUrl = `${nextUrl.origin}${nextUrl.pathname}${nextUrl.search}`;
-  loginUrl.searchParams.set('callbackUrl', callbackUrl);
+  const loginUrl = buildLoginRedirectUrl(callbackUrl);
+  const redirectUrl = loginUrl.startsWith('http://') || loginUrl.startsWith('https://')
+    ? loginUrl
+    : new URL(loginUrl, nextUrl.origin).toString();
 
-  return NextResponse.redirect(loginUrl);
+  return NextResponse.redirect(redirectUrl);
 }
 
 export const config = {

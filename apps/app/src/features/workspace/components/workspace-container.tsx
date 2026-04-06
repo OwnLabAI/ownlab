@@ -23,7 +23,7 @@ interface WorkspaceContainerProps {
 }
 
 const CARD_CLASS =
-  'flex h-full min-h-0 flex-col overflow-hidden rounded-[24px] border border-border/60 bg-card shadow-[0_10px_30px_rgba(15,23,42,0.05)] dark:shadow-[0_12px_30px_rgba(0,0,0,0.35)]';
+  'flex h-full min-h-0 flex-col overflow-hidden rounded-[20px] border border-border/60 bg-card shadow-none';
 
 function WorkspaceTopBar({
   toolPanelOpen,
@@ -37,11 +37,11 @@ function WorkspaceTopBar({
   onToggleChannel: () => void;
 }) {
   return (
-    <div className="flex h-12 shrink-0 items-center justify-between px-2 pt-2">
+    <div className="desktop-macos-workspace-topbar flex h-10 min-h-10 shrink-0 items-center justify-between px-2">
       <div className="flex items-center gap-2">
         <Link
           href="/lab/workspaces"
-          className="flex size-8 items-center justify-center rounded-md text-foreground transition-colors hover:bg-transparent hover:text-foreground"
+          className="flex size-8 items-center justify-center rounded-lg text-foreground transition-colors hover:bg-accent/40 hover:text-foreground"
           aria-label="Back to workspaces"
           title="Back to workspaces"
         >
@@ -63,7 +63,7 @@ function WorkspaceTopBar({
           type="button"
           variant="ghost"
           size="icon"
-          className="size-8 text-muted-foreground hover:bg-transparent hover:text-foreground"
+          className="size-8 rounded-lg text-muted-foreground hover:bg-accent/40 hover:text-foreground"
           onClick={onToggleToolPanel}
           aria-label={toolPanelOpen ? 'Collapse tool panel' : 'Expand tool panel'}
           title={toolPanelOpen ? 'Collapse tool panel' : 'Expand tool panel'}
@@ -77,7 +77,7 @@ function WorkspaceTopBar({
           type="button"
           variant="ghost"
           size="icon"
-          className="size-8 text-muted-foreground hover:bg-transparent hover:text-foreground"
+          className="size-8 rounded-lg text-muted-foreground hover:bg-accent/40 hover:text-foreground"
           onClick={onToggleChannel}
           aria-label={channelOpen ? 'Collapse channel panel' : 'Expand channel panel'}
           title={channelOpen ? 'Collapse channel panel' : 'Expand channel panel'}

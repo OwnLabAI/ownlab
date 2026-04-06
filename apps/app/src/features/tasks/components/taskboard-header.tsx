@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { Plus, Pencil, Check, X, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { SidebarTrigger } from '@/components/ui/sidebar';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -51,9 +50,8 @@ export function TaskBoardHeader({
 
   return (
     <>
-      <header className="flex h-14 shrink-0 items-center gap-2 border-b">
+      <header className="desktop-macos-lab-header flex h-14 shrink-0 items-center gap-2">
         <div className="flex flex-1 items-center gap-2 px-3">
-          <SidebarTrigger />
           <Breadcrumb>
             <BreadcrumbList>
               <BreadcrumbItem>

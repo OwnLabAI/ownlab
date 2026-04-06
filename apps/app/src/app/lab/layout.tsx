@@ -1,8 +1,8 @@
 import { LabSidebar } from '@/features/lab';
 import { SidebarProvider } from '@/components/ui/sidebar';
+import { buildLoginRedirectUrl } from '@/lib/desktop-auth';
 import { getWorkspaces } from '@/features/lab';
 import { getSession } from '@/lib/server';
-import { getWwwUrl } from '@/lib/urls';
 import { redirect } from 'next/navigation';
 import type { PropsWithChildren } from 'react';
 
@@ -11,7 +11,7 @@ export const dynamic = 'force-dynamic';
 export default async function LabLayout({ children }: PropsWithChildren) {
   const session = await getSession();
   if (!session?.user) {
-    redirect(getWwwUrl('/auth/login'));
+    redirect(buildLoginRedirectUrl('/lab/workspaces'));
   }
 
   const userData = {
@@ -28,7 +28,7 @@ export default async function LabLayout({ children }: PropsWithChildren) {
 
   return (
     <SidebarProvider
-      className="h-svh overflow-hidden"
+      className="desktop-lab-root h-svh overflow-hidden"
       style={
         {
           '--sidebar-width': 'calc(var(--spacing) * 72)',
@@ -40,7 +40,7 @@ export default async function LabLayout({ children }: PropsWithChildren) {
         user={userData}
         workspaces={workspaceList}
       />
-      <main className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-sidebar">
+      <main className="desktop-lab-main flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-sidebar">
         {children}
       </main>
     </SidebarProvider>

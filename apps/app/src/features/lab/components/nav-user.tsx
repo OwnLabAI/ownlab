@@ -1,6 +1,7 @@
 'use client';
 
 import { authClient } from '@/lib/auth-client';
+import { isDesktopAuthEnabled } from '@/lib/desktop-auth';
 import { getWwwUrl } from '@/lib/urls';
 import {
   ChevronsUpDown,
@@ -47,6 +48,11 @@ export function NavUser({
 
   const handleSignOut = async () => {
     await authClient.signOut();
+    if (isDesktopAuthEnabled() && window.ownlabDesktop) {
+      window.location.assign('/desktop-auth/login');
+      return;
+    }
+
     window.location.assign(getWwwUrl('/'));
   };
 

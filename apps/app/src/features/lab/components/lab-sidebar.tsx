@@ -15,6 +15,7 @@ import {
   SidebarFooter,
   SidebarHeader,
   SidebarRail,
+  SidebarTrigger,
 } from '@/components/ui/sidebar';
 
 type UserData = {
@@ -55,23 +56,18 @@ export function LabSidebar({
     : user;
 
   return (
-    <Sidebar className="border-r border-border/60" {...props}>
-      <SidebarHeader>
-        <div className="flex items-center justify-start p-2">
-          <a href="/lab/workspaces">
-            <>
-              <img
-                src="/logo-name.svg"
-                alt="OwnLab Logo"
-                className="h-6 w-auto dark:hidden"
-              />
-              <img
-                src="/logo-name-dark.svg"
-                alt="OwnLab Logo"
-                className="hidden h-6 w-auto dark:block"
-              />
-            </>
-          </a>
+    <Sidebar
+      className="border-r border-border/60"
+      collapsible="icon"
+      {...props}
+    >
+      <SidebarHeader className="gap-0 p-0">
+        <div className="desktop-macos-chrome-row flex h-10 min-h-10 shrink-0 items-center gap-1 px-2">
+          <SidebarTrigger className="desktop-window-no-drag size-7 shrink-0" />
+          <div
+            className="hidden min-h-0 flex-1 self-stretch md:block desktop-window-drag"
+            aria-hidden
+          />
         </div>
         <ClientOnly>
           <LabToolbar />

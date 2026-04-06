@@ -4,7 +4,6 @@ import Link from 'next/link';
 import { EntityIcon } from '@/components/entity-icon';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { SidebarTrigger } from '@/components/ui/sidebar';
 import {
   Dialog,
   DialogContent,
@@ -70,9 +69,8 @@ export function TeamHeader({
   const workerCount = members.filter((member) => member.teamRole === 'worker').length;
 
   return (
-    <header className="flex min-h-12 shrink-0 flex-wrap items-start justify-between gap-2 border-b px-4 py-2">
+    <header className="flex min-h-12 shrink-0 flex-wrap items-start justify-between gap-2 px-4 py-2">
       <div className="flex min-w-0 flex-1 items-center gap-2">
-        <SidebarTrigger className="-ml-1" />
         <EntityIcon icon={team.icon} name={team.name} fallback="TM" className="size-8 rounded-lg" />
         <div className="flex min-w-0 flex-wrap items-center gap-1.5 text-sm leading-tight">
           <span className="max-w-full truncate font-semibold" title={team.name}>

@@ -7,6 +7,7 @@ import {
   fontNotoSansMono,
   fontNotoSerif,
 } from '@/assets/fonts';
+import { DesktopEnvironment } from '@/components/desktop/desktop-environment';
 import { Toaster } from '@/components/ui/sonner';
 import { cn } from '@/lib/utils';
 
@@ -33,6 +34,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         )}
       >
         <Providers>
+          <DesktopEnvironment />
           {children}
           <Toaster richColors position="top-right" offset={64} />
         </Providers>
