@@ -1,13 +1,30 @@
 import { routing } from '@/i18n/routing';
 import type { Locale } from 'next-intl';
 
-const baseUrl =
-  process.env.NEXT_PUBLIC_BASE_URL ??
-  `http://localhost:${process.env.PORT ?? 3001}`;
+function normalizeAbsoluteUrl(value: string, fallbackProtocol = 'https'): string {
+  const trimmed = value.trim().replace(/\/+$/, '');
 
-const appBaseUrl =
-  process.env.NEXT_PUBLIC_APP_URL ??
-  'http://localhost:3000';
+  if (!trimmed) {
+    return trimmed;
+  }
+
+  if (/^https?:\/\//i.test(trimmed)) {
+    return trimmed;
+  }
+
+  return `${fallbackProtocol}://${trimmed}`;
+}
+
+const baseUrl = normalizeAbsoluteUrl(
+  process.env.NEXT_PUBLIC_BASE_URL ??
+    `http://localhost:${process.env.PORT ?? 3001}`,
+  'https',
+);
+
+const appBaseUrl = normalizeAbsoluteUrl(
+  process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000',
+  'https',
+);
 
 export function getBaseUrl(): string {
   return baseUrl;
