@@ -17,13 +17,6 @@ const WORKSPACE_SOURCES_CHANGED_EVENT = 'workspace-sources-changed';
 
 type SourceDialogType = 'webpage' | 'image' | 'video' | null;
 
-function formatTime(value: string | null) {
-  if (!value) return 'Not synced yet';
-  const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) return 'Not synced yet';
-  return parsed.toLocaleString();
-}
-
 function getTypeLabel(type: WorkspaceSourceRecord['type']) {
   switch (type) {
     case 'webpage':
@@ -35,11 +28,6 @@ function getTypeLabel(type: WorkspaceSourceRecord['type']) {
     default:
       return 'Source';
   }
-}
-
-function getStatusLabel(status: string) {
-  if (status === 'completed') return 'Ready';
-  return status;
 }
 
 export function dispatchWorkspaceSourcesChanged(workspaceId: string) {
@@ -99,14 +87,7 @@ export function SourcesPanel({
   const sourceItems = sources.map((source) => ({
     id: source.id,
     title: source.title,
-    subtitle:
-      source.summary ??
-      source.filePath ??
-      (typeof source.metadata?.url === 'string' ? source.metadata.url : '') ??
-      '',
     type: source.type,
-    status: source.status,
-    updatedAt: source.updatedAt,
   }));
 
   useEffect(() => {
@@ -167,8 +148,12 @@ export function SourcesPanel({
           content,
           metadata,
         });
-        dispatchWorkspaceSourcesChanged(workspaceId);
+        setSources((prev) => {
+          const next = [created, ...prev.filter((source) => source.id !== created.id)];
+          return next;
+        });
         onSourceSelect(created.id);
+        dispatchWorkspaceSourcesChanged(workspaceId);
         resetDialog();
         toast.success('Source added.');
       } catch (nextError) {
@@ -265,16 +250,6 @@ export function SourcesPanel({
                         )}
                         <span className="truncate text-sm font-medium text-foreground">{item.title}</span>
                       </div>
-                      <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
-                        <span>{getTypeLabel(item.type)}</span>
-                        <span>{getStatusLabel(item.status)}</span>
-                        <span>{formatTime(item.updatedAt)}</span>
-                      </div>
-                      {item.subtitle ? (
-                        <p className="mt-2 line-clamp-2 text-xs leading-5 text-muted-foreground">
-                          {item.subtitle}
-                        </p>
-                      ) : null}
                     </div>
                   </div>
                 </button>

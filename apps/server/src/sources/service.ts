@@ -11,6 +11,8 @@ import { validateWorkspaceRoot } from "../workspace/file-tree.js";
 
 type TranscriptSegment = {
   text?: string;
+  offset?: number;
+  duration?: number;
 };
 
 function sanitizeSegment(value: string) {
@@ -116,29 +118,108 @@ function buildUrlMarkdown(input: {
   return `${parts.join("\n\n").trim()}\n`;
 }
 
-function matchMetaContent(html: string, attribute: "name" | "property", key: string) {
-  const patterns = [
-    new RegExp(
-      `<meta[^>]+${attribute}=["']${key}["'][^>]+content=["']([\\s\\S]*?)["'][^>]*>`,
-      "i",
-    ),
-    new RegExp(
-      `<meta[^>]+content=["']([\\s\\S]*?)["'][^>]+${attribute}=["']${key}["'][^>]*>`,
-      "i",
-    ),
-  ];
-  for (const pattern of patterns) {
-    const match = html.match(pattern);
-    if (match?.[1]) {
-      return match[1].trim();
+function collapseWhitespace(value: string | null | undefined) {
+  if (!value) {
+    return null;
+  }
+
+  const normalized = value.replace(/\s+/g, " ").trim();
+  return normalized.length > 0 ? normalized : null;
+}
+
+function getMetaContent(document: Document, selectors: string[]) {
+  for (const selector of selectors) {
+    const value = collapseWhitespace(document.querySelector(selector)?.getAttribute("content"));
+    if (value) {
+      return value;
     }
   }
+
   return null;
 }
 
-function truncateText(value: string, maxLength: number) {
-  if (value.length <= maxLength) return value;
-  return `${value.slice(0, maxLength).trim()}...`;
+function escapeMarkdownText(value: string) {
+  return value.replace(/([\\`*_[\]{}()#+\-.!|>])/g, "\\$1");
+}
+
+function stripLeadingHeading(markdown: string, title: string) {
+  const normalizedTitle = title.trim().toLowerCase();
+  const lines = markdown.trim().split(/\r?\n/);
+  const firstLine = lines[0]?.trim() ?? "";
+  const firstHeading = firstLine.replace(/^#+\s*/, "").trim().toLowerCase();
+
+  if (firstHeading && firstHeading === normalizedTitle) {
+    return lines.slice(1).join("\n").trim();
+  }
+
+  return markdown.trim();
+}
+
+function sanitizeDocumentTitle(input: {
+  title: string | null;
+  siteName?: string | null;
+}) {
+  const title = collapseWhitespace(input.title);
+  if (!title) {
+    return null;
+  }
+
+  const siteName = collapseWhitespace(input.siteName)?.toLowerCase() ?? null;
+  const separators = [" | ", " - ", " — ", " – ", " · ", " —"];
+  for (const separator of separators) {
+    if (!title.includes(separator)) {
+      continue;
+    }
+
+    const parts = title
+      .split(separator)
+      .map((part) => collapseWhitespace(part))
+      .filter((part): part is string => Boolean(part));
+
+    if (parts.length < 2) {
+      continue;
+    }
+
+    if (siteName) {
+      const filtered = parts.filter((part) => part.toLowerCase() !== siteName);
+      if (filtered.length > 0 && filtered.length < parts.length) {
+        return filtered[0] ?? title;
+      }
+    }
+
+    return parts[0] ?? title;
+  }
+
+  return title;
+}
+
+function buildWebpageMarkdown(input: {
+  title: string;
+  url: string;
+  siteName?: string | null;
+  byline?: string | null;
+  description?: string | null;
+  markdown: string;
+}) {
+  const parts = [`# ${input.title.trim()}`, `[Open original webpage](${input.url.trim()})`];
+
+  if (input.siteName?.trim()) {
+    parts.push(`Site: ${escapeMarkdownText(input.siteName.trim())}`);
+  }
+
+  if (input.byline?.trim()) {
+    parts.push(`Byline: ${escapeMarkdownText(input.byline.trim())}`);
+  }
+
+  if (input.description?.trim()) {
+    parts.push(input.description.trim());
+  }
+
+  if (input.markdown.trim()) {
+    parts.push(stripLeadingHeading(input.markdown, input.title));
+  }
+
+  return `${parts.join("\n\n").trim()}\n`;
 }
 
 async function fetchHtmlDocument(url: string) {
@@ -177,25 +258,47 @@ function htmlToMarkdown(html: string) {
 
 function extractWebpageMarkdown(input: { html: string; url: string }) {
   const dom = new JSDOM(input.html, { url: input.url });
+  const document = dom.window.document;
   const reader = new Readability(dom.window.document);
   const article = reader.parse();
-
+  const siteName =
+    getMetaContent(document, [
+      'meta[property="og:site_name"]',
+      'meta[name="application-name"]',
+      'meta[name="apple-mobile-web-app-title"]',
+    ]) ||
+    collapseWhitespace(article?.siteName) ||
+    null;
+  const openGraphTitle = getMetaContent(document, [
+    'meta[property="og:title"]',
+    'meta[name="twitter:title"]',
+    'meta[name="title"]',
+  ]);
+  const documentTitle = sanitizeDocumentTitle({
+    title: collapseWhitespace(document.title),
+    siteName,
+  });
+  const readabilityTitle = sanitizeDocumentTitle({
+    title: collapseWhitespace(article?.title),
+    siteName,
+  });
   const title =
-    article?.title?.trim() ||
-    matchMetaContent(input.html, "property", "og:title") ||
-    dom.window.document.title?.trim() ||
+    openGraphTitle ||
+    documentTitle ||
+    readabilityTitle ||
     "Untitled Page";
   const description =
-    article?.excerpt?.trim() ||
-    matchMetaContent(input.html, "property", "og:description") ||
-    matchMetaContent(input.html, "name", "description");
-  const siteName =
-    article?.siteName?.trim() ||
-    matchMetaContent(input.html, "property", "og:site_name");
-  const byline = article?.byline?.trim() || null;
-  const contentHtml = article?.content?.trim() || dom.window.document.body?.innerHTML || "";
+    getMetaContent(document, [
+      'meta[property="og:description"]',
+      'meta[name="twitter:description"]',
+      'meta[name="description"]',
+    ]) ||
+    collapseWhitespace(article?.excerpt) ||
+    null;
+  const byline = collapseWhitespace(article?.byline) || null;
+  const contentHtml = article?.content?.trim() || document.body?.innerHTML || "";
   const markdown = htmlToMarkdown(contentHtml);
-  const plainText = article?.textContent?.trim() || dom.window.document.body?.textContent?.trim() || "";
+  const plainText = collapseWhitespace(article?.textContent) || collapseWhitespace(document.body?.textContent) || "";
 
   if (!markdown && !plainText) {
     throw new Error("WEBPAGE_EXTRACTION_EMPTY");
@@ -206,7 +309,14 @@ function extractWebpageMarkdown(input: { html: string; url: string }) {
     description,
     siteName,
     byline,
-    markdown: markdown || plainText,
+    markdown: buildWebpageMarkdown({
+      title,
+      url: input.url,
+      siteName,
+      byline,
+      description,
+      markdown: markdown || plainText,
+    }),
     textLength: plainText.length,
   };
 }
@@ -277,6 +387,90 @@ function buildVideoMarkdown(input: {
   return `${parts.join("\n\n").trim()}\n`;
 }
 
+function getVideoTranscriptFormatVersion(metadata: Record<string, unknown>) {
+  return typeof metadata.sourceFormat === "string" ? metadata.sourceFormat : null;
+}
+
+function formatTranscriptTimestamp(seconds: number) {
+  const totalSeconds = Math.max(0, Math.floor(seconds));
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const remainingSeconds = totalSeconds % 60;
+
+  if (hours > 0) {
+    return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(remainingSeconds).padStart(2, "0")}`;
+  }
+
+  return `${String(minutes).padStart(2, "0")}:${String(remainingSeconds).padStart(2, "0")}`;
+}
+
+function normalizeTranscriptOffset(offset: number) {
+  if (!Number.isFinite(offset)) {
+    return 0;
+  }
+
+  // youtube-transcript offsets are often milliseconds.
+  if (offset > 12 * 60 * 60) {
+    return offset / 1000;
+  }
+
+  return offset;
+}
+
+function formatTranscriptSegments(segments: TranscriptSegment[]) {
+  const paragraphs: string[] = [];
+  let currentStart: number | null = null;
+  let currentTextParts: string[] = [];
+
+  function flushParagraph() {
+    if (currentTextParts.length === 0) {
+      return;
+    }
+
+    const paragraphText = currentTextParts.join(" ").replace(/\s+/g, " ").trim();
+    if (!paragraphText) {
+      currentTextParts = [];
+      currentStart = null;
+      return;
+    }
+
+    const timestamp = currentStart !== null ? formatTranscriptTimestamp(currentStart) : null;
+    paragraphs.push(timestamp ? `[${timestamp}] ${paragraphText}` : paragraphText);
+    currentTextParts = [];
+    currentStart = null;
+  }
+
+  for (const segment of segments) {
+    const text = collapseWhitespace(segment.text);
+    if (!text) {
+      continue;
+    }
+
+    const offset =
+      typeof segment.offset === "number" && Number.isFinite(segment.offset)
+        ? normalizeTranscriptOffset(segment.offset)
+        : null;
+
+    if (currentStart === null) {
+      currentStart = offset ?? 0;
+    }
+
+    currentTextParts.push(text);
+
+    const hasSentenceBoundary = /[.!?]["']?$/.test(text);
+    const shouldSplitForTime =
+      offset !== null && currentStart !== null && offset - currentStart >= 30;
+
+    if (hasSentenceBoundary || shouldSplitForTime) {
+      flushParagraph();
+    }
+  }
+
+  flushParagraph();
+
+  return paragraphs.join("\n\n").trim();
+}
+
 async function fetchYoutubeTranscript(url: string) {
   try {
     const fetchTranscript =
@@ -295,13 +489,8 @@ async function fetchYoutubeTranscript(url: string) {
       throw new Error("VIDEO_TRANSCRIPT_MODULE_INVALID");
     }
 
-    const transcript = await fetchTranscript(url);
-    const text = transcript
-      .map((segment: TranscriptSegment) => segment.text?.trim())
-      .filter(Boolean)
-      .join(" ")
-      .replace(/[ ]{2,}/g, " ")
-      .trim();
+    const transcript = (await fetchTranscript(url)) as TranscriptSegment[];
+    const text = formatTranscriptSegments(transcript);
     return text || null;
   } catch {
     return null;
@@ -354,10 +543,21 @@ async function readSourceFileContent(rootPath: string, relativeFilePath: string 
   return readFile(absolutePath, "utf8");
 }
 
+async function writeSourceFileContent(rootPath: string, relativeFilePath: string, content: string) {
+  const absolutePath = path.join(rootPath, relativeFilePath);
+  await mkdir(path.dirname(absolutePath), { recursive: true });
+  await writeFile(absolutePath, content, "utf8");
+}
+
 function toWorkspaceSource(
   row: typeof workspaceSources.$inferSelect,
   fileContent: string | null,
 ): WorkspaceSource {
+  const metadataDescription =
+    typeof row.metadata?.description === "string" && row.metadata.description.trim()
+      ? row.metadata.description.trim()
+      : null;
+
   return {
     id: row.id,
     workspaceId: row.workspaceId,
@@ -365,7 +565,7 @@ function toWorkspaceSource(
     type: row.type as WorkspaceSource["type"],
     title: row.title,
     status: row.status,
-    summary: row.summary ?? null,
+    summary: row.summary ?? metadataDescription ?? null,
     content: fileContent,
     filePath: row.filePath ?? null,
     metadata: row.metadata ?? {},
@@ -402,6 +602,58 @@ export function createSourceService(db: Db) {
     return { workspace, rootPath };
   }
 
+  async function maybeRefreshVideoSourceContent(
+    rootPath: string,
+    row: typeof workspaceSources.$inferSelect,
+  ) {
+    if (
+      row.type !== "video" ||
+      !row.filePath ||
+      typeof row.metadata?.url !== "string" ||
+      row.metadata.url.trim().length === 0
+    ) {
+      return row;
+    }
+
+    const metadata = row.metadata ?? {};
+    const videoUrl = typeof metadata.url === "string" ? metadata.url : "";
+    const currentFormat = getVideoTranscriptFormatVersion(metadata);
+    if (currentFormat === "video_markdown_v3") {
+      return row;
+    }
+
+    const transcript = await fetchYoutubeTranscript(videoUrl);
+    const refreshedContent = buildVideoMarkdown({
+      title: row.title,
+      url: videoUrl,
+      authorName: typeof metadata.authorName === "string" ? metadata.authorName : null,
+      authorUrl: typeof metadata.authorUrl === "string" ? metadata.authorUrl : null,
+      providerName: "YouTube",
+      summary: row.summary,
+      transcript: transcript || "Transcript unavailable.",
+    });
+
+    await writeSourceFileContent(rootPath, row.filePath, refreshedContent);
+
+    const nextMetadata = {
+      ...metadata,
+      sourceFormat: "video_markdown_v3",
+      transcriptAvailable: Boolean(transcript),
+      transcriptLength: transcript?.length ?? 0,
+    };
+
+    const [updatedRow] = await db
+      .update(workspaceSources)
+      .set({
+        metadata: nextMetadata,
+        updatedAt: new Date(),
+      })
+      .where(eq(workspaceSources.id, row.id))
+      .returning();
+
+    return updatedRow ?? row;
+  }
+
   async function listWorkspaceSources(workspaceId: string): Promise<WorkspaceSource[]> {
     const { rootPath } = await getWorkspaceRootPath(workspaceId);
 
@@ -421,15 +673,17 @@ export function createSourceService(db: Db) {
   async function getWorkspaceSource(workspaceId: string, sourceId: string): Promise<WorkspaceSource | null> {
     const { rootPath } = await getWorkspaceRootPath(workspaceId);
 
-    const [row] = await db
+    const [rawRow] = await db
       .select()
       .from(workspaceSources)
       .where(eq(workspaceSources.id, sourceId))
       .limit(1);
 
-    if (!row || row.workspaceId !== workspaceId) {
+    if (!rawRow || rawRow.workspaceId !== workspaceId) {
       return null;
     }
+
+    const row = await maybeRefreshVideoSourceContent(rootPath, rawRow);
 
     return toWorkspaceSource(row, await readSourceFileContent(rootPath, row.filePath ?? null));
   }
@@ -453,6 +707,10 @@ export function createSourceService(db: Db) {
       const { finalUrl, html } = await fetchHtmlDocument(url);
       const extracted = extractWebpageMarkdown({ html, url: finalUrl });
       const resolvedTitle = extracted.title || resolveSourceTitle(input);
+      const resolvedSummary =
+        extracted.description ||
+        input.summary?.trim() ||
+        null;
 
       const allocation = await allocateUniqueBasePath(rootPath, resolvedTitle, ".md");
       filePath = allocation.relativePath;
@@ -464,10 +722,15 @@ export function createSourceService(db: Db) {
         url: finalUrl,
         filePath,
         siteName: extracted.siteName,
-        description: extracted.description ?? input.summary?.trim() ?? null,
+        description: resolvedSummary,
         byline: extracted.byline,
         importedTitle: resolvedTitle,
         textLength: extracted.textLength,
+        sourceFormat: "webpage_markdown_v2",
+      };
+      input = {
+        ...input,
+        summary: resolvedSummary,
       };
     } else if (input.type === "video") {
       const rawUrl = typeof input.metadata?.url === "string" ? input.metadata.url : input.content?.trim() ?? "";
@@ -484,7 +747,7 @@ export function createSourceService(db: Db) {
         authorUrl: videoInfo.authorUrl,
         providerName: videoInfo.providerName ?? "YouTube",
         summary: input.summary,
-        transcript: transcript ? truncateText(transcript, 24000) : "Transcript unavailable.",
+        transcript: transcript || "Transcript unavailable.",
       });
       await mkdir(path.dirname(allocation.absolutePath), { recursive: true });
       await writeFile(allocation.absolutePath, fileContent, "utf8");
@@ -498,6 +761,8 @@ export function createSourceService(db: Db) {
         authorUrl: videoInfo.authorUrl,
         thumbnailUrl: videoInfo.thumbnailUrl,
         transcriptAvailable: Boolean(transcript),
+        transcriptLength: transcript?.length ?? 0,
+        sourceFormat: "video_markdown_v3",
       };
     } else if (input.type === "image") {
       const fileName = typeof input.metadata?.fileName === "string" ? input.metadata.fileName.trim() : "";
@@ -546,7 +811,10 @@ export function createSourceService(db: Db) {
           (typeof metadata.importedTitle === "string" && metadata.importedTitle.trim()) ||
           resolveSourceTitle(input),
         status: "ready",
-        summary: input.summary?.trim() || null,
+        summary:
+          input.summary?.trim() ||
+          (typeof metadata.description === "string" && metadata.description.trim()) ||
+          null,
         filePath,
         metadata,
         createdAt: now,
