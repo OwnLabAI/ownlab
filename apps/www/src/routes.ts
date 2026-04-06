@@ -14,7 +14,7 @@ export enum Routes {
   Docs = 'https://github.com/OwnLabAI/ownlab#readme',
   About = '/',
   Contact = '/auth/register',
-  Waitlist = '/auth/register',
+  Waitlist = '/waitlist',
   Changelog = 'https://github.com/OwnLabAI/ownlab/releases',
   Roadmap = 'https://github.com/OwnLabAI/ownlab',
   CookiePolicy = '/cookie',

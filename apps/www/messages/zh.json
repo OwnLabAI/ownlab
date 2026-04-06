@@ -476,14 +476,14 @@
           "roadmap": "路线图"
         }
       },
-      "company": {
-        "title": "公司",
-        "items": {
-          "about": "关于我们",
-          "contact": "联系我们",
-          "waitlist": "创建账号"
-        }
-      },
+    "company": {
+      "title": "公司",
+      "items": {
+        "about": "关于我们",
+        "contact": "联系我们",
+        "waitlist": "邮件列表"
+      }
+    },
       "legal": {
         "title": "法律",
         "items": {
@@ -788,14 +788,14 @@
   "HomePage": {
     "title": "OwnLab",
     "description": "OwnLab 是面向 AI 实验室的本地优先编排系统",
-    "hero": {
-      "title": "用 AI 构建你自己的实验室",
-      "description": "围绕真实本地工作区运行智能体、团队、任务和频道，而不是停留在孤立的演示界面里。",
-      "introduction": "了解 OwnLab",
-      "primary": "创建账号",
-      "secondary": "查看 GitHub",
-      "follow": "关注",
-      "read": "阅读博客"
+  "hero": {
+    "title": "用 AI 构建你自己的实验室",
+    "description": "围绕真实本地工作区运行智能体、团队、任务和频道，而不是停留在孤立的演示界面里。",
+    "introduction": "了解 OwnLab",
+    "primary": "加入等待列表",
+    "secondary": "查看 GitHub",
+    "follow": "关注",
+    "read": "阅读博客"
     },
     "logocloud": {
       "title": "您最爱公司都是我们的合作伙伴"

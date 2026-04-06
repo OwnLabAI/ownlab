@@ -476,14 +476,14 @@
           "roadmap": "Roadmap"
         }
       },
-      "company": {
-        "title": "Company",
-        "items": {
-          "about": "About",
-          "contact": "Contact",
-          "waitlist": "Create account"
-        }
-      },
+    "company": {
+      "title": "Company",
+      "items": {
+        "about": "About",
+        "contact": "Contact",
+        "waitlist": "Waitlist"
+      }
+    },
       "legal": {
         "title": "Legal",
         "items": {
@@ -788,14 +788,14 @@
   "HomePage": {
     "title": "OwnLab",
     "description": "OwnLab is a local-first orchestration system for AI labs",
-    "hero": {
-      "title": "Build your own lab with AI",
-      "description": "Run agents, teams, tasks, and channels around real local workspaces instead of isolated demos.",
-      "introduction": "Introducing OwnLab",
-      "primary": "Create account",
-      "secondary": "View on GitHub",
-      "follow": "Follow",
-      "read": "Read Blog"
+  "hero": {
+    "title": "Build your own lab with AI",
+    "description": "Run agents, teams, tasks, and channels around real local workspaces instead of isolated demos.",
+    "introduction": "Introducing OwnLab",
+    "primary": "Join the waitlist",
+    "secondary": "View on GitHub",
+    "follow": "Follow",
+    "read": "Read Blog"
     },
     "logocloud": {
       "title": "Your favorite companies are our partners"

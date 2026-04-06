@@ -77,3 +77,19 @@ export const verification = pgTable('verification', {
   createdAt: timestamp('created_at'),
   updatedAt: timestamp('updated_at'),
 });
+
+export const waitlistEntry = pgTable(
+  'waitlist_entry',
+  {
+    id: text('id').primaryKey(),
+    email: text('email').notNull().unique(),
+    source: text('source').notNull().default('website'),
+    locale: text('locale'),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  },
+  (table) => ({
+    waitlistEntryEmailIdx: index('waitlist_entry_email_idx').on(table.email),
+    waitlistEntrySourceIdx: index('waitlist_entry_source_idx').on(table.source),
+  }),
+);

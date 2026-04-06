@@ -30,23 +30,23 @@ export default function FeaturesSection() {
 
   const images = {
     'item-1': {
-      image: '/blocks/charts-light.png',
-      darkImage: '/blocks/charts.png',
+      image: '/feature-light.png',
+      darkImage: '/feature-dark.png',
       alt: 'Workspace-backed execution',
     },
     'item-2': {
-      image: '/blocks/music-light.png',
-      darkImage: '/blocks/music.png',
+      image: '/feature-light.png',
+      darkImage: '/feature-dark.png',
       alt: 'Channel-first collaboration',
     },
     'item-3': {
-      image: '/blocks/mail2-light.png',
-      darkImage: '/blocks/mail2.png',
+      image: '/feature-light.png',
+      darkImage: '/feature-dark.png',
       alt: 'Agents and teams',
     },
     'item-4': {
-      image: '/blocks/payments-light.png',
-      darkImage: '/blocks/payments.png',
+      image: '/feature-light.png',
+      darkImage: '/feature-dark.png',
       alt: 'Taskboards and heartbeat runs',
     },
   };
