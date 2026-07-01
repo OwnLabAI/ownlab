@@ -1,24 +1,55 @@
-# OwnLab
+<p align="center">
+  <img src="./docs/assets/logo-name.svg" alt="OwnLab" width="220" />
+</p>
 
-[English README](./README.md)
+<p align="center">
+  <strong>面向实验室、研究者与 agentic research teams 的开源 AI science workbench。</strong>
+</p>
 
-OwnLab 是一个以 desktop 为主的 humans-agents 协作开源平台。
+<p align="center">
+  <a href="./README.md">English README</a>
+</p>
+
+<p align="center">
+  <img src="./apps/www/public/app-light.png" alt="OwnLab app preview" width="860" />
+</p>
+
+OwnLab 是一个开源、desktop-first 的 AI workbench，面向科学研究与技术工作。它把 workspaces、specialist agents、可复用 skills、tasks、files、code 和可复现 artifacts 放进同一个 local-first 环境里。
 
 ## OwnLab 是做什么的
 
-- ✅ 如果你想构建一个自动化实验室，
-- ✅ 如果你想构建一个自动化公司，
-- ✅ 如果你想构建一个自动化工程团队，
-- ✅ 如果你想同时拥有上面的一切，那么你应该使用 OwnLab。
+- ✅ 如果你想要一个面向科学与技术团队的开源 AI workbench，
+- ✅ 如果你希望 agents 能阅读论文、检查文件、编写代码、运行工具，并产出可审计的 research artifacts，
+- ✅ 如果你希望把实验协议、分析流程、文献综述工作流和领域知识沉淀成可复用 skills，
+- ✅ 如果你希望协调 specialist agents 完成研究、工程、数据分析、写作、review 和运营工作，
+- ✅ 如果你希望敏感数据集和项目上下文留在自己的机器或基础设施中，
+- ✅ 如果你想构建一个自动化实验室、自动化工程团队或自动化公司，那么你应该使用 OwnLab。
 
 ## 功能特性
 
+|                                                                 |                                                              |
+| --------------------------------------------------------------- | ------------------------------------------------------------ |
+| **Workspaces** 把文件、对话、工具、channels 和 artifacts 放在一起。 | **Agents** 构建带有 skills、memory、tools 和 agency 的 specialist runtimes。 |
+| **Teams** 将 agents 组织成包含 leaders、reviewers 和 workers 的研究团队。 | **Tasks** 将 scheduled、long-running 或 automatic 工作委派给 agents 和 teams。 |
 
-|                                                    |                                                          |
-| -------------------------------------------------- | -------------------------------------------------------- |
-| **Workspaces** 在一个 channel 中和多个 agents 协作，一起把工作完成。 | **Agents** 构建不同的 runtime，并为它们注入真正的 agency 和 skills。      |
-| **Teams** 将 agents 组织成包含 leader 和 worker 的团队。      | **Tasks** 把 scheduled 或 automatic 的工作委派给 agents 和 teams。 |
+## 产品预览
 
+| Workspace | Agents |
+| --- | --- |
+| ![Workspace](./docs/assets/workspace.png) | ![Agents](./docs/assets/agent.png) |
+
+| Teams | Tasks |
+| --- | --- |
+| ![Teams](./docs/assets/team.png) | ![Tasks](./docs/assets/task.png) |
+
+## 为什么是 OwnLab
+
+现代研究工作被分散在论文、notebooks、数据库、terminal、scripts、cloud compute、团队聊天和 manuscript tools 之间。OwnLab 的目标是让这些工作回到一个连续的研究环境中：
+
+- 用 agents 运行多步骤研究工作流，让它们能够 plan、execute、review 和 iterate。
+- 产出带有充分上下文的 artifacts，方便理解它们是如何生成的。
+- 用 skills 封装实验协议、分析方法、领域 playbooks 和实验室专属工作流。
+- 以 Desktop app 作为主要体验，同时保留 Web app、API server 和 CLI 方便开发与集成。
 
 ## 快速开始
 
@@ -59,7 +90,7 @@ pnpm dev
 ```bash
 curl http://localhost:3100/health
 curl http://localhost:3100/api/agents
-curl http://localhost:3100/api/workspaces
+curl http://localhost:3100/api/workspace
 ```
 
 CLI（在仓库根目录，开发时无需先 build）：
@@ -86,7 +117,7 @@ API 挂载在 `/api` 下，主要包括：
 
 - `/api/agents`
 - `/api/teams`
-- `/api/workspaces`
+- `/api/workspace`
 - `/api/channels`
 - `/api/taskboards`
 - `/api/tasks`
@@ -147,4 +178,3 @@ pnpm ownlab --help
 - ⚪ 在 tasks 中支持 auto mode，例如 auto-research
 - ⚪ 自动创建 tasks
 - ⚪ 更好的文档
-
