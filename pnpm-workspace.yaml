@@ -3,3 +3,6 @@ packages:
   - packages/*
   - packages/plugins/*
   - packages/adapters/*
+
+overrides:
+  '@esbuild-kit/core-utils>esbuild': ^0.25.12

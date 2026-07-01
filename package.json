@@ -4,8 +4,8 @@
   "type": "module",
   "scripts": {
     "dev": "pnpm run dev:web",
-    "dev:web": "pnpm run dev:server & pnpm run dev:app",
-    "dev:all": "pnpm run dev:web & pnpm run dev:www",
+    "dev:web": "pnpm --parallel --filter @ownlab/server --filter @ownlab/app dev",
+    "dev:all": "pnpm --parallel --filter @ownlab/server --filter @ownlab/app --filter @ownlab/www dev",
     "dev:server": "pnpm --filter @ownlab/server dev",
     "dev:app": "pnpm --filter @ownlab/app dev",
     "dev:www": "pnpm --filter @ownlab/www dev",
@@ -30,10 +30,5 @@
   "engines": {
     "node": ">=20"
   },
-  "packageManager": "pnpm@9.15.4",
-  "pnpm": {
-    "overrides": {
-      "@esbuild-kit/core-utils>esbuild": "^0.25.12"
-    }
-  }
+  "packageManager": "pnpm@9.15.4"
 }
