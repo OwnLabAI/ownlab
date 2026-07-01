@@ -1,23 +1,19 @@
 import { LabSidebar } from '@/features/lab';
 import { SidebarProvider } from '@/components/ui/sidebar';
-import { buildLoginRedirectUrl } from '@/lib/desktop-auth';
 import { getWorkspaces } from '@/features/lab';
 import { getSession } from '@/lib/server';
-import { redirect } from 'next/navigation';
 import type { PropsWithChildren } from 'react';
 
 export const dynamic = 'force-dynamic';
 
 export default async function LabLayout({ children }: PropsWithChildren) {
   const session = await getSession();
-  if (!session?.user) {
-    redirect(buildLoginRedirectUrl('/lab/workspaces'));
-  }
+  const user = session?.user;
 
   const userData = {
-    name: session.user.name || session.user.email || 'OwnLab User',
-    email: session.user.email || '',
-    avatar: session.user.image || '',
+    name: user?.name || user?.email || 'OwnLab Guest',
+    email: user?.email || '',
+    avatar: user?.image || '',
   };
 
   const { workspaces } = await getWorkspaces();

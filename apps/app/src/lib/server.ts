@@ -2,7 +2,7 @@ import 'server-only';
 
 import { headers } from 'next/headers';
 import { cache } from 'react';
-import { DESKTOP_SESSION_HEADER, parseDesktopSessionHeader } from './desktop-auth';
+import { DESKTOP_SESSION_HEADER, isHostedAuthEnabled, parseDesktopSessionHeader } from './desktop-auth';
 import { getWwwInternalUrl } from './urls';
 
 export type HostedSession = {
@@ -26,6 +26,10 @@ export const getSession = cache(async (): Promise<HostedSession> => {
 
     if (desktopSession?.user) {
       return desktopSession;
+    }
+
+    if (!isHostedAuthEnabled()) {
+      return null;
     }
 
     const response = await fetch(getWwwInternalUrl('/api/auth/get-session'), {

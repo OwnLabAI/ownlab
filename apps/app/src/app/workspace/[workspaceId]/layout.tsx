@@ -1,12 +1,9 @@
 import { TooltipProvider } from '@/components/ui/tooltip';
-import { buildLoginRedirectUrl } from '@/lib/desktop-auth';
 import { getWorkspaces } from '@/features/lab';
 import {
   WorkspaceContainer,
   getItemsByWorkspace,
 } from '@/features/workspace';
-import { getSession } from '@/lib/server';
-import { redirect } from 'next/navigation';
 import type { PropsWithChildren } from 'react';
 
 export const dynamic = 'force-dynamic';
@@ -18,10 +15,6 @@ export default async function WorkspaceLayout({
   params: Promise<{ workspaceId: string }>;
 }>) {
   const { workspaceId } = await params;
-  const session = await getSession();
-  if (!session?.user) {
-    redirect(buildLoginRedirectUrl(`/workspace/${workspaceId}`));
-  }
 
   const [items, { workspaces }] = await Promise.all([
     getItemsByWorkspace(workspaceId),

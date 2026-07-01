@@ -6,6 +6,14 @@ export function isDesktopAuthEnabled(): boolean {
   return process.env.OWNLAB_DESKTOP_AUTH_ENABLED === 'true' || process.env.NEXT_PUBLIC_OWNLAB_DESKTOP === 'true';
 }
 
+export function isHostedAuthEnabled(): boolean {
+  return process.env.OWNLAB_HOSTED_AUTH_ENABLED === 'true' || process.env.NEXT_PUBLIC_OWNLAB_HOSTED_AUTH_ENABLED === 'true';
+}
+
+export function isAuthRequired(): boolean {
+  return process.env.OWNLAB_REQUIRE_AUTH === 'true' || process.env.NEXT_PUBLIC_OWNLAB_REQUIRE_AUTH === 'true';
+}
+
 export function buildLoginRedirectUrl(callbackUrl: string): string {
   const normalizedCallbackUrl = normalizeCallbackUrl(callbackUrl);
 

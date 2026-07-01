@@ -1,6 +1,6 @@
 import { createAuthClient } from 'better-auth/react';
 import { useEffect, useState } from 'react';
-import { isDesktopAuthEnabled } from './desktop-auth';
+import { isDesktopAuthEnabled, isHostedAuthEnabled } from './desktop-auth';
 import { getWwwBaseUrl } from './urls';
 
 type HostedSession = {
@@ -63,10 +63,18 @@ function useDesktopSession() {
   return { data, isPending, error };
 }
 
+function useGuestSession() {
+  return { data: null, isPending: false, error: null };
+}
+
 export const authClient = {
   useSession: () => {
     if (typeof window !== 'undefined' && isDesktopAuthEnabled() && window.ownlabDesktop) {
       return useDesktopSession();
+    }
+
+    if (!isHostedAuthEnabled()) {
+      return useGuestSession();
     }
 
     return browserAuthClient.useSession();

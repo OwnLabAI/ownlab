@@ -1,6 +1,12 @@
 import { type NextRequest, NextResponse } from 'next/server';
-import { buildLoginRedirectUrl, DESKTOP_SESSION_HEADER, parseDesktopSessionHeader } from './lib/desktop-auth';
-import { getWwwBaseUrl, getWwwInternalUrl } from './lib/urls';
+import {
+  buildLoginRedirectUrl,
+  DESKTOP_SESSION_HEADER,
+  isAuthRequired,
+  isHostedAuthEnabled,
+  parseDesktopSessionHeader,
+} from './lib/desktop-auth';
+import { getWwwInternalUrl } from './lib/urls';
 
 function isProtectedRoute(pathname: string): boolean {
   return (
@@ -22,6 +28,10 @@ async function getHostedSession(req: NextRequest): Promise<HostedSession> {
   ) as HostedSession;
   if (desktopSession?.user) {
     return desktopSession;
+  }
+
+  if (!isHostedAuthEnabled()) {
+    return null;
   }
 
   try {
@@ -46,7 +56,7 @@ async function getHostedSession(req: NextRequest): Promise<HostedSession> {
 export default async function proxy(req: NextRequest) {
   const { nextUrl } = req;
 
-  if (!isProtectedRoute(nextUrl.pathname)) {
+  if (!isProtectedRoute(nextUrl.pathname) || !isAuthRequired()) {
     return NextResponse.next();
   }
 

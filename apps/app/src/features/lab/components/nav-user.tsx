@@ -1,7 +1,7 @@
 'use client';
 
 import { authClient } from '@/lib/auth-client';
-import { isDesktopAuthEnabled } from '@/lib/desktop-auth';
+import { isDesktopAuthEnabled, isHostedAuthEnabled } from '@/lib/desktop-auth';
 import { getWwwUrl } from '@/lib/urls';
 import {
   ChevronsUpDown,
@@ -45,6 +45,7 @@ export function NavUser({
   isAuthenticated?: boolean;
 }) {
   const { isMobile } = useSidebar();
+  const homepageHref = isHostedAuthEnabled() ? getWwwUrl('/') : '/lab/workspaces';
 
   const handleSignOut = async () => {
     await authClient.signOut();
@@ -53,7 +54,7 @@ export function NavUser({
       return;
     }
 
-    window.location.assign(getWwwUrl('/'));
+    window.location.assign(homepageHref);
   };
 
   return (
@@ -123,7 +124,7 @@ export function NavUser({
               </div>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
-                <a href={getWwwUrl('/')}>
+                <a href={homepageHref}>
                   <Home />
                   Homepage
                 </a>
