@@ -1,21 +1,55 @@
-[简体中文](./README_CN.md)
+<p align="center">
+  <img src="./docs/assets/logo-name.svg" alt="OwnLab" width="220" />
+</p>
 
-OwnLab is an open-source desktop-first platform for humans-agents collaboration.
+<p align="center">
+  <strong>An open-source AI science workbench for labs, researchers, and agentic research teams.</strong>
+</p>
+
+<p align="center">
+  <a href="./README_CN.md">简体中文</a>
+</p>
+
+<p align="center">
+  <img src="./apps/www/public/app-light.png" alt="OwnLab app preview" width="860" />
+</p>
+
+OwnLab is an open-source, desktop-first AI workbench for scientific and technical work. It brings workspaces, specialist agents, reusable skills, tasks, files, code, and reproducible artifacts into one local-first environment.
 
 ## What OwnLab Is For
 
-- ✅ If you want to build an automated lab,
-- ✅ If you want to build an automated company,
-- ✅ If you want to build an automated engineering team,
-- ✅ If you want all of the above at the same time, you should use OwnLab.
+- ✅ If you want an open-source alternative to a [Claude Science-style AI workbench](https://www.anthropic.com/news/claude-science-ai-workbench),
+- ✅ If you want agents that can read papers, inspect files, write code, run tools, and produce auditable research artifacts,
+- ✅ If you want to turn lab protocols, analysis pipelines, literature review workflows, and domain knowledge into reusable skills,
+- ✅ If you want to coordinate specialist agents across research, engineering, data analysis, writing, review, and operations,
+- ✅ If you want a local-first workspace where sensitive datasets and project context can stay on your own machine or infrastructure,
+- ✅ If you want to build an automated lab, an automated engineering team, or an automated company, you should use OwnLab.
 
 ## Features
 
-
 |                                                                                     |                                                                                  |
 | ----------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
-| **Workspaces** Talk with multiple agents in one channel and get work done together. | **Agents** Build different runtimes and inject them with real agency and skills. |
-| **Teams** Organize agents into teams with leaders and workers.                      | **Tasks** Delegate scheduled or automatic work to agents and teams.              |
+| **Workspaces** Bring files, conversations, tools, channels, and artifacts together. | **Agents** Build specialist runtimes with skills, memory, tools, and agency. |
+| **Teams** Organize agents into research groups with leaders, reviewers, and workers. | **Tasks** Delegate scheduled, long-running, or automatic work to agents and teams. |
+
+## Product Preview
+
+| Workspace | Agents |
+| --- | --- |
+| ![Workspace](./docs/assets/workspace.png) | ![Agents](./docs/assets/agent.png) |
+
+| Teams | Tasks |
+| --- | --- |
+| ![Teams](./docs/assets/team.png) | ![Tasks](./docs/assets/task.png) |
+
+## Why OwnLab
+
+Modern research is fragmented across papers, notebooks, databases, terminals, scripts, cloud compute, team chats, and manuscript tools. OwnLab is designed to make that work feel like one continuous research environment:
+
+- Run multi-step research workflows with agents that can plan, execute, review, and iterate.
+- Produce artifacts with enough context to understand how they were made.
+- Use skills to package protocols, analysis methods, domain playbooks, and lab-specific workflows.
+- Keep the desktop app as the primary experience while still exposing a web app, API server, and CLI for development.
 
 
 ## Quickstart
@@ -145,4 +179,3 @@ pnpm ownlab --help
 - ⚪ Support auto mode in tasks, such as auto-research
 - ⚪ Automatically create tasks
 - ⚪ Better docs
-
