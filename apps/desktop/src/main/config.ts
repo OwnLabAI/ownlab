@@ -48,7 +48,7 @@ export function createDesktopRuntimeConfig(): DesktopRuntimeConfig {
     appExternalUrl: process.env.OWNLAB_DESKTOP_APP_URL?.trim() || null,
     serverExternalUrl: process.env.OWNLAB_DESKTOP_SERVER_URL?.trim() || null,
     reuseExistingDevServices:
-      process.env.OWNLAB_DESKTOP_REUSE_EXISTING?.trim() !== 'false',
+      process.env.OWNLAB_DESKTOP_REUSE_EXISTING?.trim() === 'true',
     workspaceRoot,
     appRuntimeDir: path.join(runtimeRoot, 'app'),
     appRuntimeCwd: path.join(runtimeRoot, 'app', 'apps/app'),

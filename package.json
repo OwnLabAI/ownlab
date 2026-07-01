@@ -3,7 +3,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "pnpm run dev:server & pnpm run dev:app & pnpm run dev:www",
+    "dev": "pnpm run dev:web",
+    "dev:web": "pnpm run dev:server & pnpm run dev:app",
+    "dev:all": "pnpm run dev:web & pnpm run dev:www",
     "dev:server": "pnpm --filter @ownlab/server dev",
     "dev:app": "pnpm --filter @ownlab/app dev",
     "dev:www": "pnpm --filter @ownlab/www dev",

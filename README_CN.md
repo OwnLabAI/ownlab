@@ -66,18 +66,28 @@ cd ownlab
 pnpm install
 ```
 
-使用 OwnLab Desktop（推荐）：
+选择你想使用 OwnLab 的方式。
+
+### Desktop App
+
+如果你想要 local-first 的桌面体验，使用 Desktop。Desktop 应用会启动并管理自己的本地 app/server runtime，和浏览器里的 Web 栈隔离。
 
 ```bash
 pnpm dev:desktop
 ```
 
-这是本地使用 OwnLab 的推荐方式。Desktop 应用会承载完整产品体验，并负责本地运行时。
-
-如果你是在开发 Web 和 Server，也可以继续启动浏览器开发环境：
+如果你明确想让 Desktop 连接到已经启动的 Web app 和 API server，可以使用：
 
 ```bash
-pnpm dev
+pnpm dev:desktop:reuse
+```
+
+### Web App + API Server
+
+如果你想使用浏览器里的产品体验，或准备做自托管部署，使用 Web app + API server。
+
+```bash
+pnpm dev:web
 ```
 
 启动后地址：
@@ -108,7 +118,7 @@ pnpm ownlab health
 
 ```bash
 export DATABASE_URL="postgres://ownlab:ownlab@localhost:5432/ownlab"
-pnpm dev
+pnpm dev:web
 ```
 
 ## API 概览
@@ -158,6 +168,8 @@ ownlab/
 
 ```bash
 pnpm dev:desktop
+pnpm dev:desktop:reuse
+pnpm dev:web
 pnpm dev
 pnpm dev:server
 pnpm dev:app

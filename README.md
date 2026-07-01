@@ -67,18 +67,28 @@ cd ownlab
 pnpm install
 ```
 
-Run OwnLab Desktop in development:
+Choose how you want to run OwnLab.
+
+### Desktop App
+
+Use this when you want the local-first desktop experience. The desktop app starts and owns its own local app/server runtime, so it stays isolated from the browser-based Web stack.
 
 ```bash
 pnpm dev:desktop
 ```
 
-This is the recommended way to use OwnLab locally. The desktop app hosts the full product experience and manages the local runtime for you.
-
-If you are working on the web and server separately, you can still start the browser-based dev stack:
+To intentionally attach Desktop to an already-running Web app and API server, use:
 
 ```bash
-pnpm dev
+pnpm dev:desktop:reuse
+```
+
+### Web App + API Server
+
+Use this when you want the browser-based product experience or a self-hosted deployment shape.
+
+```bash
+pnpm dev:web
 ```
 
 That starts:
@@ -109,7 +119,7 @@ To use an external database instead:
 
 ```bash
 export DATABASE_URL="postgres://ownlab:ownlab@localhost:5432/ownlab"
-pnpm dev
+pnpm dev:web
 ```
 
 ## API Surface
@@ -159,6 +169,8 @@ Common commands:
 
 ```bash
 pnpm dev:desktop
+pnpm dev:desktop:reuse
+pnpm dev:web
 pnpm dev
 pnpm dev:server
 pnpm dev:app
