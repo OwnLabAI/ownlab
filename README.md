@@ -18,7 +18,7 @@ OwnLab is an open-source, desktop-first AI workbench for scientific and technica
 
 ## What OwnLab Is For
 
-- ✅ If you want an open-source alternative to a [Claude Science-style AI workbench](https://www.anthropic.com/news/claude-science-ai-workbench),
+- ✅ If you want an open-source AI workbench for scientific and technical teams,
 - ✅ If you want agents that can read papers, inspect files, write code, run tools, and produce auditable research artifacts,
 - ✅ If you want to turn lab protocols, analysis pipelines, literature review workflows, and domain knowledge into reusable skills,
 - ✅ If you want to coordinate specialist agents across research, engineering, data analysis, writing, review, and operations,
