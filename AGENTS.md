@@ -125,28 +125,28 @@ pnpm dev
 - `apps/server`
 - `apps/app`
 
-2. Treat code as the source of truth.
+1. Treat code as the source of truth.
 
 - Route names, entity names, and capabilities in docs or comments must match the implementation in `apps/server/src/app.ts` and the feature code.
 - Do not introduce new terminology for existing core entities unless you are intentionally migrating the product model.
 
-3. Preserve scope boundaries.
+1. Preserve scope boundaries.
 
 - Labs own the main entities.
 - Workspaces should remain clear filesystem-backed units.
 - Channels should remain scoped to a concrete surface such as workspace, agent DM, team, or task.
 
-4. Keep write flows traceable.
+1. Keep write flows traceable.
 
 - A state-changing flow should be understandable from UI action to API route to service layer to DB write.
 - Prefer explicit service functions over hidden side effects.
 
-5. Prefer additive evolution.
+1. Prefer additive evolution.
 
 - Extend the current model where possible.
 - Do not replace stable behavior or rename major concepts casually.
 
-6. Validate and fail clearly.
+1. Validate and fail clearly.
 
 - API routes should validate input and return predictable JSON error bodies.
 - UI should surface failures instead of swallowing them.
@@ -243,13 +243,13 @@ When changing the data model:
 pnpm --filter @ownlab/db generate
 ```
 
-5. Apply migrations when using an external database:
+1. Apply migrations when using an external database:
 
 ```sh
 pnpm --filter @ownlab/db migrate
 ```
 
-6. Validate the repo still compiles:
+1. Validate the repo still compiles:
 
 ```sh
 pnpm typecheck
@@ -281,5 +281,6 @@ pnpm typecheck
 pnpm build
 ```
 
-4. tests are updated or added when behavior changes materially
-5. user-facing docs such as `README.md` are updated when setup, routes, or product behavior changes
+1. tests are updated or added when behavior changes materially
+2. user-facing docs such as `README.md` are updated when setup, routes, or product behavior changes
+

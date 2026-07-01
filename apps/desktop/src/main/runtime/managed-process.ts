@@ -30,6 +30,7 @@ export class ManagedProcess {
       cwd: this.options.cwd,
       env: this.options.env,
       stdio: 'pipe',
+      windowsHide: true,
     });
 
     this.logWriter?.writeLine(

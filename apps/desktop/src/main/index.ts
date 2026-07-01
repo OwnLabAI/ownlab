@@ -17,6 +17,11 @@ const pendingProtocolUrls: string[] = [];
 
 const DESKTOP_PROTOCOL = 'ownlab';
 const DESKTOP_AUTH_COMPLETE_URL = `${DESKTOP_PROTOCOL}://auth/complete`;
+const DEFAULT_AUTH_CALLBACK_ORIGINS = [
+  'https://www.ownlab.app',
+  'http://localhost:3001',
+  'http://127.0.0.1:3001',
+];
 
 async function bootstrap() {
   const lockAcquired = app.requestSingleInstanceLock();
@@ -265,8 +270,9 @@ function buildAllowedAuthCallbackOrigins(config: ReturnType<typeof createDesktop
     }
   }
 
-  origins.add('http://localhost:3001');
-  origins.add('http://127.0.0.1:3001');
+  for (const origin of DEFAULT_AUTH_CALLBACK_ORIGINS) {
+    origins.add(origin);
+  }
 
   return [...origins];
 }

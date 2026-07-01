@@ -1,7 +1,3 @@
-<p>
-  <img src="./apps/app/public/logo-name.svg" alt="OwnLab" width="180" />
-</p>
-
 [简体中文](./README_CN.md)
 
 OwnLab is an open-source desktop-first platform for humans-agents collaboration.
@@ -15,36 +11,11 @@ OwnLab is an open-source desktop-first platform for humans-agents collaboration.
 
 ## Features
 
-<table>
-  <tr>
-    <td valign="top" width="50%">
-      <strong>Workspaces</strong><br />
-      Talk with multiple agents in one channel and get work done together.
-      <br /><br />
-      <img src="./docs/assets/workspace.png" alt="OwnLab workspace" />
-    </td>
-    <td valign="top" width="50%">
-      <strong>Agents</strong><br />
-      Build different runtimes and inject them with real agency and skills.
-      <br /><br />
-      <img src="./docs/assets/agent.png" alt="OwnLab agents" />
-    </td>
-  </tr>
-  <tr>
-    <td valign="top" width="50%">
-      <strong>Teams</strong><br />
-      Organize agents into teams with leaders and workers.
-      <br /><br />
-      <img src="./docs/assets/team.png" alt="OwnLab teams" />
-    </td>
-    <td valign="top" width="50%">
-      <strong>Tasks</strong><br />
-      Delegate scheduled or automatic work to agents and teams.
-      <br /><br />
-      <img src="./docs/assets/task.png" alt="OwnLab tasks" />
-    </td>
-  </tr>
-</table>
+
+|                                                                                     |                                                                                  |
+| ----------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| **Workspaces** Talk with multiple agents in one channel and get work done together. | **Agents** Build different runtimes and inject them with real agency and skills. |
+| **Teams** Organize agents into teams with leaders and workers.                      | **Tasks** Delegate scheduled or automatic work to agents and teams.              |
 
 
 ## Quickstart
@@ -166,6 +137,7 @@ pnpm db:generate
 pnpm db:migrate
 pnpm ownlab --help
 ```
+
 ## Roadmap
 
 - ⚪ Support more agent runtimes
@@ -173,3 +145,4 @@ pnpm ownlab --help
 - ⚪ Support auto mode in tasks, such as auto-research
 - ⚪ Automatically create tasks
 - ⚪ Better docs
+

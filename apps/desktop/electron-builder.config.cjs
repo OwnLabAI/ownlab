@@ -4,6 +4,7 @@ const path = require('node:path')
 module.exports = {
   appId: 'com.ownlab.desktop',
   productName: 'OwnLab',
+  icon: path.join(__dirname, 'build', 'icon.png'),
   electronDist: path.join(__dirname, 'node_modules', 'electron', 'dist'),
   afterPack: path.join(__dirname, 'scripts', 'after-pack.mjs'),
   directories: {
@@ -21,6 +22,7 @@ module.exports = {
     },
   ],
   mac: {
+    icon: path.join(__dirname, 'build', 'icon.png'),
     category: 'public.app-category.developer-tools',
     hardenedRuntime: true,
     gatekeeperAssess: false,

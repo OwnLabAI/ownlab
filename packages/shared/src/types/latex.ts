@@ -46,6 +46,15 @@ export interface LatexCompileResult {
   error?: string | null;
 }
 
+export interface LatexSavedOutput {
+  runId: string;
+  mainFilePath: string;
+  outputPdfPath: string;
+  logPath: string | null;
+  finishedAt: string;
+}
+
 export interface LatexWorkspaceFileList {
   files: string[];
+  detectedMainFilePath: string | null;
 }

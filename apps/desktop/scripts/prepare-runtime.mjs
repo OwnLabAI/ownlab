@@ -1,29 +1,18 @@
-import { cp, mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises';
+import { execFileSync } from 'node:child_process';
+import { cp, mkdir, readFile, readdir, rm, stat, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
 
 const desktopRoot = process.cwd();
 const workspaceRoot = path.resolve(desktopRoot, '../..');
 const runtimeRoot = path.join(desktopRoot, '.runtime');
-
-const ownlabPackages = [
-  'packages/shared',
-  'packages/db',
-  'packages/adapter-utils',
-  'packages/adapters/claude-local',
-  'packages/adapters/codex-local',
-  'packages/adapters/cursor-local',
-  'packages/adapters/gemini-local',
-  'packages/adapters/opencode-local',
-  'packages/adapters/pi-local',
-  'apps/server',
-];
+const serverRuntimeDir = path.join(runtimeRoot, 'server');
 
 await rm(runtimeRoot, { force: true, recursive: true });
 await mkdir(runtimeRoot, { recursive: true });
 
 await stageAppRuntime();
-await stageWorkspaceRuntime();
+await stageServerRuntime();
 
 async function stageAppRuntime() {
   const appStandaloneDir = path.join(workspaceRoot, 'apps/app/.next/standalone');
@@ -31,7 +20,10 @@ async function stageAppRuntime() {
   const appPublicDir = path.join(workspaceRoot, 'apps/app/public');
   const appRuntimeDir = path.join(runtimeRoot, 'app');
 
-  await cp(appStandaloneDir, appRuntimeDir, { recursive: true });
+  await cp(appStandaloneDir, appRuntimeDir, {
+    recursive: true,
+    dereference: true,
+  });
   await cp(
     appStaticDir,
     path.join(appRuntimeDir, 'apps/app/.next/static'),
@@ -42,85 +34,142 @@ async function stageAppRuntime() {
     path.join(appRuntimeDir, 'apps/app/public'),
     { recursive: true },
   );
+
+  await pruneRuntimeArtifacts(appRuntimeDir);
 }
 
-async function stageWorkspaceRuntime() {
-  const stagedWorkspaceRoot = path.join(runtimeRoot, 'workspace');
-  const stagedNodeModulesRoot = path.join(stagedWorkspaceRoot, 'node_modules');
-
-  await cp(
-    path.join(workspaceRoot, 'node_modules'),
-    stagedNodeModulesRoot,
-    { recursive: true },
+async function stageServerRuntime() {
+  execFileSync(
+    'pnpm',
+    ['--offline', '--filter', '@ownlab/server', '--prod', 'deploy', serverRuntimeDir],
+    {
+      cwd: workspaceRoot,
+      stdio: 'inherit',
+      env: {
+        ...process.env,
+        CI: process.env.CI ?? '1',
+      },
+    },
   );
 
-  await pruneDesktopOnlyDependencies(stagedNodeModulesRoot);
-
-  for (const packagePath of ownlabPackages) {
-    const sourceDir = path.join(workspaceRoot, packagePath);
-    const targetDir = path.join(stagedWorkspaceRoot, packagePath);
-
-    await mkdir(targetDir, { recursive: true });
-    await cp(path.join(sourceDir, 'dist'), path.join(targetDir, 'dist'), { recursive: true });
-
-    try {
-      await cp(path.join(sourceDir, 'node_modules'), path.join(targetDir, 'node_modules'), {
-        recursive: true,
-      });
-    } catch {
-      // Optional package-local node_modules.
-    }
-
-    const packageJsonPath = path.join(sourceDir, 'package.json');
-    const packageJson = JSON.parse(await readFile(packageJsonPath, 'utf8'));
-    packageJson.exports = rewriteExports(packageJson.exports);
-    if (!packageJson.main) {
-      packageJson.main = './dist/index.js';
-    }
-    await writeFile(
-      path.join(targetDir, 'package.json'),
-      `${JSON.stringify(packageJson, null, 2)}\n`,
-      'utf8',
-    );
-  }
-}
-
-async function pruneDesktopOnlyDependencies(stagedNodeModulesRoot) {
-  const removals = [
-    'electron',
-    'electron-builder',
-    'electron-vite',
-    '@electron',
-  ];
-
-  for (const dependencyName of removals) {
-    await rm(path.join(stagedNodeModulesRoot, dependencyName), { force: true, recursive: true });
-    await rm(path.join(stagedNodeModulesRoot, '.pnpm', 'node_modules', dependencyName), {
-      force: true,
-      recursive: true,
-    });
-  }
-
-  const pnpmStoreDir = path.join(stagedNodeModulesRoot, '.pnpm');
-  try {
-    const entries = await readDirNames(pnpmStoreDir);
-    await Promise.all(
-      entries
-        .filter((entry) =>
-          entry.startsWith('electron@') ||
-          entry.startsWith('electron-builder@') ||
-          entry.startsWith('electron-vite@') ||
-          entry.startsWith('@electron+'),
-        )
-        .map((entry) => rm(path.join(pnpmStoreDir, entry), { force: true, recursive: true })),
-    );
-  } catch {
-    // Ignore if node_modules uses a different layout.
-  }
+  await rewriteRuntimePackageJson(path.join(serverRuntimeDir, 'package.json'));
+  await rm(path.join(serverRuntimeDir, 'src'), { force: true, recursive: true });
+  await rewriteBundledOwnlabPackages(serverRuntimeDir);
+  await pruneRuntimeArtifacts(serverRuntimeDir);
 }
 
 async function readDirNames(dir) {
   return readdir(dir);
+}
+
+async function rewriteRuntimePackageJson(packageJsonPath) {
+  const packageJson = JSON.parse(await readFile(packageJsonPath, 'utf8'));
+  packageJson.exports = rewriteExports(packageJson.exports);
+  packageJson.main = rewritePath(packageJson.main ?? './dist/index.js');
+
+  await writeFile(packageJsonPath, `${JSON.stringify(packageJson, null, 2)}\n`, 'utf8');
+}
+
+async function rewriteBundledOwnlabPackages(runtimeDir) {
+  const bundledRoots = [
+    path.join(runtimeDir, 'node_modules', '@ownlab'),
+    path.join(runtimeDir, 'node_modules', '.pnpm'),
+  ];
+
+  for (const bundledRoot of bundledRoots) {
+    if (!(await pathExists(bundledRoot))) {
+      continue;
+    }
+
+    if (bundledRoot.endsWith('.pnpm')) {
+      const entries = await readDirNames(bundledRoot);
+      for (const entry of entries.filter((candidate) => candidate.startsWith('@ownlab+'))) {
+        const packageScopeRoot = path.join(bundledRoot, entry, 'node_modules', '@ownlab');
+        if (!(await pathExists(packageScopeRoot))) {
+          continue;
+        }
+
+        const packageNames = await readDirNames(packageScopeRoot);
+        for (const packageName of packageNames) {
+          const packageDir = path.join(packageScopeRoot, packageName);
+          await rewriteOwnlabPackageDir(packageDir);
+        }
+      }
+      continue;
+    }
+
+    const packageNames = await readDirNames(bundledRoot);
+    for (const packageName of packageNames) {
+      const packageDir = path.join(bundledRoot, packageName);
+      await rewriteOwnlabPackageDir(packageDir);
+    }
+  }
+}
+
+async function rewriteOwnlabPackageDir(packageDir) {
+  const packageJsonPath = path.join(packageDir, 'package.json');
+  if (!(await pathExists(packageJsonPath))) {
+    return;
+  }
+
+  const packageJson = JSON.parse(await readFile(packageJsonPath, 'utf8'));
+  if (typeof packageJson.name !== 'string' || !packageJson.name.startsWith('@ownlab/')) {
+    return;
+  }
+
+  packageJson.exports = rewriteExports(packageJson.exports);
+  if (packageJson.main) {
+    packageJson.main = rewritePath(packageJson.main);
+  } else {
+    packageJson.main = './dist/index.js';
+  }
+
+  await writeFile(packageJsonPath, `${JSON.stringify(packageJson, null, 2)}\n`, 'utf8');
+  await rm(path.join(packageDir, 'src'), { force: true, recursive: true });
+  await rm(path.join(packageDir, 'test'), { force: true, recursive: true });
+  await rm(path.join(packageDir, '__tests__'), { force: true, recursive: true });
+  await rm(path.join(packageDir, 'tsconfig.json'), { force: true });
+  await rm(path.join(packageDir, 'vitest.config.ts'), { force: true });
+}
+
+async function pruneRuntimeArtifacts(rootDir) {
+  const entries = await readdir(rootDir, { withFileTypes: true });
+
+  await Promise.all(
+    entries.map(async (entry) => {
+      const entryPath = path.join(rootDir, entry.name);
+
+      if (entry.isDirectory()) {
+        if (entry.name === '__tests__') {
+          await rm(entryPath, { force: true, recursive: true });
+          return;
+        }
+
+        await pruneRuntimeArtifacts(entryPath);
+        return;
+      }
+
+      if (
+        entry.name.endsWith('.d.ts') ||
+        entry.name.endsWith('.d.ts.map') ||
+        entry.name.endsWith('.js.map') ||
+        entry.name.endsWith('.tsbuildinfo') ||
+        entry.name === 'tsconfig.json' ||
+        entry.name === 'vitest.config.ts'
+      ) {
+        await rm(entryPath, { force: true });
+      }
+    }),
+  );
+}
+
+async function pathExists(targetPath) {
+  try {
+    await stat(targetPath);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 function rewriteExports(exportsField) {

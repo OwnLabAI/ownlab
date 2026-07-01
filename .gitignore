@@ -33,6 +33,7 @@ apps/*/.open-next/
 apps/*/.wrangler/
 apps/*/.content-collections/
 apps/*/.source/
+apps/*/.runtime/
 apps/*/next-env.d.ts
 apps/*/.dev.vars
 apps/*/.dev.vars.*
@@ -77,7 +78,3 @@ yarn-error.log*
 
 # Prompt / reference material not shipped with the product
 ods/
-
-#
-apps/app/
-apps/server/

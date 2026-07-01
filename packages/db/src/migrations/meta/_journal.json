@@ -183,6 +183,13 @@
       "when": 1775260800000,
       "tag": "0025_channels_default_workspace_dedupe",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1775520000000,
+      "tag": "0026_codex_local_bypass_default",
+      "breakpoints": true
     }
   ]
 }

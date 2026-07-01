@@ -5,6 +5,7 @@ import { waitForHttpReady } from '../health';
 import { findAvailablePort } from '../ports';
 import { ManagedProcess } from './managed-process';
 import { cleanupStaleNextDevLock } from './next-dev-lock';
+import { resolveRuntimeExecPath } from './runtime-exec-path';
 
 export interface StartedOwnlabRuntime {
   appUrl: string;
@@ -68,7 +69,7 @@ export async function startOwnlabRuntime(config: DesktopRuntimeConfig): Promise<
 function createPackagedServerProcess(config: DesktopRuntimeConfig, port: number, host: string) {
   return {
     name: 'ownlab-server',
-    command: process.execPath,
+    command: getPackagedRuntimeCommand(config),
     args: [config.serverRuntimeEntry],
     cwd: config.serverRuntimeCwd,
     env: {
@@ -107,7 +108,7 @@ function createPackagedAppProcess(
 ) {
   return {
     name: 'ownlab-app',
-    command: process.execPath,
+    command: getPackagedRuntimeCommand(config),
     args: [config.appRuntimeEntry],
     cwd: config.appRuntimeCwd,
     env: createAppEnv(config, port, host, serverUrl),
@@ -159,6 +160,15 @@ function createNodeRuntimeEnv(): NodeJS.ProcessEnv {
     ELECTRON_RUN_AS_NODE: '1',
     ELECTRON_NO_ASAR: app.isPackaged ? '1' : process.env.ELECTRON_NO_ASAR,
   };
+}
+
+function getPackagedRuntimeCommand(config: DesktopRuntimeConfig): string {
+  return resolveRuntimeExecPath({
+    appName: app.getName(),
+    execPath: process.execPath,
+    isPackaged: config.isPackaged,
+    platform: process.platform,
+  });
 }
 
 function enrichStartupError(

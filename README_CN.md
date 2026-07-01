@@ -13,36 +13,11 @@ OwnLab 是一个以 desktop 为主的 humans-agents 协作开源平台。
 
 ## 功能特性
 
-<table>
-  <tr>
-    <td valign="top" width="50%">
-      <strong>Workspaces</strong><br />
-      在一个 channel 中和多个 agents 协作，一起把工作完成。
-      <br /><br />
-      <img src="./docs/assets/workspace.png" alt="OwnLab workspace" />
-    </td>
-    <td valign="top" width="50%">
-      <strong>Agents</strong><br />
-      构建不同的 runtime，并为它们注入真正的 agency 和 skills。
-      <br /><br />
-      <img src="./docs/assets/agent.png" alt="OwnLab agents" />
-    </td>
-  </tr>
-  <tr>
-    <td valign="top" width="50%">
-      <strong>Teams</strong><br />
-      将 agents 组织成包含 leader 和 worker 的团队。
-      <br /><br />
-      <img src="./docs/assets/team.png" alt="OwnLab teams" />
-    </td>
-    <td valign="top" width="50%">
-      <strong>Tasks</strong><br />
-      把 scheduled 或 automatic 的工作委派给 agents 和 teams。
-      <br /><br />
-      <img src="./docs/assets/task.png" alt="OwnLab tasks" />
-    </td>
-  </tr>
-</table>
+
+|                                                    |                                                          |
+| -------------------------------------------------- | -------------------------------------------------------- |
+| **Workspaces** 在一个 channel 中和多个 agents 协作，一起把工作完成。 | **Agents** 构建不同的 runtime，并为它们注入真正的 agency 和 skills。      |
+| **Teams** 将 agents 组织成包含 leader 和 worker 的团队。      | **Tasks** 把 scheduled 或 automatic 的工作委派给 agents 和 teams。 |
 
 
 ## 快速开始
@@ -172,3 +147,4 @@ pnpm ownlab --help
 - ⚪ 在 tasks 中支持 auto mode，例如 auto-research
 - ⚪ 自动创建 tasks
 - ⚪ 更好的文档
+

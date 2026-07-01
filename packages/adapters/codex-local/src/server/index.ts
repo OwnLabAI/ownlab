@@ -14,9 +14,11 @@ export const sessionCodec: AdapterSessionCodec = {
     const sessionId = readNonEmptyString(record.sessionId) ?? readNonEmptyString(record.session_id);
     if (!sessionId) return null;
     const cwd = readNonEmptyString(record.cwd);
+    const permissionMode = readNonEmptyString(record.permissionMode);
     return {
       sessionId,
       ...(cwd ? { cwd } : {}),
+      ...(permissionMode ? { permissionMode } : {}),
     };
   },
   serialize(params: Record<string, unknown> | null) {
@@ -24,9 +26,11 @@ export const sessionCodec: AdapterSessionCodec = {
     const sessionId = readNonEmptyString(params.sessionId) ?? readNonEmptyString(params.session_id);
     if (!sessionId) return null;
     const cwd = readNonEmptyString(params.cwd);
+    const permissionMode = readNonEmptyString(params.permissionMode);
     return {
       sessionId,
       ...(cwd ? { cwd } : {}),
+      ...(permissionMode ? { permissionMode } : {}),
     };
   },
   getDisplayId(params: Record<string, unknown> | null) {

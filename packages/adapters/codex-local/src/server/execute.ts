@@ -201,8 +201,9 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
   const search = asBoolean(config.search, false);
   const bypass = asBoolean(
     config.dangerouslyBypassApprovalsAndSandbox,
-    asBoolean(config.dangerouslyBypassSandbox, false),
+    asBoolean(config.dangerouslyBypassSandbox, true),
   );
+  const permissionMode = bypass ? "dangerously-bypass-approvals-and-sandbox" : "workspace-write";
 
   const workspaceContext = parseObject(context.ownlabWorkspace);
   const workspaceCwd = asString(workspaceContext.cwd, "");
@@ -311,15 +312,25 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
   const runtimeSessionParams = parseObject(runtime.sessionParams);
   const runtimeSessionId = asString(runtimeSessionParams.sessionId, runtime.sessionId ?? "");
   const runtimeSessionCwd = asString(runtimeSessionParams.cwd, "");
+  const runtimeSessionPermissionMode = asString(runtimeSessionParams.permissionMode, "");
   const canResumeSession =
     runtimeSessionId.length > 0 &&
-    (runtimeSessionCwd.length === 0 || path.resolve(runtimeSessionCwd) === path.resolve(cwd));
+    (runtimeSessionCwd.length === 0 || path.resolve(runtimeSessionCwd) === path.resolve(cwd)) &&
+    runtimeSessionPermissionMode === permissionMode;
   const sessionId = canResumeSession ? runtimeSessionId : null;
 
   if (runtimeSessionId && !canResumeSession) {
+    const reasons = [
+      runtimeSessionCwd.length > 0 && path.resolve(runtimeSessionCwd) !== path.resolve(cwd)
+        ? `cwd changed from "${runtimeSessionCwd}" to "${cwd}"`
+        : null,
+      runtimeSessionPermissionMode !== permissionMode
+        ? `permission mode changed from "${runtimeSessionPermissionMode || "unknown"}" to "${permissionMode}"`
+        : null,
+    ].filter(Boolean);
     await onLog(
       "stderr",
-      `[ownlab] Codex session "${runtimeSessionId}" was saved for cwd "${runtimeSessionCwd}" and will not be resumed in "${cwd}".\n`,
+      `[ownlab] Codex session "${runtimeSessionId}" will not be resumed because ${reasons.join(" and ") || "its runtime context changed"}.\n`,
     );
   }
 
@@ -417,7 +428,7 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
 
     const resolvedSessionId = attempt.parsed.sessionId ?? runtimeSessionId ?? runtime.sessionId ?? null;
     const resolvedSessionParams = resolvedSessionId
-      ? { sessionId: resolvedSessionId, cwd } as Record<string, unknown>
+      ? { sessionId: resolvedSessionId, cwd, permissionMode } as Record<string, unknown>
       : null;
     const parsedError = typeof attempt.parsed.errorMessage === "string" ? attempt.parsed.errorMessage.trim() : "";
     const stderrLine = firstNonEmptyLine(attempt.proc.stderr);

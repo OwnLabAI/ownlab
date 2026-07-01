@@ -38,5 +38,6 @@ export type {
   LatexEngine,
   LatexEnvironmentInfo,
   LatexEnvironmentStatus,
+  LatexSavedOutput,
   LatexWorkspaceFileList,
 } from "./latex.js";

@@ -3,7 +3,7 @@
   "version": "0.0.4",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./dist/index.js"
   },
   "scripts": {
     "build": "tsc && rm -rf dist/migrations && cp -R src/migrations dist/migrations 2>/dev/null || true",
@@ -26,5 +26,6 @@
     "tsx": "^4.19.2",
     "typescript": "^5.7.3",
     "vitest": "^3.2.4"
-  }
+  },
+  "main": "./dist/index.js"
 }
