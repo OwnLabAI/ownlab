@@ -68,78 +68,24 @@ pnpm install
 
 选择你想使用 OwnLab 的方式。
 
+### Web App
+
+在浏览器中使用 OwnLab：
+
+```bash
+pnpm dev:web
+```
+
+打开：
+
+- Web App: `http://localhost:3000`
+
 ### Desktop App
 
-如果你想要 local-first 的桌面体验，使用 Desktop。Desktop 应用会启动并管理自己的本地 app/server runtime，和浏览器里的 Web 栈隔离。
+以 local-first 桌面应用的方式使用 OwnLab：
 
 ```bash
 pnpm dev:desktop
-```
-
-如果你明确想让 Desktop 连接到已经启动的 Web app 和 API server，可以使用：
-
-```bash
-pnpm dev:desktop:reuse
-```
-
-### Web App + API Server
-
-如果你想使用浏览器里的产品体验，或准备做自托管部署，使用 Web app + API server。
-
-```bash
-pnpm dev:web
-```
-
-启动后地址：
-
-- Web UI: `http://localhost:3000`
-- API 服务: `http://localhost:3100`
-
-快速健康检查：
-
-```bash
-curl http://localhost:3100/health
-curl http://localhost:3100/api/agents
-curl http://localhost:3100/api/workspace
-```
-
-CLI（在仓库根目录，开发时无需先 build）：
-
-```bash
-pnpm ownlab --help
-pnpm ownlab health
-```
-
-执行 `pnpm --filter ./apps/cli build` 后，可用 `pnpm ownlab:run -- health`，或进入 `apps/cli` 运行 `node dist/index.js`。
-
-默认情况下，如果没有设置 `DATABASE_URL`，OwnLab 在开发环境中会使用内嵌 PostgreSQL。
-
-如果你想改用外部数据库：
-
-```bash
-export DATABASE_URL="postgres://ownlab:ownlab@localhost:5432/ownlab"
-pnpm dev:web
-```
-
-## API 概览
-
-API 挂载在 `/api` 下，主要包括：
-
-- `/api/agents`
-- `/api/teams`
-- `/api/workspace`
-- `/api/channels`
-- `/api/taskboards`
-- `/api/tasks`
-- `/api/channel-chat`
-- `/api/heartbeat`
-- `/api/skills`
-- `/api/search`
-
-健康检查接口：
-
-```bash
-GET /health
 ```
 
 ## 仓库结构
@@ -160,27 +106,6 @@ ownlab/
 ├── ods/               # 产品切片、示例与设计记录
 ├── package.json
 └── pnpm-workspace.yaml
-```
-
-## 开发命令
-
-常用命令：
-
-```bash
-pnpm dev:desktop
-pnpm dev:desktop:reuse
-pnpm dev:web
-pnpm dev
-pnpm dev:server
-pnpm dev:app
-pnpm build:desktop
-pnpm dist:desktop
-pnpm build
-pnpm typecheck
-pnpm test:run
-pnpm db:generate
-pnpm db:migrate
-pnpm ownlab --help
 ```
 
 ## 路线图

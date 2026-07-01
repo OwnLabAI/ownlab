@@ -67,80 +67,26 @@ cd ownlab
 pnpm install
 ```
 
-Choose how you want to run OwnLab.
+Choose how you want to use OwnLab.
+
+### Web App
+
+Use OwnLab in your browser:
+
+```bash
+pnpm dev:web
+```
+
+Open:
+
+- Web App: `http://localhost:3000`
 
 ### Desktop App
 
-Use this when you want the local-first desktop experience. The desktop app starts and owns its own local app/server runtime, so it stays isolated from the browser-based Web stack.
+Use OwnLab as a local-first desktop app:
 
 ```bash
 pnpm dev:desktop
-```
-
-To intentionally attach Desktop to an already-running Web app and API server, use:
-
-```bash
-pnpm dev:desktop:reuse
-```
-
-### Web App + API Server
-
-Use this when you want the browser-based product experience or a self-hosted deployment shape.
-
-```bash
-pnpm dev:web
-```
-
-That starts:
-
-- Web UI: `http://localhost:3000`
-- API server: `http://localhost:3100`
-
-Quick health checks:
-
-```bash
-curl http://localhost:3100/health
-curl http://localhost:3100/api/agents
-curl http://localhost:3100/api/workspace
-```
-
-CLI (from repo root, dev / no build):
-
-```bash
-pnpm ownlab --help
-pnpm ownlab health
-```
-
-After `pnpm --filter ./apps/cli build`, you can run the bundled binary with `pnpm ownlab:run -- health` or `pnpm --filter ./apps/cli exec node dist/index.js` from `apps/cli`.
-
-By default, OwnLab uses an embedded PostgreSQL instance in development when `DATABASE_URL` is not set.
-
-To use an external database instead:
-
-```bash
-export DATABASE_URL="postgres://ownlab:ownlab@localhost:5432/ownlab"
-pnpm dev:web
-```
-
-## API Surface
-
-The API is mounted under `/api` with routes such as:
-
-- `/api/agents`
-- `/api/teams`
-- `/api/workspace`
-- `/api/channels`
-- `/api/taskboards`
-- `/api/tasks`
-- `/api/channel-chat`
-- `/api/heartbeat`
-- `/api/skills`
-- `/api/search`
-
-Health endpoint:
-
-```bash
-GET /health
 ```
 
 ## Repo Map
@@ -161,27 +107,6 @@ ownlab/
 ├── ods/               # Product slices, examples, and design notes
 ├── package.json
 └── pnpm-workspace.yaml
-```
-
-## Development
-
-Common commands:
-
-```bash
-pnpm dev:desktop
-pnpm dev:desktop:reuse
-pnpm dev:web
-pnpm dev
-pnpm dev:server
-pnpm dev:app
-pnpm build:desktop
-pnpm dist:desktop
-pnpm build
-pnpm typecheck
-pnpm test:run
-pnpm db:generate
-pnpm db:migrate
-pnpm ownlab --help
 ```
 
 ## Roadmap
